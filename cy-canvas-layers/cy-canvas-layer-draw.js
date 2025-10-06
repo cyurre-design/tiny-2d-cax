@@ -23,14 +23,32 @@ export const canvasCSS = {
     pointDimension : 3
 }
 
+class layerStyle{
+    constructor( pathColor= 'green', pathWidth= 2, selectedColor= 'yellow', selectedWidth= 3, printColor= 'black', printWidth= 2, pointDimension = 3){
+        this.pathColor=     pathColor;
+        this.pathWidth=     pathWidth;
+        this.selectedColor= selectedColor;
+        this.selectedWidth= selectedWidth;
+        this.printColor =   printColor;
+        this.printWidth =   printWidth;
+        this.pointDimension= pointDimension;
+    }
+    static default = ()=> new layerStyle();
+    toJSON(){
+        return this;
+    }
+    fromJSON(data){ return new layerStyle(data);
+
+    }
+}
 // ------------------------
 // Modelo Layer
 // ------------------------
 class Layer {
-  constructor(id, name, lyStyle = canvasCSS, visible = true) {
+  constructor(id, name, style = layerStyle.default(), visible = true) {
     this.id = id;
     this.name = name;
-    this.lyStyle = lyStyle;
+    this.style = style;
     this.visible = visible;
     this.blocks = new Set(); // ids de shapes asignados a esta capa
   }
@@ -39,15 +57,15 @@ class Layer {
     return {
       id: this.id,
       name: this.name,
-      lyStyle: this.lyStyle,
+      style: this.style,
       visible: this.visible,
-      shapes: [...this.shapes],
+      blocks: [...this.blocks],
     };
   }
 
   static fromJSON(data) {
-    const layer = new Layer(data.id, data.name, data.lyStyle, data.visible);
-    layer.shapes = new Set(data.shapes);
+    const layer = new Layer(data.id, data.name, data.style, data.visible);
+    layer.blocks = new Set(data.blocks);
     return layer;
   }
 
@@ -56,12 +74,25 @@ class Layer {
 //29-09-25 La gestión de undo, redo, etc... se enmorralla bastante con las capas en varios sets
 //Probamos a que la capa sea un atributo de cada elemento, path, etc...
 export default class CyCanvasLayerDraw extends CyCanvasLayer {
+/**
+ * @constructor
+ * El canvasLayerDraw aglutina la gestión de capas y comandos geométricos, selección, etc..
+ * Creamos 3 maps por conveniencia
+ *  1 para los bloques (entidades geométricas) propiamente dichos
+ *  2 para los puntos relevante de dichos elementos
+ *  3 para gestionar las capas
+ *  En cada capa se almacena un id con el set de elementos (bloques) ue se supone que están en esa capa
+ *  se guardan los ids que permiten recuperarlos en el map de bloques
+ *  Como id usamos un simple contador 
+ * Además, para la gesti´n de selección o proximidad geométrica creamo un RBush para cada elemento y sus puntos
+ *  esperando que el rendimiento mejore al buscar puntos relevantes próximos 
+ */
     constructor() {
         super('draw');
     this.blocks = new Map();       // id -> Block
     this.points = new Map();        // id -> point
     this.layers = new Map();       // layerId -> Set(shapeIds)
-    this._activeLayer = undefined;
+    this._activeLayerId = undefined;
     //auxiliar para selección
     this.selectData = {
         hoveredBlocks: undefined
@@ -96,10 +127,16 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     //Atención al orden de los canvas. Para que los eventos de mouse lleguen a draw, tiene que estar encima
     connectedCallback(){
         super.connectedCallback();
+        const style = getComputedStyle(this);
+        this.pathWidth = +style.getPropertyValue('--path-width') || 2;
+        this.pathColor = style.getPropertyValue('--path-color') || 'green';
+        this.selectedWidth = +style.getPropertyValue('--selected-width') || 2;
+        this.selectedColor = style.getPropertyValue('--selected-color') || 'yellow';
+
         this.addEventListener('symmetry', (evt)=>
             this.symmetrySelected(evt.detail.mode, evt.detail.data));
         //Voy a probar a extender las clases geométricas con los métodos de dibujo
-        Circle.prototype.getRelevantPoints  = function(){ return ([{x0:this.cx, y0:this.cy, id:this.id}])};
+        Circle.prototype.getRelevantPoints  = function(){ return [{x0:this.cx, y0:this.cy, id:this.id}]};
         Segment.prototype.getRelevantPoints = function(){ return [{x0:this.x0, y0:this.y0, id:this.id},{x0:this.x1, y0:this.y1, id:this.id}]};
         Polygon.prototype.getRelevantPoints = function(){ return [{x0:this.cx, y0:this.cy, id:this.id}].concat(this.segments.map(p=>({x0:p.x0, y0:p.y0, id:this.id})))};
         Arc.prototype.getRelevantPoints     = function(){ return [{x0:this.cx, y0:this.cy, id:this.id},{x0:this.x1, y0:this.y1, id:this.id},{x0:this.x2, y0:this.y2, id:this.id}]};
@@ -125,41 +162,67 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
 //    }
 
 //-------------------- Creación de elementos y gestión de id y 
-
-    addLayer(name, lyStyle = canvasCSS) {
-        const id = `L${this.nextLayerId++}`;
-        const layer = new Layer(id, name, lyStyle, true);
-        this.layers.set(id, layer);
+/**
+ * 
+ * @param {string} name el nombre de la capa (que puede ser generado automáticamente)
+ * @param {*} style valore de color para pintar los bloques. Se deberán guardar
+ * @returns la referencia a la capa recién creada
+ * @todo no crear si ya existe
+ * @todo definir clase o similar (serializable) para el estilo de pintada en canvas
+ */
+    addLayer(name, style = layerStyle.default()) {
+        const lyId = `L${this.nextLayerId++}`;
+        const layer = new Layer(lyId, name, style, true);
+        this.layers.set(lyId, layer);
         this.dispatchEvent(new CustomEvent('new-layer', {bubbles: true, composed:true, detail:{name:name}})); 
-        this._activeLayer = layer;
-        return layer;
+        this._activeLayerId = lyId;
+        return lyId;
     }
-
-    //Atención, no eliminar si tiene elementos, o preguntar...
+/**
+ * 
+ * @param {id} layerId el id de la capa a eliminar, pero no su contenido
+ * @todo preguntar si realmente se quiere borrar !!! atton, al undo
+ * además se podrían pasar los elementos a otra capa provisional?
+ */
     removeLayer(layerId) {
         this.layers.delete(layerId);
     // shapes siguen existiendo pero pueden quedar "huérfanos"
     // → según diseño, podrías eliminarlos o moverlos a "default"
     }
-        //Gestión de las capas normales de dibujo
+/**
+ * 
+ * @param {string} name nombre de la capa
+ * @returns LyId de la capa o undefined si no existe
+ */
     findLayerByName(name){
-        for (const [id, layer] of this.layers.entries()){
-            if(name === layer.name) return [id, layer];
+        for (const [lyId, layer] of this.layers.entries()){
+            if(name === layer.name) return lyId;
         }
         return undefined;
     }
-    
-    //espera true o false
+/**
+ * 
+ * @param {string} name 
+ * @param {boolean} visible 
+ */    
     setVisible(name, visible) {
-        let ly = this.findLayerByName(name);
-        if(ly !== undefined)
-            ly.visible = visible;
+        let lyId = this.findLayerByName(name);
+        if(lyId !== undefined){
+            this.layers.get(lyId).visible = visible;
+        }
         this.draw();
     }
+/**
+ * 
+ * @param {string} name 
+ * @returns boolean si existe o undefined si no existe
+ */
     isVisible(name) {
-        let ly = this.findLayerByName(name);
-        if(ly !== undefined)
-            return ly.visible;
+        let lyId = this.findLayerByName(name);
+        if(lyId !== undefined){
+            return this.layers.get(lyId).visible;
+        }
+        return undefined;
     }
 // ------------------------
 //    addShape(type, x, y, layerId) {
@@ -179,19 +242,32 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     //     this.draw();
     // }
     //No creo la capa de forma automática!!
+
+/**
+ * 
+ * @param {array} points array de objetos con propiedades x0,y0,id
+ * Se inseran en un RBush para mejorar búsqueedas de puntos cercanos, etc...
+ */
     _addPointsToTree(points){
         points.forEach(p => this.pointsTree.insert({minX:p.x0, maxX:p.x0, minY:p.y0, maxY: p.y0, id:p.id}));
     }
-    addBlocks(layer = this._activeLayer, paths){  //pueden ser circles o polygons también...
+/**
+ * 
+ * @param {string} layerId el id de la capa en el Map  de capas
+ * @param {array} paths 
+ * @returns 
+ */
+    addBlocks(layerId = this._activeLayerId, paths){  //pueden ser circles o polygons también...
         if(paths === undefined) {console.log('tipo de bloque no visualizzable'); return;}
         let ps = Array.isArray(paths)?paths:[paths];
         //Primero pongo la info de pintar y un id, importante. La parte del tree es de alguna manera opcional
         ps.forEach(b=>{
             if((b.type !== 'point') && (b.type!=='cut-point')){
                 b.id = this.nextBlockId++;                  //id de bloque
-                b.layerId = layer.id;
+                b.layerId = layerId;
                 b.canvasPath = getPathFromBlocks(b);
-                b.style = Object.assign({}, layer.lyStyle);     //copia, para poder tocarlos de forma independiente
+                //No merece la pena, mejor cada layer un color (varios según estado, etc...)
+                //b.style = Object.assign({}, layer.style);     //copia, para poder tocarlos de forma independiente
                 this.blocks.set(b.id, b);                   //La mete en el map de bloques
 
 
@@ -211,6 +287,11 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
             }
         })
     }
+    /**
+     * 
+     * @param {Number} id obtenido por interacción, selecci´on, etc...
+     * @returns block borrado, @todo porque si no sirve mejor quitarlo
+     */
     removeBlock(id) {
         //Hay que quitarlo del árbol!!!! Parece que hay un error, uso un hack de un blog
         this.blocksTree.remove(  {minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity, id:id }, (a, b) => a.id === b.id)
@@ -222,6 +303,12 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         layer.delete(block.id);
         return block; //??
     }
+    /**
+     * 
+     * @param {Number} blockId 
+     * @param {Number} newLayerId 
+     * @returns nothing
+     */
     moveBlockToLayer(blockId, newLayerId) {
         const block = this.blocks.get(blockId);
         if (!block) return;
@@ -232,17 +319,22 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         block.layerId = newLayerId;
         this.layers.get(newLayerId).blocks.add(blockId);
     }
-
+    /**
+     * 
+     * @param {Number} layerId 
+     * @returns array of blocks (referencias a sus bloques)
+     * Se necesita hacer así porque todos los bloques de todas las capas está en un solo Map
+     */
     getBlocksInLayer(layerId) {
         const layer = this.layers.get(layerId);
         if (!layer) return [];
         return [...layer.blocks].map(id => this.blocks.get(id));
     }
-    setActiveLayer(name){
-        const ly = this.findLayerByName(name);
-        if(ly)
-            this._activeLayer = ly;
-        return this._activeLayer;
+    setActiveLayerId(name){
+        const lyId = this.findLayerByName(name);
+        if(lyId)
+            this._activeLayerId = lyId;
+        return this._activeLayerId;
     }
     // dataLayerAdd(name){
     //     let ly = this.findLayerByName(name);
@@ -430,11 +522,13 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     // }
     draw() {
         this.clear();
+        //Hacemos que el estilo sea por capa y estado en vez de por path
+/**@todo pintar por capas para mejorar rendimiento?? */
         this.blocks.forEach( p => {
             let ly = this.layers.get(p.layerId);
             if(ly.visible){
-                this.ctx.lineWidth = scalePixels2mm(p.selected?+p.style.selectedWidth:+p.style.pathWidth);
-                this.ctx.strokeStyle = (p.selected)?p.style.selectedColor:(p.hover)?p.style.selectedColor:p.style.pathColor;
+                this.ctx.lineWidth = scalePixels2mm(p.selected?+ly.style.selectedWidth:+ly.style.pathWidth);
+                this.ctx.strokeStyle = (p.selected)?ly.style.selectedColor:(p.hover)?ly.style.selectedColor:ly.style.pathColor;
                 this.ctx.stroke(p.canvasPath);
             }
         })
