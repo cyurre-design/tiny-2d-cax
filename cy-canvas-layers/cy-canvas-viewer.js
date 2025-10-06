@@ -11,14 +11,15 @@ import {createDrawElement} from '../cy-geometry/cy-geometry-basic-elements.js';
 //En este componente agrupamos la gestión de los varios canvas que tenemos
 //layerDraw por su parte virtualiza las capas de dibujo en una sola capa física
 //y una de borrador
-
+/**
+ * @class que virtualiza algunas acciones sobre las capas físicas y/o lógicas, como ocultar, etc...
+ * y además debe proporcionar estilo?? 
+ * Una función fundmental es mantner la coherencia de dimensiones cuando hacemos zoom, pane, etc...
+ */
 export default class CyCanvasViewer extends HTMLElement {
     constructor() {
         super();
-        this.dom = this.attachShadow({mode:'open'});
-
-        //this.delay = 100;
-       
+        this.dom = this.attachShadow({mode:'open'});       
     }
     createStyle() {
         let style = `
@@ -77,16 +78,16 @@ export default class CyCanvasViewer extends HTMLElement {
             })}
     
     connectedCallback() {
-        this.dom.innerHTML= this.createStyle() + this.createTemplate();
-        //this.container = this.dom.querySelector('#container');
-        this.layerAxes = this.dom.querySelector("#axes");
-        this.layerDraw = this.dom.querySelector("#draw");
-        this.layerDraft = this.dom.querySelector("#draft");
-        this.canvasLayers = [this.layerAxes, this.layerDraw, this.layerDraft];
+        this.dom.innerHTML  = this.createStyle() + this.createTemplate();
+
+        this.layerAxes      = this.dom.querySelector("#axes");
+        this.layerDraw      = this.dom.querySelector("#draw");
+        this.layerDraft     = this.dom.querySelector("#draft");
+        this.canvasLayers   = [this.layerAxes, this.layerDraw, this.layerDraft];
 
         //Para gestión de zoom y pane la asignamos al draw, los otros no tienen eventos, se necesita pasar un canvas
         //Para que llegue el evento de zoom-end y tal, hay que asociarlo al último canvas definido!!!!
-        this.canvasHandler = new CyCanvasHandler(this.layerDraw.viewer);
+        this.canvasHandler = new CyCanvasHandler(this.layerDraft.viewer);
         //Pongo unas dimensiones "razonables" que serían settings TODO
         //Para ello simulo un zoom de ventana
         this.canvasHandler.view('fgZoomInDrag', 
@@ -94,30 +95,42 @@ export default class CyCanvasViewer extends HTMLElement {
         this.canvasHandler.view('fgSetHome');
 
         //Inicialización de la de draft, le ponemos atributos específicos de color y tal (TODO settings)
+        //los colores y grosores vienen del estilo. Si se ponen en un json de settings puede ir aquí..
+        /**@todo decidir si esto es estilo, son, clas.... */
         this.layerDraft.pathColor ='yellow', this.layerDraft.pathWidth=3, this.layerDraft.selectedPathWidth=4, this.layerDraft.selectedPathColor='magenta';
         this.interactiveDrawing = new CyInteractiveDraw(this.canvasHandler, this.layerDraft);
- 
-        this.layerDraw.addEventListener('zoom_end', e => 
+        /**@listens zoom-end cambios en la relación window - viewport , o sea, coordenadas mundo y bitamp */
+        this.addEventListener('zoom_end', e => 
             this._redrawLayers());
-
+        
+        /**@listens set-origin cuando se ejecuta de verdad el comando definido de forma interactiva */
+        //Los comandos en realidad no se ejecutan al accionar el menú sino cuando se dan por concluidas las partes interactivas
         this.addEventListener('set-origin', e=>{
             this.canvasHandler.view("fgPane", {x:e.detail.data.x0, y:e.detail.data.y0});  //rehace los cálculos del handler
             this.layerDraw.translate(-e.detail.data.x0, -e.detail.data.y0);
             this._redrawLayers();
-        });                        //gestión de la geometría a pintar
+        });
+        /**@listens new-block Aquí es donde se recibe la peición de insertar geometría
+         * tras terminar la pare interactiva !!! */
         this.addEventListener('new-block', e=>{
             this.layerDraft.clear();
             const blocks = createDrawElement(e.detail.type, e.detail.data);
             this.layerDraw.addBlocks(undefined, blocks);  //Ya añade los puntos también en su propio tree
             this.layerDraw.draw();
         });
+        /**@listens scale-change podría estar en el zoom-end pero es más específico, indica que la escala hacambiado y sirve
+         * para cambiar el tamaño del cursor de búsque o cosas relacionadas
+         */
         //Evento de cambio de escala, suele venir con el zoom, después. Lo habilito para que el dispatch siguiente lo dispare
         this.layerAxes.addEventListener('scale-change', (e) =>  {
             this.layerDraw.scaleChange(e.detail.scale)
         })
         //Hasta que no he puesto el listener de zoom-end no inicializo los canvas y extents
-                //Inicializo todos los canvas, simulo un zoom
-        this.layerDraw.dispatchEvent(new CustomEvent('zoom_end'));
+         /**
+          * @emits zoom_end auque no le corresponde, lanza la ejecución en cada ventana del ajuste de escalas
+          * Inicializo todos los canvas, simulo un zoom
+         */
+        this.dispatchEvent(new CustomEvent('zoom_end'));
         //Hasta que no se ha inicializado no puedo poner los extents y hacer draws (el setVisible hace draw)
         this.layerAxes.setAxesVisible(true);
         this.layerAxes.setGridVisible(true);
@@ -125,6 +138,7 @@ export default class CyCanvasViewer extends HTMLElement {
         this.layerDraft.setVisible(true);
 
     }
+    /**@todo eliminación de listeners, solo tiene sentido al implementar pantallas de CAM y CNC */
     disconnectedCallback() {
     }
     handleEvent(evt) {
@@ -135,6 +149,9 @@ export default class CyCanvasViewer extends HTMLElement {
         }
         else console.log(evt.type);
     }
+    /** de momento no tenemos atributos pero podrían ser algunos como:
+     *  tamaño inicial (ventana), etc...
+     */
     static get observedAttributes() {
       return [];
     }   
@@ -144,7 +161,14 @@ export default class CyCanvasViewer extends HTMLElement {
     //         break;
     //   }
     // }
+
     //Desde aquí hacia arriba no se debería saber si no hace falta qué tipo de capa es, etc...
+    /**
+     * 
+     * @param {string} layer  la capa que queremos ocultarver
+     * @param {boolean} value true/false
+     * No he virtyualizado ejes / grid porque no merece mucho la pena, la verdad
+     */
     setVisible(layer, value){
         if(layer === 'grid')
             this.layerAxes.setGridVisible(value);
@@ -152,7 +176,10 @@ export default class CyCanvasViewer extends HTMLElement {
             this.layerAxes.setAxesVisible(value);
         else this.layerDraw.setVisible(layer, value);
     }
-
+    /**
+     * Obtenemos el box que engloba todo lo que hay en la geometría y simulamos el evento de zoom con ventana
+     * @todo que e comando esté en el canvasHandler de forma original . Llma a l función o emitir un event esecífico !
+     */
     fit(){
         const bbox = this.layerDraw.getBBox();
         this.canvasHandler.view('fgZoomInDrag', 
@@ -161,6 +188,8 @@ export default class CyCanvasViewer extends HTMLElement {
         this.canvasHandler.view('fgSetHome');
         this._redrawLayers();
     }
+    //Gestión de los cursores, TODO
+    /**@todo */
     setSelectCursor(r) {
         this.layerDraw.setAttribute('style', `cursor: url('data:image/svg+xml;utf8,<svg id="svg" xmlns="http://www.w3.org/2000/svg" version="1.1" width="${2*r}" height="${2*r}"><circle cx="${r}" cy="${r}" r="${r}" stroke-width="1" style="stroke: black; fill: red;"/></svg>') ${r} ${r}, pointer;`);
     }
@@ -171,9 +200,6 @@ export default class CyCanvasViewer extends HTMLElement {
         this.removeSelectCursor();
         ["zoomInCursor", "paneClickCursor"].forEach(c => this.layerDraw.classList.remove(c));
     }
-    // view(cmd) {
-    //     this.canvasHandler.view(cmd);
-    // }
 }
 
 customElements.define('cy-canvas-viewer', CyCanvasViewer);
