@@ -107,17 +107,23 @@ export default class CyCanvasViewer extends HTMLElement {
         //Los comandos en realidad no se ejecutan al accionar el menú sino cuando se dan por concluidas las partes interactivas
         this.addEventListener('set-origin', e=>{
             this.canvasHandler.view("fgPane", {x:e.detail.data.x0, y:e.detail.data.y0});  //rehace los cálculos del handler
-            this.layerDraw.translate(-e.detail.data.x0, -e.detail.data.y0);
+            this.layerDraw.setOrigin(-e.detail.data.x0, -e.detail.data.y0);
             this._redrawLayers();
         });
         /**@listens new-block Aquí es donde se recibe la peición de insertar geometría
-         * tras terminar la pare interactiva !!! */
+         * tras terminar la parte interactiva !!! */
         this.addEventListener('new-block', e=>{
             this.layerDraft.clear();
             const blocks = createDrawElement(e.detail.type, e.detail.data);
             this.layerDraw.addBlocks(undefined, blocks);  //Ya añade los puntos también en su propio tree
             this.layerDraw.draw();
         });
+        this.addEventListener('translate-selection',  (evt)=>
+            this.layerDraw.translateSelected(evt.detail.data));
+        
+        this.addEventListener('symmetry', (evt)=>
+            this.layerDraw.symmetrySelected(evt.detail.mode, evt.detail.data));
+        
         /**@listens scale-change podría estar en el zoom-end pero es más específico, indica que la escala hacambiado y sirve
          * para cambiar el tamaño del cursor de búsque o cosas relacionadas
          */

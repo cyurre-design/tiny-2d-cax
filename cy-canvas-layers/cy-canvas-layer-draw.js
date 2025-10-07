@@ -133,10 +133,6 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         this.selectedWidth = +style.getPropertyValue('--selected-width') || 2;
         this.selectedColor = style.getPropertyValue('--selected-color') || 'yellow';
 
-        this.addEventListener('symmetry', (evt)=>
-            this.symmetrySelected(evt.detail.mode, evt.detail.data));
-        this.addEventListener('translate-selection',  (evt)=>
-            this.translateSelected(evt.detail.data));
         //Voy a probar a extender las clases geométricas con los métodos de dibujo
         Circle.prototype.getRelevantPoints  = function(){ return [{x0:this.cx, y0:this.cy, id:this.id}]};
         Segment.prototype.getRelevantPoints = function(){ return [{x0:this.x0, y0:this.y0, id:this.id},{x0:this.x1, y0:this.y1, id:this.id}]};
@@ -478,10 +474,36 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     }
 
 
-    //Es un comando morralla porque implica que todos los árboles hay que rehacerlos...
-    //Al final no se sabe si se optimiza o pesimiza...
-    translate(x,y){
-        this.dataLayers.forEach(ly => ly.translate(x,y))
+    /**
+     * nuevo origen, el origen es siempre 0,0 por definición!!! hay que restar el nuevo valor
+     * @param {Number} dx desplazamiento en x
+     * @param {Number} dy desplazamiento en y
+     * Es un comando morralla porque implica que todos los árboles hay que rehacerlos...
+     * Al final no se sabe si con los RBushes se optimiza o pesimiza...
+     * Hay que cambiar todas las coordenadas de todos los elementos!!!
+     */
+    setOrigin(dx, dy){
+        this.pointsTree.clear();
+        this.blocksTree.clear();
+        //hay que clonar la info básica, y hacer el cambio de coordenadas, el translate es geométrico, no guarda el id, etc...
+        //Los layers, blocks y puntos podrían mantenerse, pero la info de path no, la de bbox no...
+        //Clono lo necesario para rehacer toda la base de datos... transladada
+        let oldBlocks=[];
+        
+        this.blocks.forEach((b)=> {
+            const nb = b.translate(dx,dy);
+            nb.layerId = b.layerId;
+            oldBlocks.push(nb);
+        });
+        this.blocks.clear();
+        this.points.clear();
+        this.layers.forEach(ly => ly.blocks = new Set()); //No borro las capas y sus estilos y nombre, pero sí los bloques
+        //No reiniciamos el contador de Id... porque es común con los layers y la podemos liar...
+        this.layers.forEach(layerId => {
+            this.addBlocks(layerId.id, oldBlocks.filter(b=>b.layerId = layerId));
+        })
+        //Los points que no son cut ya se habrán regenerado
+        //Faltan los cut
     }
 
     draw() {
