@@ -300,7 +300,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         this.blocks.delete(id);
         //Lo busco y lo quito de su capa
         const layer = this.layers.get(block.layerId);
-        layer.delete(block.id);
+        layer.blocks.delete(block.id);
         return block; //??
     }
     /**
@@ -346,8 +346,9 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     //     }
     //     return(ly);
     // }
-    //TODO : Los cuts podrían ser intercapas, así que no llevan layerId
+    /**@todo Los cuts podrían ser intercapas, así que no llevan layerId */
     //Y por otra parte pertenecen a 2 bloques, ... igual son eternos 
+    
     addCutPoints( points){ //estos ya vienen pretratados
         if(!points) console.log('puntos?'); //esto debe tratar el indefinido, el no array y el longitud 0
         points.forEach(p=>{
@@ -361,10 +362,15 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     }
 //--------------Gestión de RBush y cercanía al ratón------------------
     //No miro por capas, si hace falta se filtra por layerId posteriormente
+    /**@todo esto igual mejor un evento??*/
     scaleChange(scale){
         this.scale = scale;
         this.resolution = scale / 10; //settings, TODO
     }
+    /**@function 
+     * @param {Number} x,y coordendas del cursor en espacio usuario (window, milimetros)
+     * @param {Number} w  precisión con la que buscamos el punto, en las mismas coordenadas
+     */
     getNearestPoint(x,y,w){
         //Miro si estamos cerca de un punto destacado (un centro, etc...), cojo solo el primero, dejo la gestión al usuario y el ratón
         const ps = this.pointsTree.search({minX:x -w, maxX: x+w, minY: y -w, maxY: y+w});
@@ -378,27 +384,45 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         return {type:'point', x0:s*Math.round(x/s), y0:s*Math.round(y/s)};
     }
     //Salgo en el primero pero se prepara para varios
+    /**@function getNearestBlock
+     * @param {Number} x,y coordenadas del cursor en el espacio usuario (window, milimetros)
+     * @param w precisión de búsqueda del bloque cercanos
+     * La búsqueda se realiza en con las funciones propias del canvas, así que x,y pasan a pixels
+     * La rutina sale en el primer hit porque el resto lo hace el usuario (interactivo)
+     * Pero se podrían devolver más. 
+     */
     getNearestBlock(x, y, w){
         const p = position2pixels({x:x,y:y})
         this.ctx.lineWidth = scalePixels2mm(w); //Esto son pixels, iría en settings o así TODO
         for (const [id, block] of this.blocks.entries()){
-            if(this.ctx.isPointInStroke(b.canvasPath, p.x, p.y)){
+            if(this.ctx.isPointInStroke(block.canvasPath, p.x, p.y)){
                 return block;
             } 
         }
         return undefined;
     }
+    /**@function getBBox
+     * @return un BBox que engloba los de todos los elementos, sirve para determinar el área de trabajo
+     */
     getBBox(){  //forEach funciona en maps
         let bbox = {x0:Infinity,y0:Infinity,x1:-Infinity,y1:-Infinity};
         this.blocks.forEach(b => bbox = checkBbox(bbox, b.bbox));
         return(bbox);
     }
+    /**@param {box} box  caja de selección
+     * @returns array de bloques
+    */
     getBlocksInsideBox(box){ //la search funciona en rbushes
         const bboxes = this.blocksTree.search({minX:box.x0, maxX: box.x1, minY: box.y0, maxY: box.y1})
         return bboxes.map(box => this.blocks.get(box.id))
     }
 //--------------- Selección, deselección...  ------------------------------
 //Seguimos la misma filosofía de buscar todo y en su caso filtrar
+/**@function 
+ * @param {Number} x,y posición coordenadas window (usuario) 
+ * @param {Box} box parámetro opcional, si existe, se marcan los elementos totalmente contenidos, si no, el apuntado por x,y
+ * @param {boolean} [select=false] si está a true, en vez de estado hover ponemos estado selected
+ */
     hover( x, y, box, select = false){
         let blocks;
         if(this.selectData.hoveredBlocks)
@@ -419,26 +443,31 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         return(blocks );
     }
     //TODO ver si se pasa el layer por name o por id... de momento, undefined = all
-    //Estos son COMANDOS, sobre todo el delete!!!
-    selectAll(layer){
-        //const targetLayers = layer? [layer] : this.dataLayers;
-        this.blocks.forEach( p => p.selected = true);
+    //Estos son COMANDOS?!, sobre todo el delete!!!
+    /**
+     * 
+     * @param {string} layerId 
+     * Usamos el map de layers si viene el parámetro y el map de blocks si no está definida (= all)
+     * @todo pasar un array de layers, pero se puede hacer con varias llamadas...
+     */
+    selectAll(layerId){
+        const blocks = (layerId !== undefined) ? this.layers.get(layerId) : this.blocks;
+        blocks.forEach( p => p.selected = true);
         this.draw();
     }
-    deselectAll(layer){
-        //const targetLayers = layer? [layer] : this.dataLayers;
-        this.blocks.forEach(p => p.selected = false);
+    deselectAll(layerId){
+        const blocks = (layerId !== undefined) ? this.layers.get(layerId) : this.blocks;
+        blocks.forEach(p => p.selected = false);
         this.draw();
     }
-    invertSelection(layer){ 
-        //const targetLayers = layer? [layer] : this.dataLayers;
-        this.blocks.forEach( p => p.selected = p.selected? false : true);
+    invertSelection(layerId){ 
+        const blocks = (layerId !== undefined) ? this.layers.get(layerId) : this.blocks;
+        blocks.forEach( p => p.selected = p.selected? false : true);
         this.draw();
     }
-    deleteSelection(layer){
-       // const targetLayers = layer? [layer] : this.dataLayers;
-        //const deleted = {};
-        for (const [id, block] of this.blocks.entries()){
+    deleteSelection(layerId){
+        const blocks = (layerId !== undefined) ? this.layers.get(layerId) : this.blocks;
+        for (const [id, block] of blocks.entries()){
             if(block.selected){
                 //deleted.push(block);
                 this.removeBlock(id);
@@ -447,8 +476,10 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         this.draw();
         //return deleted;
     }
-    getSelectedPaths(layer){
-        //const targetLayers = layer? [layer] : this.dataLayers;
+    /**@function No lleva argumentos porque los bloques ya están seleccionados
+     * @returns un Path con los bloques seleccionados
+     */
+    getSelectedPaths(){
         const blocks = [];
         for (const [id, block] of this.blocks.entries()){
             if(block.selected)
@@ -457,8 +488,10 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         const paths = getPathFromBlocks(blocks);
         return paths;
     }
-    getSelectedBlocks(layer){
-        //const targetLayers = layer? [layer] : this.dataLayers;
+    /**@function No lleva argumentos porque los bloques ya están seleccionados
+     * @returns un array de bloques que se han seleccionado previamente
+    */
+    getSelectedBlocks(){
         const blocks = [];
         for (const [id, block] of this.blocks.entries()){
             if(block.selected)
