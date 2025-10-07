@@ -524,8 +524,9 @@ export default class CyInteractiveDraw {
         }
         //Mejor con evento?!!!
         const translate = (p)=>{
-            //this.layerDraw.dispatchEvent(new CustomEvent('translate-selection', {bubbles: true, composed:true, detail:{ data:{x0:this.hit.x, y0:this.hit.y}}}));
-            this.status = 2;    
+            this.layerDraw.dispatchEvent(new CustomEvent('translate-selection',
+                {bubbles: true, composed:true, detail:{ data:{dx:this.hit.x-this.data.x0, dy:this.hit.y-this.data.y0}}}));
+            //this.status = 0;    
         };
         //Insertar los bloques como copia con o sin borrado, sería un flag
         //const translate = (p) => {

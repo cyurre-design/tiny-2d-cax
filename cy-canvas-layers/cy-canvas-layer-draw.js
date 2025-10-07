@@ -135,6 +135,8 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
 
         this.addEventListener('symmetry', (evt)=>
             this.symmetrySelected(evt.detail.mode, evt.detail.data));
+        this.addEventListener('translate-selection',  (evt)=>
+            this.translateSelected(evt.detail.data));
         //Voy a probar a extender las clases geométricas con los métodos de dibujo
         Circle.prototype.getRelevantPoints  = function(){ return [{x0:this.cx, y0:this.cy, id:this.id}]};
         Segment.prototype.getRelevantPoints = function(){ return [{x0:this.x0, y0:this.y0, id:this.id},{x0:this.x1, y0:this.y1, id:this.id}]};
@@ -413,8 +415,9 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
      * @returns array de bloques
     */
     getBlocksInsideBox(box){ //la search funciona en rbushes
-        const bboxes = this.blocksTree.search({minX:box.x0, maxX: box.x1, minY: box.y0, maxY: box.y1})
-        return bboxes.map(box => this.blocks.get(box.id))
+        const bboxes = this.blocksTree.search({minX:box.x0, maxX: box.x1, minY: box.y0, maxY: box.y1});
+        return bboxes.map(box => this.blocks.get(box.id)).filter(b=>insideBbox(box,b.bbox));
+    // }
     }
 //--------------- Selección, deselección...  ------------------------------
 //Seguimos la misma filosofía de buscar todo y en su caso filtrar
@@ -519,7 +522,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         })   
     }
 
-    //El nombre sería transfer o así, pero ya...
+
     //Es un comando morralla porque implica que todos los árboles hay que rehacerlos...
     //Al final no se sabe si se optimiza o pesimiza...
     translate(x,y){
@@ -668,32 +671,39 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
 
 
 
-    //en estas los bloques ya están seleccionados, no hay que pasar el layer
-    translateSelected(dx, dy){
-        this.dataLayers.forEach(ly => {
-            let sels = ly.blocks.filter( p => p.selected);
-            sels = sels.map(b => b.translate(dx,dy, true));
-            ly.addBlocks(sels); //mete los puntos también
-            //ly.addPoints(sels);
+    //en estas los bloques ya están seleccionados, no hay que pasar el layer, pero hay que copiarlo...
+    //Atton: el translate hace un clone de la parte geométrica, pero no va a recordar la capa ni ná.
+    translateSelected(data){
+        this.layers.forEach(ly => {
+            const sels = [];
+            ly.blocks.forEach( id => {
+                const b = this.blocks.get(id);
+                if( b.selected) sels.push(b.translate( data.dx, data.dy, true))
+                }
+            )
+            this.addBlocks(ly.id, sels);
         })
         this.draw();
     }
+    /**@param {string} axis es el eje o línea de referencia para la simetría (X,Y,L)
+     * @param data puedeser un punto (de donde cogemos x0 o y0, o un segmento)
+     * Se hace por capas para que la simetría cree los elementos en la misma capa que el original
+     * Esto son decisiones de especificación, podría cambiarse e ir a la capa activa
+     * @todo la decisión sobre ello
+     */
     symmetrySelected(axis, data){
-        this.dataLayers.forEach(ly => {
-            let sels = ly.blocks.filter( p => p.selected);
-            //sels = sels.map(b => b.clone());
-            if(axis === 'X')
-                sels = sels.map(s=>s.symmetryX(data.y0));
-            else if(axis === 'Y')
-                sels = sels.map(s=>s.symmetryY(data.x0));
-            else if(axis === 'L')
-                sels = sels.map(s=>s.symmetryL(data));
-
-            ly.addBlocks(sels);//mete los puntos también
-            //ly.addPoints(sels);
+        const symmetry = axis==='X' ? (b)=>b.symmetryX(data.y0) : axis==='Y' ? (b)=>b.symmetryY(data.x0) : (b)=>b.symmetryL(data)
+        this.layers.forEach(ly => {
+            const sels = [];
+            ly.blocks.forEach( id => {
+                const s = this.blocks.get(id);
+                if( s.selected)
+                    sels.push(symmetry(s))
+                }
+            )
+            this.addBlocks(ly.id, sels);   //mete los puntos también
         })
         this.draw();
-
     }
 }
 customElements.define('cy-canvas-layer-draw', CyCanvasLayerDraw);
