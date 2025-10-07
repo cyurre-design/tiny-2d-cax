@@ -226,24 +226,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         }
         return undefined;
     }
-// ------------------------
-//    addShape(type, x, y, layerId) {
-//     if (!this.layers.has(layerId)) throw new Error(`Layer ${layerId} no existe`);
-//     const id = String(this.nextShapeId++);
-//     const shape = new Shape(id, type, x, y, layerId);
-//     this.shapes.set(id, shape);
-//     this.layers.get(layerId).shapes.add(id);
-//     return shape;
-//   }
-    // addBlocksToActiveLayer(blocks){
-    //     if(blocks === undefined)
-    //         console.log('tipo de bloque no visualizzable');
-    //     if(!this._activeLayer) return;
-    //     this._activeLayer.addBlocks(blocks);
-    //     //this._activeLayer.addPoints(blocks);
-    //     this.draw();
-    // }
-    //No creo la capa de forma automática!!
+// ------------------------ Gestión de bloques , árbol y puntos, etc...
 
 /**
  * 
@@ -338,16 +321,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
             this._activeLayerId = lyId;
         return this._activeLayerId;
     }
-    // dataLayerAdd(name){
-    //     let ly = this.findLayerByName(name);
-    //     if(ly === undefined){
-    //         ly = new CyDataLayer(this, name, canvasCSS);
-    //         this.dataLayers.push(ly);
-    //         this._activeLayer = ly;
-            
-    //     }
-    //     return(ly);
-    // }
+
     /**@todo Los cuts podrían ser intercapas, así que no llevan layerId */
     //Y por otra parte pertenecen a 2 bloques, ... igual son eternos 
     
@@ -504,58 +478,12 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     }
 
 
-
-
-    //FUNCIONES DE DRAW, DATA LAYERS
-    serialice(){
-        let out = '[';
-        this.dataLayers.forEach(ly => out += ly.serialice()); 
-        out = out.slice(0,-1) + ']';
-        console.log (out);
-    }
-    deserialice(file){
-    //Aquí debe llegar el texto del fichero, que está en JSON
-        const rawLayers = JSON.parse(file);
-        rawLayers.forEach(ly => {
-            const newLayer = this.addLayer(ly.name);
-            newLayer.addBlocks(deserialize(ly.blocks));
-        })   
-    }
-
-
     //Es un comando morralla porque implica que todos los árboles hay que rehacerlos...
     //Al final no se sabe si se optimiza o pesimiza...
     translate(x,y){
         this.dataLayers.forEach(ly => ly.translate(x,y))
     }
 
-    //Entre setExtents y getBBox apañan las relaciones de tamaño...
-    // setExtents(extents) {
-    //     const scale = scaleMm2pixels(1);
-    //     const offset = position2pixels({x:0, y:0});
-    //     this.drawCanvasLayer.ctx.setTransform(scale, 0, 0, -scale, offset.x, offset.y);
-    //     //this.draftCanvasLayer.ctx.setTransform(scale, 0, 0, -scale, offset.x, offset.y);
-
-    //     this.drawCanvasLayer.extents = extents;
-    //     //this.draftCanvasLayer.extents = extents;
-    // }
-    //Redibujado del canvas con varios colores :
-    //Primero los seleccionados y luego los que no, en función de su estado 
-    //NO es un redraw, no se recalculan los paths2D !!!!
-    //Aunque los paths tienen la propiedad de color, width... la herdan de layer TODO
-    //layer, aquí, es un CyDataLayer
-    // _drawCanvasLayer(layer){
-    //     if(layer.blocks.size > 0){
-    //         if(layer.visible){
-    //             const ctx = layer.canvasLayer.ctx;  // === this.dataLayerDraft? this.draftCanvasLayer.ctx:this.drawCanvasLayer.ctx
-    //             layer.blocks.forEach(p=>{
-    //                 ctx.lineWidth = scalePixels2mm(p.selected?+p.style.selectedWidth:+p.style.pathWidth);
-    //                 ctx.strokeStyle = (p.selected)?p.style.selectedColor:(p.hover)?p.style.selectedColor:p.style.pathColor;
-    //                 ctx.stroke(p.canvasPath);
-    //             });
-    //         }
-    //     } 
-    // }
     draw() {
         this.clear();
         //Hacemos que el estilo sea por capa y estado en vez de por path
@@ -571,108 +499,9 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         return;
     }
 
-
-    //La gestión cambia de arrastar con el leftclick pulsado a dos pulsaciones.
-    //Así que para selección con box se supone que el primer click se hará de forma que no seleccione nada
-    //La rutina entra por el modo "move" de forma al mover el cursor podemos ponernos junto a un elemento
-    // y se resalta. Al hacer click, si estaba resaltado se selecciona defeinitivamente (o deselecciona)
-    // Si no había nada resaltado es modo box
-    // La selección es sobre geometría construida, o sea, drawCanvasLayer
-    // La selección con Box usa, a decidir, el RBush, la de cursor, el canvas
-    //Habría que hacerlo solo en las layers visibles...
-    // getNearestPoint(x,y, w){
-    //     let p;
-    //     for(let i=0; i< this.dataLayers.length;i++){
-    //         if((p=this.dataLayers[i].getNearestPoint(x,y,w)) !== undefined )
-    //             return p;
-    //     }
-    //     const s = this.resolution; 
-    //     return {type:'point', x0:s*Math.round(x/s), y0:s*Math.round(y/s)};
-    // }
-    //El método con canvas es ideal para ratón pero no para box....
-    //Por otra parte la clase data-layer no debería saber de canvas y tal...
-    //así que hacemos un método find (se puede hacer el filter y tal)
-    //TODO meterlo como prototype ??
-    //Salgo en el primero pero se prepara para varios
-    // getNearestBlock(x, y, w){
-    //     const p = position2pixels({x:x,y:y})
-    //     const filter = (b) => this.ctx.isPointInStroke(b.canvasPath, p.x, p.y);
-    //     this.ctx.lineWidth = scalePixels2mm(w); //Esto son pixels, iría en settings o así TODO
-    //     for(let i = 0; i < this.dataLayers.length; i++){
-    //         const b = this.dataLayers[i].findBlock(filter);
-    //         if(b !== undefined)
-    //             return [b];
-    //     }
-    //     return undefined;
-    //     //const blocks = this.dataLayers.map(ly=>ly.blocks.filter(b=>this.ctx.isPointInStroke(b.canvasPath, p.x, p.y))).flat();
-    //     //return blocks? blocks : undefined;
-    // }
-    //me paso un box, x0,y0,x1,y1
-    // getBlocksInsideBox(box){
-    //     const ps = this.dataLayers.map(ly => ly.getBlocksInsideBox(box)).flat();
-    //     return ps.filter(b=>insideBbox(box,b.bbox));
-    // }
-
-    // hover( x, y, box, select = false){
-    //     let blocks;
-    //     if(this.selectData.hoveredBlocks)
-    //         this.selectData.hoveredBlocks.forEach(b => b.hover = false);       
-    //     if(box)
-    //         blocks = this.getBlocksInsideBox(box);
-    //     else
-    //         blocks = this.getNearestBlock(x, y, 5);
-    //     if(blocks && blocks.length > 0){
-    //         if(select){
-    //             blocks.forEach(b => b.selected = b.selected? false : true);
-    //         } else {
-    //             blocks.forEach(b => b.hover = true);
-    //             this.selectData.hoveredBlocks = blocks;
-    //         }
-    //     }
-    //     this.draw();
-    //     return(blocks );
-    // }
-    // selectAll(layer){
-    //     const targetLayers = layer? [layer] : this.dataLayers;
-    //     targetLayers.forEach(ly => ly.selectAll());
-    //     this.draw();
-    // }
-    // deselectAll(layer){
-    //     const targetLayers = layer? [layer] : this.dataLayers;
-    //     targetLayers.forEach(ly => ly.deselectAll());
-    //     this.draw();
-    // }
-    // invertSelection(layer){ 
-    //     const targetLayers = layer? [layer] : this.dataLayers;
-    //     targetLayers.forEach(ly => ly.invertSelection());
-    //     this.draw();
-    // }
-    // deleteSelection(layer){
-    //     const targetLayers = layer? [layer] : this.dataLayers;
-    //     const deleted = {};
-    //     targetLayers.forEach(ly => deleted[ly.name] = ly.deleteSelection());
-    //     this.draw();
-    //     return deleted;
-    // }
-    //this.blocksTree.load(bs.map(b=>Object.assign(b,{minX:b.bbox.x0,minY:b.bbox.y0,maxX:b.bbox.x1,maxY:b.bbox.y1, id:b.id})));
-
-    // getSelectedPaths(layer){
-    //     const targetLayers = layer? [layer] : this.dataLayers;
-    //     const blocks = targetLayers.map(ly => ly.blocks.filter( p => p.selected)).flat();
-    //     const paths = getPathFromBlocks(blocks);
-    //     return paths;
-    // }
-    // getSelectedBlocks(layer){
-    //     const targetLayers = layer? [layer] : this.dataLayers;
-    //     return targetLayers.map(ly => ly.blocks.filter( p => p.selected)).flat();
-    // }
-
-
-
-
-
     //en estas los bloques ya están seleccionados, no hay que pasar el layer, pero hay que copiarlo...
     //Atton: el translate hace un clone de la parte geométrica, pero no va a recordar la capa ni ná.
+    
     translateSelected(data){
         this.layers.forEach(ly => {
             const sels = [];
@@ -705,5 +534,28 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         })
         this.draw();
     }
+
+
+    
+    /**
+     * @function serialice y deserialice, persistencia
+     */
+
+    serialice(){
+        let out = '[';
+        this.dataLayers.forEach(ly => out += ly.serialice()); 
+        out = out.slice(0,-1) + ']';
+        console.log (out);
+    }
+    deserialice(file){
+    //Aquí debe llegar el texto del fichero, que está en JSON
+        const rawLayers = JSON.parse(file);
+        rawLayers.forEach(ly => {
+            const newLayer = this.addLayer(ly.name);
+            newLayer.addBlocks(deserialize(ly.blocks));
+        })   
+    }
+
+
 }
 customElements.define('cy-canvas-layer-draw', CyCanvasLayerDraw);
