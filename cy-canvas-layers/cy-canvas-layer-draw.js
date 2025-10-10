@@ -10,6 +10,7 @@ import {Polygon} from '../cy-geometry/cy-geo-elements/cy-polygon.js'
 import {Circle} from '../cy-geometry/cy-geo-elements/cy-circle.js'
 import {Segment} from '../cy-geometry/cy-geo-elements/cy-segment.js'
 import {Arc} from '../cy-geometry/cy-geo-elements/cy-arc.js'
+import {Point, CutPoint} from '../cy-geometry/cy-geo-elements/cy-point.js'
 import { CommandManager} from './cy-layer-commands.js'
 
 
@@ -34,6 +35,10 @@ class layerStyle{
         this.pointDimension= pointDimension;
     }
     static default = ()=> new layerStyle();
+    save(){ return this}
+    restore(data){
+        Object.entries(data.forEach(([K,v]) => this[k] = v))
+    }
     toJSON(){
         return this;
     }
@@ -52,14 +57,29 @@ class Layer {
     this.visible = visible;
     this.blocks = new Set(); // ids de shapes asignados a esta capa
   }
-
+  save() {
+    return {
+        id: this.id,
+        name: this.name,
+        style: this.style,
+        visible: this.visible,
+        blocks: [...this.blocks],
+    };
+  }
+  restore(data){
+    this.id = data.id;
+    this.name = data.name;
+    this.style = data.style;
+    this.visible = data.visible;
+    this.blocks = new Set(data.blocks);
+  }
   toJSON() {
     return {
-      id: this.id,
-      name: this.name,
-      style: this.style,
-      visible: this.visible,
-      blocks: [...this.blocks],
+        id: this.id,
+        name: this.name,
+        style: this.style,
+        visible: this.visible,
+        blocks: [...this.blocks],
     };
   }
 
@@ -103,7 +123,11 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     this.pointsTree = new RBush();
     this.blocksTree = new RBush();
     }
-
+    toJSON(){
+        return {blocks:Object.fromEntries(this.blocks.entries()), points:(Object.fromEntries(this.points.entries())), layers: Object.fromEntries(this.layers.entries()),
+            _activeLayerId: this._activeLayerId, nextBlockId:this.nextBlockId, nextLayerId: this.nextLayerId,
+            pointsTree:this.pointsTree, blocksTree:this.blocksTree}
+    }
     createStyle() {
         return`
         <style>
@@ -134,10 +158,10 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         this.selectedColor = style.getPropertyValue('--selected-color') || 'yellow';
 
         //Voy a probar a extender las clases geométricas con los métodos de dibujo
-        Circle.prototype.getRelevantPoints  = function(){ return [{x0:this.cx, y0:this.cy, id:this.id}]};
-        Segment.prototype.getRelevantPoints = function(){ return [{x0:this.x0, y0:this.y0, id:this.id},{x0:this.x1, y0:this.y1, id:this.id}]};
-        Polygon.prototype.getRelevantPoints = function(){ return [{x0:this.cx, y0:this.cy, id:this.id}].concat(this.segments.map(p=>({x0:p.x0, y0:p.y0, id:this.id})))};
-        Arc.prototype.getRelevantPoints     = function(){ return [{x0:this.cx, y0:this.cy, id:this.id},{x0:this.x1, y0:this.y1, id:this.id},{x0:this.x2, y0:this.y2, id:this.id}]};
+        Circle.prototype.getRelevantPoints  = function(){ return [new Point({x:this.cx, y:this.cy})]};
+        Segment.prototype.getRelevantPoints = function(){ return [new Point({x:this.x0, y:this.y0}), new Point({x:this.x1, y:this.y1})]};
+        Polygon.prototype.getRelevantPoints = function(){ return [new Point({x:this.cx, y:this.cy})].concat(this.segments.map(p=>(new Point({x:p.x0, y:p.y0}))))};
+        Arc.prototype.getRelevantPoints     = function(){ return [new Point({x:this.cx, y:this.cy}),new Point({x:this.x1, y:this.y1}),new Point({x:this.x2, y:this.y2})]};
         Path.prototype.getRelevantPoints    = function(){ return (this.elements.map(el=>el.getRelevantPoints())).flat()};
         // Gestión de do , undo , redo...
         this.history = new CommandManager();
@@ -169,10 +193,12 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
  * @todo definir clase o similar (serializable) para el estilo de pintada en canvas
  */
     addLayer(name, style = layerStyle.default()) {
-        const lyId = `L${this.nextLayerId++}`;
-        const layer = new Layer(lyId, name, style, true);
+        const theId = this.nextLayerId++;
+        const lyId = `L${theId}`;
+        const lname = name !== undefined ? name : `Layer-${theId}`;
+        const layer = new Layer(lyId, lname, style, true);
         this.layers.set(lyId, layer);
-        this.dispatchEvent(new CustomEvent('new-layer', {bubbles: true, composed:true, detail:{name:name}})); 
+        this.dispatchEvent(new CustomEvent('new-layer', {bubbles: true, composed:true, detail:{name:lname}})); 
         this._activeLayerId = lyId;
         return lyId;
     }
@@ -186,6 +212,22 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         this.layers.delete(layerId);
     // shapes siguen existiendo pero pueden quedar "huérfanos"
     // → según diseño, podrías eliminarlos o moverlos a "default"
+    }
+/**
+ * Esta sería una función para undo, redo de comandos de insertar o quitar un layer
+ * 
+ */
+    saveLayers(){
+        return {
+            _activeLayerId:this._activeLayerId,
+            nextLayerId: this.nextLayerId,
+            layers: Object.fromEntries(this.layers.entries())
+        }
+    }
+    restoreLayers(data){
+        this._activeLayerId = data._activeLayerId;
+        this.nextLayerId    = data.nextLayerId;
+        this.layers         = new Set(data.layers);
     }
 /**
  * 
@@ -244,7 +286,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         //Primero pongo la info de pintar y un id, importante. La parte del tree es de alguna manera opcional
         ps.forEach(b=>{
             if((b.type !== 'point') && (b.type!=='cut-point')){
-                b.id = this.nextBlockId++;                  //id de bloque
+                b.id = `B${this.nextBlockId++}`;                  //id de bloque
                 b.layerId = layerId;
                 b.canvasPath = getPathFromBlocks(b);
                 //No merece la pena, mejor cada layer un color (varios según estado, etc...)
@@ -258,7 +300,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
                 const points = b.getRelevantPoints();
                 points.forEach(p=>{ 
                     p.bid = b.id;   //para saber a qué bloque pertenece el punto 
-                    p.id = this.nextBlockId++; //el id que estamos poniendo es el del bloque, en getRelevantPoints
+                    p.id = `P${this.nextBlockId++}`; //el id que estamos poniendo es el del bloque, en getRelevantPoints
                     p.type = 'point';
                     p.canvasPath = getPathFromBlocks([p], this.pointDimension);
                     p.style = this.style;       //TODO no sé si hace falta por cómo se gestionan luego...
@@ -498,7 +540,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         this.blocks.clear();
         this.points.clear();
         this.layers.forEach(ly => ly.blocks = new Set()); //No borro las capas y sus estilos y nombre, pero sí los bloques
-        //No reiniciamos el contador de Id... porque es común con los layers y la podemos liar...
+        //No reiniciamos el contador de Id... porque la podemos liar...
         this.layers.forEach(layerId => {
             this.addBlocks(layerId.id, oldBlocks.filter(b=>b.layerId = layerId));
         })
@@ -564,10 +606,10 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
      */
 
     serialice(){
-        let out = '[';
-        this.dataLayers.forEach(ly => out += ly.serialice()); 
-        out = out.slice(0,-1) + ']';
-        console.log (out);
+        //let out = '[';
+        //this.layers.forEach(ly => out += ly.serialice()); 
+        //out = out.slice(0,-1) + ']';
+        console.log (JSON.stringify(this));
     }
     deserialice(file){
     //Aquí debe llegar el texto del fichero, que está en JSON

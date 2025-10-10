@@ -133,10 +133,7 @@ const templateSingleLayer = (name) => {
 }
 const templateLayers = `
 <div id=show-layers>
-    <md-list >
-      ${templateSingleLayer('AXES')}
-      ${templateSingleLayer('GRID')}
-    </md-list >
+LAYERS <md-filled-button id="layer-add">ADD</md-filled-button><md-switch slot="end" selected id="layer-show"></md-switch>
 </div>
 `
 const templateKeys = `
@@ -152,8 +149,6 @@ const templateUndo = `
     <md-filled-button id="redo">REDO</md-filled-button>
 </div>
 `
-
-
 const template = `
   <div id="full-screen" tabindex='1' class='column'>
     <div id="main-menu" class="row">${templateMainMenu}</div>
@@ -257,54 +252,53 @@ class cyCad1830App extends HTMLElement {
     }
 
     connectedCallback(){
+      this.viewer = this.dom.querySelector("#viewer");
+      const menus = ['file', 'zoom', /*'select',*/ 'draw', 'support', 'transform' ]
+      menus.forEach(m => this[m+'MenuEl'] = this.dom.querySelector(`#${m}-menu`));
+      menus.forEach(m => {
+          const el = this.dom.querySelector(`#${m}-menu-anchor`);
+          el.addEventListener('click',  ()=> this[`${m}MenuEl`].open = !this[`${m}MenuEl`].open);
+      })
 
-        this.viewer = this.dom.querySelector("#viewer");
-        const menus = ['file', 'zoom', /*'select',*/ 'draw', 'support', 'transform' ]
-        menus.forEach(m => this[m+'MenuEl'] = this.dom.querySelector(`#${m}-menu`));
-        menus.forEach(m => {
-            const el = this.dom.querySelector(`#${m}-menu-anchor`);
-            el.addEventListener('click',  ()=> this[`${m}MenuEl`].open = !this[`${m}MenuEl`].open);
-        })
+      menus.forEach(m => this[`${m}MenuEl`].addEventListener('close-menu', (e) => this.handleMenus(e)));
 
-        menus.forEach(m => this[`${m}MenuEl`].addEventListener('close-menu', (e) => this.handleMenus(e)));
-
-         //Almacenamiento de los datos manuales entre entradas y salidas de menus.
-        //Pongo defaults (podrían ser de un JSON, TODO)
-        //Uso la nomenclatura de variables de los componentes
-        this.dataStore  = {
-          circle:{
-            "data-r" : 10
-          },
-          poly:{
-            "data-edges" : 4,
-            "data-subType" : 'R'
-          },
-          segment:{
-            "data-d": 500,
-            "data-a": 30
-          },
-          arc:{
-            "data-r" : 100,
-            "data-a" : 45
-          },
-          symmetry:{
-            "data-a" : 45
-          }
+        //Almacenamiento de los datos manuales entre entradas y salidas de menus.
+      //Pongo defaults (podrían ser de un JSON, TODO)
+      //Uso la nomenclatura de variables de los componentes
+      this.dataStore  = {
+        circle:{
+          "data-r" : 10
+        },
+        poly:{
+          "data-edges" : 4,
+          "data-subType" : 'R'
+        },
+        segment:{
+          "data-d": 500,
+          "data-a": 30
+        },
+        arc:{
+          "data-r" : 100,
+          "data-a" : 45
+        },
+        symmetry:{
+          "data-a" : 45
         }
+      }
 
 //-------------------INPUT DATA
-        //Interactividad entre parte izquierda, datos manuales y ratón.
-        this.mData = this.dom.querySelector('#manual-data');
-        this.viewer.addEventListener('pos',(e)=>this.mData.update(e.detail));
-        this.mData.addEventListener('input-data', (e) =>
-              this.viewer.interactiveDrawing.updateData(e.detail));
-        this.mData.addEventListener('input-click', (e) => {
-            const type = e.detail.split('-')[0]; //submenu, data
-            if(type === 'data')
-              this.viewer.interactiveDrawing.updateData(e.detail);
-            else if(type === 'submenu')
-              this.handleSubmenu(e.detail)
-            });
+      //Interactividad entre parte izquierda, datos manuales y ratón.
+      this.mData = this.dom.querySelector('#manual-data');
+      this.viewer.addEventListener('pos',(e)=>this.mData.update(e.detail));
+      this.mData.addEventListener('input-data', (e) =>
+          this.viewer.interactiveDrawing.updateData(e.detail));
+      this.mData.addEventListener('input-click', (e) => {
+          const type = e.detail.split('-')[0]; //submenu, data
+          if(type === 'data')
+            this.viewer.interactiveDrawing.updateData(e.detail);
+          else if(type === 'submenu')
+            this.handleSubmenu(e.detail)
+          });
         
 
 //-----------------LOAD, FILE
@@ -323,26 +317,36 @@ class cyCad1830App extends HTMLElement {
         //Aunque el evento va y viene, se pueden generar capas por proceso diferente al load
         //si se crea una capa, por ejemplo al leer un fichero, generamos su control de ver/etc..
         this.viewer.addEventListener('new-layer', (evt)=>{
-          this.layerView.setAttribute('layer-name',evt.detail.name); //Estas dos tienen gestión interna especial
-          console.log(evt.detail.name);
+          this.layerView.setAttribute('layer-name',evt.detail.name);
         });
         //Si en la lista de capas se desea ver/no ver, etc..., viene aquí
+        //y si se crea en la propia lista también
+        //El recorrido cuando viene de lista es que primero se concentra aquí, se manda crear
+        //en layerdraw y el propio proceso debe volver aquí y de aquí vuelve a la lista
+        //rebuscado pero por separar
         this.layerView = this.dom.querySelector('#layer-view');
         this.layerView.addEventListener('layer-handle', (data)=>{
           const e = data.detail;
           if(e.action === 'visibility')
             this.viewer.setVisible(e.layer, e.value);
+          else if(e.action === 'create'){
+            this.dataLayer0 = this.viewer.layerDraw.addLayer(); //, nombre de momento automático faltarían los estilos
+          }
         })
 //-----------------UNDO, REDO
         this.dom.querySelector('#undo-redo').addEventListener('click',(evt)=>
           this.viewer.layerDraw.commandManager(evt.target.id))
+//-----------------CAPAS INICIALES
         //Estas capas las generamos de oficio
         //Los tratamientos son aditivos y los atributos ascii
-        this.layerView.setAttribute('layer-name', 'axes'); //Estas tienen gestión interna especial
-        this.layerView.setAttribute('layer-name', 'grid'); //Estas tienen gestión interna especial
+        //El setAttribute funciona incluso antes del connected, debemos esperar (async)
+        customElements.whenDefined('cy-layer-list').then(() => {
+          this.layerView.setAttribute('layer-name', 'axes'); //Estas tienen gestión interna especial
+          this.layerView.setAttribute('layer-name', 'grid'); //Estas tienen gestión interna especial
 
-        //Al crearla se debe poner activa ella sola
-        this.dataLayer0 = this.viewer.layerDraw.addLayer('layer0'); //faltarían los estilos
+          //Al crearla se debe poner activa ella sola
+          this.dataLayer0 = this.viewer.layerDraw.addLayer(); //faltarían los estilos
+        });
     }
     handleKeys = (e)=>{
         if((e.key === 'Escape') || (e.key === 'Delete') || (e.key === 'Enter')){
@@ -530,171 +534,15 @@ class cyCad1830App extends HTMLElement {
         default:break;
       }
     } 
-
-/* 
-    handleClicks = (e)=>{
-        let id = e.target.id;
-        switch(id){
-            case 'cy-sel-menu':
-            case 'cy-zoom-menu':
-            case 'cy-draw-menu':
-            case 'cy-profile-menu': this.handleMenues(id); break;
-            case 'cy-auto':
-            case 'cy-edit': this.handleEditAuto(id);return;
-            case 'cy-zoom-in':   this.viewer.canvasHandler.view('fgZoomIn'); return;
-            case 'cy-zoom-out':  this.viewer.canvasHandler.view('fgZoomOut'); return;
-            case 'cy-zoom-home': this.viewer.canvasHandler.view('fgZoomHome'); return;
-            case 'cy-set-home':  this.viewer.canvasHandler.view('fgSetHome'); return;
-            case 'cy-deselect-all':
-                this.viewer.mode.select.deselectAll();
-                return;
-            case 'cy-invert-selection':
-                this.viewer.mode.select.invertSelection();
-                return;
-            case 'cy-delete-selected':
-                this.viewer.mode.select.removeSelected()
-                return;
-            case 'cy-support-point':            this.draw.drawPoint(); break;
-            case 'cy-path':                     this.viewer.draw.path(); break;
-            case 'cy-support-circle':           this.viewer.draw.circle(); break;
-            case 'cy-support-arc':              this.viewer.draw.bulge(); break;
-            case 'cy-support-tangent-line':     this.draw.drawCircleTangent(); break;
-            case 'cy-transform-set-origin':     this.viewer.draw.origin(); break;
-            case 'cy-measure':                  this.draw.drawDistance(); break;
-            case 'cy-profile-entryPoint':       this.draw.drawEntryPoint(); break;
-            case 'cy-profile-polygon':          this.viewer.draw.polygon(this.polygonEdges, this.polygonMode); break;
-            case 'cy-profile-hole':             this.viewer.mode.drawCircleCircles();break;
-
-            case 'cy-transform-translate':   this.viewer.mode.draw('translate'); break;
-            case 'cy-transform-rotate':      this.viewer.mode.draw('rotate'); break;
-            case 'cy-transform-scale':       this.viewer.mode.draw('scale'); break;
-            case 'cy-transform-symmetry':    {
-                this.geometry.removeTemporal();
-                this.geometry.redraw();
-                switch(id){
-                    case 'cy-transform-translate':   this.draw.drawTranslate(); break;
-                    case 'cy-transform-rotate':      this.draw.drawRotate(); break;
-                    case 'cy-transform-scale':       this.draw.drawScale(); break;
-                    case 'cy-transform-symmetry':    this.draw.drawSymmetry(); break;        
-                }
-            }
-            break;
-            case 'cy-load-file':                this.dom.querySelector("#cy-hidden-file").click();break;
-            }
-        }
- */
-
- /*    mode = {
-
-        draw: (operation) => {
-          let validOperation = true;
-          switch (operation) {
-            case "point":
-            case "line":
-            case "circle":
-            case "entryPoint":
-            case "lineTangent":
-            case "circleTangent":
-            case "origin":
-            case "distance":
-              this.draw[`draw${operation[0].toUpperCase()}${operation.substring(1)}`]();
-              break;
-            case "chamfer":
-            case "round":
-            case "tangentialIO":
-              this.aids['drawAid'](operation);
-             break;
-            case "circleProfile":
-              this.draw['drawCircle']("circles");
-              break;
-            case "polygon":
-              this.aids['drawPolygon']("profile");
-              break;
-            case "translate":
-            case "rotate":
-            case "scale":
-            case "symmetry":
-              this.geometry.removeTemporal();
-              this.geometry.redraw();
-      
-              this.draw[`draw${operation[0].toUpperCase()}${operation.substring(1)}`]();
-              break;
-            default:
-              validOperation = false;
-              console.log(`Unknown operation ${operation}`);
-          }
-  
-          if (validOperation) {
-            this.cursor.clearAll();
-  
-            if (operation === "distance") {
-              this.setSelectCursor(this.selectRadius);
-            } else {
-              this.viewer.classList.add("drawCursor");
-            }
-          }
-        },
-        /**
-         * Pone el edigor de geometría en modo selección
-         * @param {('SEL'|'LINK'|'UNLINK')} mode
-         *
-        select: (mode) => {
-          this.selectedMode = mode;
-  
-          this.cursor.clearAll();
-          this.setSelectCursor(this.selectRadius);
-  
-          this.selector.setSelectMode(mode);
-        },
-        /**
-         * Pone el edigor de geometría en modo zoom
-         *
-        zoom: () => {
-          this.clearCursors();
-          this.viewer.classList.add("zoomInCursor");
-  
-          this.viewer.svgHandler.setZoomMode();
-        }
-      }; */
- /*    select = {
-        geometry: () => {
-          let selectedGeometry = [];
-          ["profile", "circles"].forEach(type => selectedGeometry.push(...this.select.geometryByLayerType(type)));
-      
-          return selectedGeometry;
-        },
-        elements: () => {
-          let selectedProfileGeometries = this.select.geometryByLayerType("profile");
-          selectedProfileGeometries = selectedProfileGeometries.reduce((acc, current) => {
-            acc.push(...(current.elements) ? current.elements : [current]);
-      
-            return acc;
-          }, []);
-      
-          let selectedCircleGeometries = this.select.geometryByLayerType("circles");
-      
-          return [...selectedProfileGeometries, ...selectedCircleGeometries];
-        },
-        geometryByLayerType: (type) => {
-          let layers = this.geometry.getLayersByType(type);
-      
-          let selectedGeometry = [];
-          layers.forEach(layer => {
-            selectedGeometry.push(...layer.getSelected());
-          });
-      
-          return selectedGeometry;
-        }
-      }
-    cursor = {
-        setSelect: (r)=>
-            {this.viewer.style.cursor = `url('data:image/svg+xml;utf8,<svg id="svg" xmlns="http://www.w3.org/2000/svg" version="1.1" width="${2*r}" height="${2*r}"><circle cx="${r}" cy="${r}" r="${r}" stroke-width="1" style="stroke: black; fill: red;"/></svg>') ${r} ${r}, pointer`},
-        removeSelect: () =>  this.viewer.style.cursor = "",
-        clearAll: ()=>{
-            this.cursor.removeSelect();
-            ["drawCursor", "zoomInCursor", "paneClickCursor"].forEach(c => this.viewer.classList.remove(c));
-            }
-        } */
+    // cursor = {
+    //     setSelect: (r)=>
+    //         {this.viewer.style.cursor = `url('data:image/svg+xml;utf8,<svg id="svg" xmlns="http://www.w3.org/2000/svg" version="1.1" width="${2*r}" height="${2*r}"><circle cx="${r}" cy="${r}" r="${r}" stroke-width="1" style="stroke: black; fill: red;"/></svg>') ${r} ${r}, pointer`},
+    //     removeSelect: () =>  this.viewer.style.cursor = "",
+    //     clearAll: ()=>{
+    //         this.cursor.removeSelect();
+    //         ["drawCursor", "zoomInCursor", "paneClickCursor"].forEach(c => this.viewer.classList.remove(c));
+    //         }
+    //     }
     //Se supone que aquí se llama al desconectar la página, pero en laa aplicaciones no parece que pase
     disconnectedCallback() {
     //hay que quitar los listeners... 

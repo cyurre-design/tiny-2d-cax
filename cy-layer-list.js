@@ -31,26 +31,33 @@ class CyLayerList extends HTMLElement {
     createTemplate() {
         return `
 <div id=show-layers>
-    <md-list >${this.createNewList()}
-    </md-list >
+    LAYERS <md-filled-button id="layer-add">ADD</md-filled-button><md-switch slot="end" selected id="layer-list-show"></md-switch>
+    ${this.createNewList()}
 </div>
 `}
+
     createNewList() {
-        const list = this.layers.reduce((out,ly) => (out + templateSingleLayer(ly)), '<md-list>') + '</md-list>';
+        const list = this.layers.reduce((out,ly) => (out + templateSingleLayer(ly)), '<md-list id="full-list">') + '</md-list>';
         return list; 
     }
     //Aquí recibimos el evento de que se quiere visualizar o tapar una capa, por ejemplo
     handleLayers = (e) => {     
-        const idn = e.target.id.split('-').pop();
-        const s = e.target.selected; //boolean
         //Canvasviewer debería ocultar si la capa es especial o no, aquí no se sabe
         //No metemos semántica aquí, simplemente informamos de que lo que se quier hacer (ocultar, etc...) y qué capa
+        const idn = e.target.id.split('-').pop();
+        const s = e.target.selected; //boolean
         this.dispatchEvent(new CustomEvent('layer-handle', {bubbles:true, composed:true, detail: {layer:idn, action: 'visibility', value:s}} ))
     }
     connectedCallback() {
         this.dom.innerHTML= this.createStyle() + this.createTemplate();
-        this.list = this.dom.querySelector('#show-layers');
+        this.list = this.dom.querySelector('#full-list');
         this.list.addEventListener('change', (e)=>this.handleLayers(e));
+        this.dom.querySelector('#layer-list-show').addEventListener('change', (e) => {
+            const v = this.list.querySelector('#full-list');
+            v.style.display = e.target.selected ? "block" : "none";
+        })
+        this.dom.querySelector('#layer-add').addEventListener('click',  (e) =>
+            this.dispatchEvent(new CustomEvent('layer-handle', {bubbles:true, composed:true, detail: {layer:undefined, action: 'create'}} )))
     }
     disconnectedCallback() {
     }
