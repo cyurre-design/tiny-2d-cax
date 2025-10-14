@@ -11,8 +11,6 @@ import {Circle} from '../cy-geometry/cy-geo-elements/cy-circle.js'
 import {Segment} from '../cy-geometry/cy-geo-elements/cy-segment.js'
 import {Arc} from '../cy-geometry/cy-geo-elements/cy-arc.js'
 import {Point, CutPoint} from '../cy-geometry/cy-geo-elements/cy-point.js'
-import { CommandManager} from './cy-layer-commands.js'
-
 
 export const canvasCSS = {
     pathColor: 'green',
@@ -123,11 +121,30 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     this.pointsTree = new RBush();
     this.blocksTree = new RBush();
     }
+        
+    /**
+     * @function toJSON y fromJSON, persistencia
+     * HAY 2 funcionalidades diferentes:
+     * 1.- salvar-restaurar el proyecto
+     * 2.- salvar o recuperar un proyecto (por ejemplo para añsdir figuras)
+     * En el segundo caso NO se usará toda la info @todo
+     */
+
     toJSON(){
         return {blocks:Object.fromEntries(this.blocks.entries()), points:(Object.fromEntries(this.points.entries())), layers: Object.fromEntries(this.layers.entries()),
             _activeLayerId: this._activeLayerId, nextBlockId:this.nextBlockId, nextLayerId: this.nextLayerId,
             pointsTree:this.pointsTree, blocksTree:this.blocksTree}
+        //console.log (JSON.stringify(this));
     }
+    static fromJSON(file){
+        const rawLayers = JSON.parse(file);
+        rawLayers.forEach(ly => {
+            const newLayer = this.addLayer(ly.name);
+            newLayer.addBlocks(deserialize(ly.blocks));
+        })   
+    }
+
+
     createStyle() {
         return`
         <style>
@@ -163,8 +180,6 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         Polygon.prototype.getRelevantPoints = function(){ return [new Point({x:this.cx, y:this.cy})].concat(this.segments.map(p=>(new Point({x:p.x0, y:p.y0}))))};
         Arc.prototype.getRelevantPoints     = function(){ return [new Point({x:this.cx, y:this.cy}),new Point({x:this.x1, y:this.y1}),new Point({x:this.x2, y:this.y2})]};
         Path.prototype.getRelevantPoints    = function(){ return (this.elements.map(el=>el.getRelevantPoints())).flat()};
-        // Gestión de do , undo , redo...
-        this.history = new CommandManager();
     }
     // disconnectedCallback(){
     //     //Aquí hay que quitar los listeners siendo formales
@@ -208,7 +223,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
  * @todo preguntar si realmente se quiere borrar !!! atton, al undo
  * además se podrían pasar los elementos a otra capa provisional?
  */
-    removeLayer(layerId) {
+    deleteLayer(layerId) {
         this.layers.delete(layerId);
     // shapes siguen existiendo pero pueden quedar "huérfanos"
     // → según diseño, podrías eliminarlos o moverlos a "default"
@@ -315,7 +330,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
      * @param {Number} id obtenido por interacción, selecci´on, etc...
      * @returns block borrado, @todo porque si no sirve mejor quitarlo
      */
-    removeBlock(id) {
+    deleteBlock(id) {
         //Hay que quitarlo del árbol!!!! Parece que hay un error, uso un hack de un blog
         this.blocksTree.remove(  {minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity, id:id }, (a, b) => a.id === b.id)
         //lo quito del map de bloques
@@ -485,7 +500,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         for (const [id, block] of blocks.entries()){
             if(block.selected){
                 //deleted.push(block);
-                this.removeBlock(id);
+                this.deleteBlock(id);
             }
         }
         this.draw();
@@ -600,25 +615,6 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     }
 
 
-    
-    /**
-     * @function serialice y deserialice, persistencia
-     */
-
-    serialice(){
-        //let out = '[';
-        //this.layers.forEach(ly => out += ly.serialice()); 
-        //out = out.slice(0,-1) + ']';
-        console.log (JSON.stringify(this));
-    }
-    deserialice(file){
-    //Aquí debe llegar el texto del fichero, que está en JSON
-        const rawLayers = JSON.parse(file);
-        rawLayers.forEach(ly => {
-            const newLayer = this.addLayer(ly.name);
-            newLayer.addBlocks(deserialize(ly.blocks));
-        })   
-    }
 
 
 }

@@ -1,8 +1,8 @@
+// -------------------------------------------------------
+// Command Manager con soporte mixto y compuesto
+// -------------------------------------------------------
 
-// ------------------------
-// Command Manager con soporte de composite
-// ------------------------
-class CommandManager {
+export class CommandManager {
   constructor(project) {
     this.project = project;
     this.undoStack = [];
@@ -10,66 +10,149 @@ class CommandManager {
   }
 
   executeCommand(command) {
-    let patches = [];
-
-    if (command.type === "action") {
-      patches.push(this.#applyAndDiff(command));
+    if (command.execute && command.undo) {
+      command.execute(this.project);
+      this.undoStack.push(command);
+      this.redoStack = [];
+      return;
     }
 
-    if (command.type === "composite") {
-      const subPatches = command.commands.map(cmd => this.#applyAndDiff(cmd));
-      patches.push(...subPatches);
+    if (command.commands) {
+      // Composite command
+      command.execute(this.project);
+      this.undoStack.push(command);
+      this.redoStack = [];
+      return;
     }
 
+    // Automático (snapshot/restore)
+    const patches = this.#applyAndDiff(command);
     this.undoStack.push(patches);
     this.redoStack = [];
   }
 
   #applyAndDiff(command) {
-    const target = this.project.shapes.get(command.targetId);
-    const before = JSON.parse(JSON.stringify(target));
+    const target =
+      command.scope === "layer"
+        ? this.project.layers.get(command.targetId)
+        : this.project.shapes.get(command.targetId);
 
+    const before = target.snapshot();
     command.actionFn(target);
+    const after = target.snapshot();
 
-    const after = JSON.parse(JSON.stringify(target));
     const patch = jsonpatch.compare(before, after);
     const inverse = jsonpatch.compare(after, before);
 
-    return { targetId: command.targetId, patch, inverse };
+    return { scope: command.scope, targetId: command.targetId, patch, inverse };
+  }
+
+  #applyPatchRecord(record, useInverse) {
+    const target =
+      record.scope === "layer"
+        ? this.project.layers.get(record.targetId)
+        : this.project.shapes.get(record.targetId);
+
+    const snapshot = target.snapshot();
+    const patch = useInverse ? record.inverse : record.patch;
+    const newSnapshot = jsonpatch.applyPatch({ ...snapshot }, patch).newDocument;
+    target.restore(newSnapshot);
   }
 
   undo() {
-    if (this.undoStack.length === 0) return;
-    const patches = this.undoStack.pop();
+    if (!this.undoStack.length) return;
+    const record = this.undoStack.pop();
 
-    [...patches].reverse().forEach(p => {
-      const target = this.project.shapes.get(p.targetId);
-      jsonpatch.applyPatch(target, p.inverse);
-    });
+    if (record.undo) record.undo(this.project);
+    else if (record.commands) record.undo(this.project); // composite
+    else this.#applyPatchRecord(record, true);
 
-    this.redoStack.push(patches);
+    this.redoStack.push(record);
   }
 
   redo() {
-    if (this.redoStack.length === 0) return;
-    const patches = this.redoStack.pop();
+    if (!this.redoStack.length) return;
+    const record = this.redoStack.pop();
 
-    patches.forEach(p => {
-      const target = this.project.shapes.get(p.targetId);
-      jsonpatch.applyPatch(target, p.patch);
-    });
+    if (record.execute) record.execute(this.project);
+    else if (record.commands) record.execute(this.project); // composite
+    else this.#applyPatchRecord(record, false);
 
-    this.undoStack.push(patches);
+    this.undoStack.push(record);
   }
 }
 
-// ------------------------
-// Helpers para comandos
-// ------------------------
-function makeCommand(targetId, actionFn) {
-  return { type: "action", targetId, actionFn };
+// -------------------------------------------------------
+// Factories
+// -------------------------------------------------------
+
+// Automático
+function makeCommand(targetId, scope, actionFn) {
+  return { scope, targetId, actionFn };
 }
 
-function makeCompositeCommand(commands) {
-  return { type: "composite", commands };
+// Explícitos
+function makeCreateShapeCommand(type, x, y, layerId) {
+  let createdId = null;
+  return {
+    execute(project) {
+      const shape = project.addShape(type, x, y, layerId);
+      createdId = shape.id;
+    },
+    undo(project) {
+      if (createdId) project.deleteShape(createdId);
+    },
+  };
+}
+
+function makeDeleteShapeCommand(shapeId) {
+  let snapshot = null;
+  return {
+    execute(project) {
+      const shape = project.shapes.get(shapeId);
+      if (!shape) throw new Error("Shape inexistente");
+      snapshot = shape.toJSON();
+      project.deleteShape(shapeId);
+    },
+    undo(project) {
+      const shape = Shape.fromJSON(snapshot);
+      project.shapes.set(shape.id, shape);
+    },
+  };
+}
+
+// Composite
+function makeCompositeCommand(commands, description = "Composite") {
+  return {
+    description,
+    commands,
+    execute(project) {
+      for (const cmd of commands) {
+        if (cmd.execute) cmd.execute(project);
+        else {
+          // automático
+          const target =
+            cmd.scope === "layer"
+              ? project.layers.get(cmd.targetId)
+              : project.shapes.get(cmd.targetId);
+          cmd.before = target.snapshot();
+          cmd.actionFn(target);
+          cmd.after = target.snapshot();
+        }
+      }
+    },
+    undo(project) {
+      // deshacer en orden inverso
+      [...commands].reverse().forEach(cmd => {
+        if (cmd.undo) cmd.undo(project);
+        else {
+          const target =
+            cmd.scope === "layer"
+              ? project.layers.get(cmd.targetId)
+              : project.shapes.get(cmd.targetId);
+          target.restore(cmd.before);
+        }
+      });
+    },
+  };
 }

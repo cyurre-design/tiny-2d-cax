@@ -7,6 +7,8 @@ import './cy-canvas-layer-draft.js';
 import CyCanvasHandler from './cy-canvas-handler.js';
 import CyInteractiveDraw from '../cy-draw-interactive/cy-interactive-draw.js';
 import {createDrawElement} from '../cy-geometry/cy-geometry-basic-elements.js';
+import {CommandManager } from './cy-command-manager.js';
+
 
 //En este componente agrupamos la gestión de los varios canvas que tenemos
 //layerDraw por su parte virtualiza las capas de dibujo en una sola capa física
@@ -102,7 +104,11 @@ export default class CyCanvasViewer extends HTMLElement {
         /**@listens zoom-end cambios en la relación window - viewport , o sea, coordenadas mundo y bitamp */
         this.addEventListener('zoom_end', e => 
             this._redrawLayers());
-        
+        //--------------------------------------
+        // hasta aquí son comandos que no se recuperan, son intrínsecos
+        // Inicializamos los listeners para los comandos que luego se podrán deshacer
+        this.history = new CommandManager(this.layerDraw); // o this....
+
         /**@listens set-origin cuando se ejecuta de verdad el comando definido de forma interactiva */
         //Los comandos en realidad no se ejecutan al accionar el menú sino cuando se dan por concluidas las partes interactivas
         this.addEventListener('set-origin', e=>{
@@ -110,11 +116,12 @@ export default class CyCanvasViewer extends HTMLElement {
             this.layerDraw.setOrigin(-e.detail.data.x0, -e.detail.data.y0);
             this._redrawLayers();
         });
-        /**@listens new-block Aquí es donde se recibe la peición de insertar geometría
+        /**@listens new-block Aquí es donde se recibe la petición de insertar geometría
          * tras terminar la parte interactiva !!! */
         this.addEventListener('new-block', e=>{
             this.layerDraft.clear();
             const blocks = createDrawElement(e.detail.type, e.detail.data);
+            this.history.executeCommand()
             this.layerDraw.addBlocks(undefined, blocks);  //Ya añade los puntos también en su propio tree
             this.layerDraw.draw();
         });
