@@ -1,26 +1,9 @@
-//import "./cy-elements/cy-config-dialog.js"
-//import "./cy-input-drawing-data.js"
-//import "./cy-elements/cy-iso-text-editor.js";
-//import "./cy-elements/cy-seven-segment.js";
 import "./cy-elements/cy-file-loader.js"
 import './cy-canvas-layers/cy-canvas-viewer.js';
 import "./cy-layer-list.js"
 import './cy-input-data.js';
 import {findAllCuts} from './cy-geometry/cy-geometry-library.js'
-//import {createDrawElement} from './cy-geometry/cy-geometry-basic-elements.js'
-//import {test_arcsweep} from './cy-geometry/cy-geometry-basic-elements.js'
-//import FgSvgGeometry from './cy-svg-geometry.js';
-//import FgSvgHandler from '/scripts/fg/lib/graph/svg/fg-svg-handler.js';
-//import DrawSupport from './draw-interactive/fg-draw-support.js';
-//import GeometrySelection from './draw-interactive/fg-geom-select.js';
-//import FgDrawProfile from './draw-interactive/fg-draw-profile.js';
-//import findDrillPattern from './lib/fg-geometry/fg-find-drill-pattern.js';
-//import FgDrawGeoAids from './draw-interactive/fg-draw-geo-aids.js';
-//Los parsers
-//import FgParserDxfGeometry from "./parsers/fg-parser-dxf-geometry.js";
-//import * as iso from "./fg-parser-iso-geometry.js"; //retocada, no me gustaba la implementación
-//import FgParserIsoGeometry from "./parsers/fg-parser-iso-geometry.js";
-//import loadSvg from "./parsers/fg-parser-svg.js";
+
 const templateMainMenu =`
   <div  id="hidden-row" >
     <cy-file-loader id="cy-hidden-file"></cy-file-loader>
@@ -305,7 +288,7 @@ class cyCad1830App extends HTMLElement {
         this.dom.querySelector('#cy-hidden-file').addEventListener('file-loaded', (evt)=>{
             //evt.detail.file;
             evt.detail.data.geometry.layers.forEach((ly,ix)=>{
-                const newLayer = this.viewer.layerDraw.addLayeer(evt.detail.name.split('.')[0] +'_'+ ix);
+                const newLayer = this.viewer.layerDraw.addLayer(evt.detail.name.split('.')[0] +'_'+ ix);
                 newLayer.addBlocks(ly.paths)
             });
             this.viewer.fit(); //se podría hacer solo con las visibles o así...
@@ -316,9 +299,6 @@ class cyCad1830App extends HTMLElement {
 //--------------Gestión de CAPAS, LAYERS
         //Aunque el evento va y viene, se pueden generar capas por proceso diferente al load
         //si se crea una capa, por ejemplo al leer un fichero, generamos su control de ver/etc..
-        this.viewer.addEventListener('new-layer', (evt)=>{
-          this.layerView.setAttribute('layer-name',evt.detail.name);
-        });
         //Si en la lista de capas se desea ver/no ver, etc..., viene aquí
         //y si se crea en la propia lista también
         //El recorrido cuando viene de lista es que primero se concentra aquí, se manda crear
@@ -329,23 +309,30 @@ class cyCad1830App extends HTMLElement {
           const e = data.detail;
           if(e.action === 'visibility')
             this.viewer.setVisible(e.layer, e.value);
-          else if(e.action === 'create'){
-            this.dataLayer0 = this.viewer.layerDraw.addLayer(); //, nombre de momento automático faltarían los estilos
-          }
+          else if(e.action === 'create')
+            this.viewer.dispatchEvent(new CustomEvent('create-layer', {bubbles:true, composed:true, detail: data.detail}))
+        })
+        this.viewer.addEventListener('layer-handle', (e)=>{
+          if(e.detail.action === 'created')
+            this.layerView.addLayer(e.detail.name);
+          else if(e.detail.action === 'deleted')
+            this.layerView.deleteLayer( e.detail.name);
         })
 //-----------------UNDO, REDO
-        this.dom.querySelector('#undo-redo').addEventListener('click',(evt)=>
-          this.viewer.layerDraw.commandManager(evt.target.id))
+        this.dom.querySelector('#undo-redo').addEventListener('click',(evt)=>{
+          this.viewer.dispatchEvent(new CustomEvent('undo-redo',  {bubbles:true, composed:true, detail:{command:evt.target.id}}))
+        })
 //-----------------CAPAS INICIALES
         //Estas capas las generamos de oficio
         //Los tratamientos son aditivos y los atributos ascii
         //El setAttribute funciona incluso antes del connected, debemos esperar (async)
         customElements.whenDefined('cy-layer-list').then(() => {
-          this.layerView.setAttribute('layer-name', 'axes'); //Estas tienen gestión interna especial
-          this.layerView.setAttribute('layer-name', 'grid'); //Estas tienen gestión interna especial
+          this.layerView.addLayer( 'axes'); //Estas tienen gestión interna especial
+          this.layerView.addLayer( 'grid'); //Estas tienen gestión interna especial
 
           //Al crearla se debe poner activa ella sola
-          this.dataLayer0 = this.viewer.layerDraw.addLayer(); //faltarían los estilos
+          this.viewer.dispatchEvent(new CustomEvent('create-layer', {bubbles:true, composed:true, detail: {layer:undefined, action: 'create'}}))
+          //this.dataLayer0 = this.viewer.layerDraw.addLayer(); //faltarían los estilos
         });
     }
     handleKeys = (e)=>{

@@ -107,8 +107,26 @@ export default class CyCanvasViewer extends HTMLElement {
         //--------------------------------------
         // hasta aquí son comandos que no se recuperan, son intrínsecos
         // Inicializamos los listeners para los comandos que luego se podrán deshacer
-        this.history = new CommandManager(this.layerDraw); // o this....
+        this.manager = new CommandManager(this.layerDraw); // o this....
 
+        //-----------------------------------------
+        /**@listens create-layer
+         * Aquí controlamos las capas y el do/undo/redo
+         */
+
+        this.addEventListener('create-layer', e => {
+            const theCommand = this.manager.makeCommand({
+            execute(p) {
+                this.id = p.addLayer(this.name);
+                this.name = p.layers.get(this.id).name;
+            },
+            undo(p) {
+                if (this.id) p.deleteLayer(this.id);
+            },
+            });
+            this.manager.executeCommand(theCommand);
+            //this.layerDraw.addLayer( e.layer );
+        })
         /**@listens set-origin cuando se ejecuta de verdad el comando definido de forma interactiva */
         //Los comandos en realidad no se ejecutan al accionar el menú sino cuando se dan por concluidas las partes interactivas
         this.addEventListener('set-origin', e=>{
@@ -137,6 +155,16 @@ export default class CyCanvasViewer extends HTMLElement {
         //Evento de cambio de escala, suele venir con el zoom, después. Lo habilito para que el dispatch siguiente lo dispare
         this.layerAxes.addEventListener('scale-change', (e) =>  {
             this.layerDraw.scaleChange(e.detail.scale)
+        })
+        /**undo-redo
+         * 
+         */
+        this.addEventListener('undo-redo', evt => {
+            if(evt.detail.command === 'undo'){
+                this.manager.undo();
+            } else if(evt.detail.command === 'redo'){
+                this.manager.redo();
+            }
         })
         //Hasta que no he puesto el listener de zoom-end no inicializo los canvas y extents
          /**

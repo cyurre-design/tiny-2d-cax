@@ -1,7 +1,39 @@
-// -------------------------------------------------------
-// Command Manager con soporte mixto y compuesto
-// -------------------------------------------------------
 
+
+//---------------- revisar
+  // deleteShape(id) {
+  //   const shape = this.shapes.get(id);
+  //   if (!shape) return;
+  //   this.shapes.delete(id);
+  //   for (const layer of this.layers.values()) {
+  //     if (layer.shapes.has(id)) layer.removeShape(id);
+  //   }
+  // }
+
+  // toJSON() {
+  //   return {
+  //     name: this.name,
+  //     layers: Array.from(this.layers.values()).map(l => l.toJSON()),
+  //     nextId: this._nextId,
+  //   };
+  // }
+
+  // static fromJSON(data) {
+  //   const project = new Project(data.name);
+  //   project._nextId = data.nextId;
+  //   for (const l of data.layers) {
+  //     const layer = Layer.fromJSON(l);
+  //     project.layers.set(layer.id, layer);
+  //     for (const s of layer.shapes.values()) {
+  //       project.shapes.set(s.id, s);
+  //     }
+  //   }
+  //   return project;
+  // }
+
+// =======================
+// Command Manager (monoproyecto)
+// =======================
 export class CommandManager {
   constructor(project) {
     this.project = project;
@@ -10,149 +42,104 @@ export class CommandManager {
   }
 
   executeCommand(command) {
-    if (command.execute && command.undo) {
-      command.execute(this.project);
-      this.undoStack.push(command);
-      this.redoStack = [];
-      return;
-    }
-
-    if (command.commands) {
-      // Composite command
-      command.execute(this.project);
-      this.undoStack.push(command);
-      this.redoStack = [];
-      return;
-    }
-
-    // Automático (snapshot/restore)
-    const patches = this.#applyAndDiff(command);
-    this.undoStack.push(patches);
+    command.execute();
+    this.undoStack.push(command);
     this.redoStack = [];
   }
 
-  #applyAndDiff(command) {
-    const target =
-      command.scope === "layer"
-        ? this.project.layers.get(command.targetId)
-        : this.project.shapes.get(command.targetId);
-
-    const before = target.snapshot();
-    command.actionFn(target);
-    const after = target.snapshot();
-
-    const patch = jsonpatch.compare(before, after);
-    const inverse = jsonpatch.compare(after, before);
-
-    return { scope: command.scope, targetId: command.targetId, patch, inverse };
-  }
-
-  #applyPatchRecord(record, useInverse) {
-    const target =
-      record.scope === "layer"
-        ? this.project.layers.get(record.targetId)
-        : this.project.shapes.get(record.targetId);
-
-    const snapshot = target.snapshot();
-    const patch = useInverse ? record.inverse : record.patch;
-    const newSnapshot = jsonpatch.applyPatch({ ...snapshot }, patch).newDocument;
-    target.restore(newSnapshot);
-  }
-
   undo() {
-    if (!this.undoStack.length) return;
-    const record = this.undoStack.pop();
-
-    if (record.undo) record.undo(this.project);
-    else if (record.commands) record.undo(this.project); // composite
-    else this.#applyPatchRecord(record, true);
-
-    this.redoStack.push(record);
+    const cmd = this.undoStack.pop();
+    if (!cmd) return;
+    cmd.undo();
+    this.redoStack.push(cmd);
   }
 
   redo() {
-    if (!this.redoStack.length) return;
-    const record = this.redoStack.pop();
+    const cmd = this.redoStack.pop();
+    if (!cmd) return;
+    cmd.execute();
+    this.undoStack.push(cmd);
+  }
 
-    if (record.execute) record.execute(this.project);
-    else if (record.commands) record.execute(this.project); // composite
-    else this.#applyPatchRecord(record, false);
+  makeCommand(spec) {
+    const project = this.project;
 
-    this.undoStack.push(record);
+    if (Array.isArray(spec)) {
+      return {
+        execute: () => spec.forEach(c => c.execute()),
+        undo: () => [...spec].reverse().forEach(c => c.undo()),
+      };
+    }
+
+    if (spec.targetId && spec.actionFn) {
+      const { targetId, scope = "shape", actionFn } = spec;
+      return {
+        execute() {
+          const target =
+            scope === "layer" ? project.layers.get(targetId) : project.shapes.get(targetId);
+          this.before = target.snapshot();
+          actionFn(target);
+          this.after = target.snapshot();
+        },
+        undo() {
+          const target =
+            scope === "layer" ? project.layers.get(targetId) : project.shapes.get(targetId);
+          if (this.before) target.restore(this.before);
+        },
+      };
+    }
+
+    if (typeof spec.execute === "function" && typeof spec.undo === "function") {
+      return {
+        execute: () => spec.execute(project),
+        undo: () => spec.undo(project),
+      };
+    }
+
+    throw new Error("Formato de comando no reconocido");
   }
 }
+/* 
+// =======================
+// Ejemplo de uso
+// =======================
 
-// -------------------------------------------------------
-// Factories
-// -------------------------------------------------------
+// Crear un proyecto
+const project = new Project("Demo CAD");
+const layer = project.addLayer("Capa1", "#ff0000");
 
-// Automático
-function makeCommand(targetId, scope, actionFn) {
-  return { scope, targetId, actionFn };
-}
+// Crear el CommandManager
+const manager = new CommandManager(project);
 
-// Explícitos
-function makeCreateShapeCommand(type, x, y, layerId) {
-  let createdId = null;
-  return {
-    execute(project) {
-      const shape = project.addShape(type, x, y, layerId);
-      createdId = shape.id;
-    },
-    undo(project) {
-      if (createdId) project.deleteShape(createdId);
-    },
-  };
-}
+// Crear una figura
+const createCmd = manager.makeCommand({
+  execute(p) {
+    const shape = p.addShape("Circle", 10, 10, 5, layer.id);
+    this.id = shape.id;
+  },
+  undo(p) {
+    if (this.id) p.deleteShape(this.id);
+  },
+});
 
-function makeDeleteShapeCommand(shapeId) {
-  let snapshot = null;
-  return {
-    execute(project) {
-      const shape = project.shapes.get(shapeId);
-      if (!shape) throw new Error("Shape inexistente");
-      snapshot = shape.toJSON();
-      project.deleteShape(shapeId);
-    },
-    undo(project) {
-      const shape = Shape.fromJSON(snapshot);
-      project.shapes.set(shape.id, shape);
-    },
-  };
-}
+manager.executeCommand(createCmd);
 
-// Composite
-function makeCompositeCommand(commands, description = "Composite") {
-  return {
-    description,
-    commands,
-    execute(project) {
-      for (const cmd of commands) {
-        if (cmd.execute) cmd.execute(project);
-        else {
-          // automático
-          const target =
-            cmd.scope === "layer"
-              ? project.layers.get(cmd.targetId)
-              : project.shapes.get(cmd.targetId);
-          cmd.before = target.snapshot();
-          cmd.actionFn(target);
-          cmd.after = target.snapshot();
-        }
-      }
-    },
-    undo(project) {
-      // deshacer en orden inverso
-      [...commands].reverse().forEach(cmd => {
-        if (cmd.undo) cmd.undo(project);
-        else {
-          const target =
-            cmd.scope === "layer"
-              ? project.layers.get(cmd.targetId)
-              : project.shapes.get(cmd.targetId);
-          target.restore(cmd.before);
-        }
-      });
-    },
-  };
-}
+// Mover figura
+const moveCmd = manager.makeCommand({
+  targetId: createCmd.id,
+  actionFn: s => s.move(20, 0),
+});
+manager.executeCommand(moveCmd);
+
+// Deshacer/Rehacer
+manager.undo(); // deshace movimiento
+manager.redo(); // rehace movimiento
+
+// Serializar proyecto
+const saved = JSON.stringify(project.toJSON(), null, 2);
+console.log(saved);
+
+// Cargar desde JSON
+const loaded = Project.fromJSON(JSON.parse(saved));
+console.log("Proyecto restaurado:", loaded);
+ */

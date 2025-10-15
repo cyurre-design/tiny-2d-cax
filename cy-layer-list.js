@@ -59,22 +59,26 @@ class CyLayerList extends HTMLElement {
         this.dom.querySelector('#layer-add').addEventListener('click',  (e) =>
             this.dispatchEvent(new CustomEvent('layer-handle', {bubbles:true, composed:true, detail: {layer:undefined, action: 'create'}} )))
     }
+    addLayer(name){
+        this.layers.push(name);
+        this.layers = [...new Set(this.layers)]; //Quito repes just in case
+        this.list.innerHTML = this.createNewList();
+    }
+    deleteLayer(name){
+        const ix = this.layers.findIndex( v => v.name === name);
+        this.layers.splice(ix,1);
+        this.list.innerHTML = this.createNewList();
+    }
     disconnectedCallback() {
     }
     static get observedAttributes () {
-        return ['layer-name'];
+        return [];
       }   
     attributeChangedCallback(name, oldVal, newVal) {
-    switch(name) {
-        case 'layer-name':{
-            this.layers.push(newVal);
-            this.layers = [...new Set(this.layers)]; //Quito repes just in case
-            this.list.innerHTML = this.createNewList();
+        switch(name) {
+            default:
+                break;
         }
-        break
-        default:
-            break;
-    }
     }
 
 }

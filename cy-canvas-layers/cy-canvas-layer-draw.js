@@ -213,7 +213,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         const lname = name !== undefined ? name : `Layer-${theId}`;
         const layer = new Layer(lyId, lname, style, true);
         this.layers.set(lyId, layer);
-        this.dispatchEvent(new CustomEvent('new-layer', {bubbles: true, composed:true, detail:{name:lname}})); 
+        this.dispatchEvent(new CustomEvent('layer-handle', {bubbles: true, composed:true, detail:{action:'created', name:lname}})); 
         this._activeLayerId = lyId;
         return lyId;
     }
@@ -224,7 +224,9 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
  * además se podrían pasar los elementos a otra capa provisional?
  */
     deleteLayer(layerId) {
+        const layer = this.layers.get(layerId)
         this.layers.delete(layerId);
+        this.dispatchEvent(new CustomEvent('layer-handle', {bubbles: true, composed:true, detail:{action:'deleted', name:layer.name}})); 
     // shapes siguen existiendo pero pueden quedar "huérfanos"
     // → según diseño, podrías eliminarlos o moverlos a "default"
     }
