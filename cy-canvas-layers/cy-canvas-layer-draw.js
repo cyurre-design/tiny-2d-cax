@@ -300,6 +300,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     addBlocks(layerId = this._activeLayerId, paths){  //pueden ser circles o polygons también...
         if(paths === undefined) {console.log('tipo de bloque no visualizzable'); return;}
         let ps = Array.isArray(paths)?paths:[paths];
+        const ids = [];
         //Primero pongo la info de pintar y un id, importante. La parte del tree es de alguna manera opcional
         ps.forEach(b=>{
             if((b.type !== 'point') && (b.type!=='cut-point')){
@@ -309,7 +310,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
                 //No merece la pena, mejor cada layer un color (varios según estado, etc...)
                 //b.style = Object.assign({}, layer.style);     //copia, para poder tocarlos de forma independiente
                 this.blocks.set(b.id, b);                   //La mete en el map de bloques
-
+                ids.push(b.id)
 
                 this.layers.get(b.layerId).blocks.add(b.id);    //la mete en el map de la capa que sea
                 this.blocksTree.insert({minX:b.bbox.x0,minY:b.bbox.y0,maxX:b.bbox.x1,maxY:b.bbox.y1, id:b.id})
@@ -326,6 +327,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
                 })
             }
         })
+        return ids;
     }
     /**
      * 

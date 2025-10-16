@@ -139,9 +139,20 @@ export default class CyCanvasViewer extends HTMLElement {
         this.addEventListener('new-block', e=>{
             this.layerDraft.clear();
             const blocks = createDrawElement(e.detail.type, e.detail.data);
-            this.history.executeCommand()
-            this.layerDraw.addBlocks(undefined, blocks);  //Ya añade los puntos también en su propio tree
-            this.layerDraw.draw();
+            const theCommand = this.manager.makeCommand({
+            execute(p) {
+                this.blocks = blocks;
+                this.ids = p.addBlocks(undefined, this.blocks); //array...?
+                p.draw();
+            },
+            undo(p) {
+                if (this.ids) this.ids.forEach(id=>p.deleteBlock(id));
+                p.draw();
+            },
+            });
+            this.manager.executeCommand(theCommand);
+            //this.layerDraw.addBlocks(undefined, blocks);  //Ya añade los puntos también en su propio tree
+            //this.layerDraw.draw();
         });
         this.addEventListener('translate-selection',  (evt)=>
             this.layerDraw.translateSelected(evt.detail.data));
