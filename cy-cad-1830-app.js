@@ -3,6 +3,7 @@ import './cy-canvas-layers/cy-canvas-viewer.js';
 import "./cy-layer-list.js"
 import './cy-input-data.js';
 import {findAllCuts} from './cy-geometry/cy-geometry-library.js'
+import {CommandManager } from './cy-canvas-layers/cy-command-manager.js';
 
 const templateMainMenu =`
   <div  id="hidden-row" >
@@ -227,113 +228,156 @@ const style = `
 
 class cyCad1830App extends HTMLElement {
 
-    constructor() {
+  constructor() {
       super();
 
       this.dom = this.attachShadow({ mode: 'open' });
       this.dom.innerHTML = template + style;
     }
-
-    connectedCallback(){
-      this.viewer = this.dom.querySelector("#viewer");
-      const menus = ['file', 'zoom', /*'select',*/ 'draw', 'support', 'transform' ]
-      menus.forEach(m => this[m+'MenuEl'] = this.dom.querySelector(`#${m}-menu`));
-      menus.forEach(m => {
-          const el = this.dom.querySelector(`#${m}-menu-anchor`);
-          el.addEventListener('click',  ()=> this[`${m}MenuEl`].open = !this[`${m}MenuEl`].open);
-      })
-
-      menus.forEach(m => this[`${m}MenuEl`].addEventListener('close-menu', (e) => this.handleMenus(e)));
-
-        //Almacenamiento de los datos manuales entre entradas y salidas de menus.
-      //Pongo defaults (podrían ser de un JSON, TODO)
-      //Uso la nomenclatura de variables de los componentes
-      this.dataStore  = {
-        circle:{
-          "data-r" : 10
-        },
-        poly:{
-          "data-edges" : 4,
-          "data-subType" : 'R'
-        },
-        segment:{
-          "data-d": 500,
-          "data-a": 30
-        },
-        arc:{
-          "data-r" : 100,
-          "data-a" : 45
-        },
-        symmetry:{
-          "data-a" : 45
-        }
+    /**
+     * @method
+     */
+  createLayer = (name = undefined, data = undefined) => {
+      const theCommand = this.manager.makeCommand({
+          execute(p, a) {
+              this.id = p.addLayer(name || this.name);
+              const layer = p.layers.get(this.id);
+              this.name = layer.name;
+              a.viewer.layerCommands._redrawLayers();
+              a.layerView.addLayer(JSON.stringify(layer));
+              return layer;
+          },
+          undo(p,a) {
+              if (this.id) p.deleteLayer(this.id);
+              a.layerView.deleteLayer(this.name);
+          },
+      });
+      return this.manager.executeCommand(theCommand);
       }
 
-//-------------------INPUT DATA
-      //Interactividad entre parte izquierda, datos manuales y ratón.
-      this.mData = this.dom.querySelector('#manual-data');
-      this.viewer.addEventListener('pos',(e)=>this.mData.update(e.detail));
-      this.mData.addEventListener('input-data', (e) =>
-          this.viewer.interactiveDrawing.updateData(e.detail));
-      this.mData.addEventListener('input-click', (e) => {
-          const type = e.detail.split('-')[0]; //submenu, data
-          if(type === 'data')
-            this.viewer.interactiveDrawing.updateData(e.detail);
-          else if(type === 'submenu')
-            this.handleSubmenu(e.detail)
-          });
-        
+  connectedCallback(){
+    this.viewer = this.dom.querySelector("#viewer");
+    this.manager = new CommandManager(this.viewer.layerDraw, this); // o this....
+
+    //--------------MENUS
+    const menus = ['file', 'zoom', /*'select',*/ 'draw', 'support', 'transform' ]
+    menus.forEach(m => this[m+'MenuEl'] = this.dom.querySelector(`#${m}-menu`));
+    menus.forEach(m => {
+        const el = this.dom.querySelector(`#${m}-menu-anchor`);
+        el.addEventListener('click',  ()=> this[`${m}MenuEl`].open = !this[`${m}MenuEl`].open);
+    })
+
+    menus.forEach(m => this[`${m}MenuEl`].addEventListener('close-menu', (e) => this.handleMenus(e)));
+
+    //Almacenamiento de los datos manuales entre entradas y salidas de menus.
+  //Pongo defaults (podrían ser de un JSON, TODO)
+  //Uso la nomenclatura de variables de los componentes
+    this.dataStore  = {
+      circle:{
+        "data-r" : 10
+      },
+      poly:{
+        "data-edges" : 4,
+        "data-subType" : 'R'
+      },
+      segment:{
+        "data-d": 500,
+        "data-a": 30
+      },
+      arc:{
+        "data-r" : 100,
+        "data-a" : 45
+      },
+      symmetry:{
+        "data-a" : 45
+      }
+    }
+
+    //-------------------INPUT DATA
+    //Interactividad entre parte izquierda, datos manuales y ratón.
+    this.mData = this.dom.querySelector('#manual-data');
+    this.viewer.addEventListener('pos',(e)=>this.mData.update(e.detail));
+    this.mData.addEventListener('input-data', (e) =>
+        this.viewer.interactiveDrawing.updateData(e.detail));
+    this.mData.addEventListener('input-click', (e) => {
+        const type = e.detail.split('-')[0]; //submenu, data
+        if(type === 'data')
+          this.viewer.interactiveDrawing.updateData(e.detail);
+        else if(type === 'submenu')
+          this.handleSubmenu(e.detail)
+        });
+    
 
 //-----------------LOAD, FILE
-        this.dom.querySelector('#cy-hidden-file').addEventListener('file-loaded', (evt)=>{
-            //evt.detail.file;
-            evt.detail.data.geometry.layers.forEach((ly,ix)=>{
-                const newLayer = this.viewer.layerDraw.addLayer(evt.detail.name.split('.')[0] +'_'+ ix);
-                newLayer.addBlocks(ly.paths)
-            });
-            this.viewer.fit(); //se podría hacer solo con las visibles o así...
-            //this.viewer.redraw();
+    this.dom.querySelector('#cy-hidden-file').addEventListener('file-loaded', (evt)=>{
+        //evt.detail.file;
+        evt.detail.data.geometry.layers.forEach((ly,ix)=>{
+            const newLayer = this.viewer.layerDraw.addLayer(evt.detail.name.split('.')[0] +'_'+ ix);
+            newLayer.addBlocks(ly.paths)
         });
-        this.dom.addEventListener('keyup',this.handleKeys,true);
+        this.viewer.fit(); //se podría hacer solo con las visibles o así...
+        //this.viewer.redraw();
+    });
+    this.dom.addEventListener('keyup',this.handleKeys,true);
 
 //--------------Gestión de CAPAS, LAYERS
-        //Aunque el evento va y viene, se pueden generar capas por proceso diferente al load
-        //si se crea una capa, por ejemplo al leer un fichero, generamos su control de ver/etc..
-        //Si en la lista de capas se desea ver/no ver, etc..., viene aquí
-        //y si se crea en la propia lista también
-        //El recorrido cuando viene de lista es que primero se concentra aquí, se manda crear
-        //en layerdraw y el propio proceso debe volver aquí y de aquí vuelve a la lista
-        //rebuscado pero por separar
-        this.layerView = this.dom.querySelector('#layer-view');
-        this.layerView.addEventListener('layer-handle', (data)=>{
-          const e = data.detail;
-          if(e.action === 'visibility')
-            this.viewer.setVisible(e.layer, e.value);
-          else if(e.action === 'create')
-            this.viewer.dispatchEvent(new CustomEvent('create-layer', {bubbles:true, composed:true, detail: data.detail}))
-        })
-        this.viewer.addEventListener('layer-handle', (e)=>{
-          if(e.detail.action === 'created')
-            this.layerView.addLayer(e.detail.name);
-          else if(e.detail.action === 'deleted')
-            this.layerView.deleteLayer( e.detail.name);
-        })
+    //Aunque el evento va y viene, se pueden generar capas por proceso diferente al load
+    //si se crea una capa, por ejemplo al leer un fichero, generamos su control de ver/etc..
+    //Si en la lista de capas se desea ver/no ver, etc..., viene aquí
+    //y si se crea en la propia lista también
+    //El recorrido cuando viene de lista es que primero se concentra aquí, se manda crear
+    //en layerdraw y el propio proceso debe volver aquí y de aquí vuelve a la lista
+    //rebuscado pero por separar
+    this.layerView = this.dom.querySelector('#layer-view');
+    this.layerView.addEventListener('layer-handle', (data)=>{
+      const e = data.detail;
+      if(e.action === 'visibility')
+        this.viewer.layerCommands.setVisible(e.layer, e.value);
+      else if(e.action === 'create'){
+        const layer = this.createLayer(e.layer);    //de momento es siempre undefined por el modo de trabajo
+        //this.viewer.layerCommands._redrawLayers();
+        //this.layerView.addLayer(JSON.stringify(layer));
+      } else if(e.action === 'delete'){
+        this.viewer.layerCommands.deleteLayer(e.layer);    //de momento es siempre undefined por el modo de trabajo
+        this.viewer.layerCommands._redrawLayers();
+      } else if(e.action === 'set-style')
+        this.viewer.layerCommands.setStyle(e.layerId, e.value)
+
+    })
+    /**
+     * @listens layer-handle que viene de layerDraw, la estructura de datos
+     * me paso todo porque cuando cambio el nombre. el viejo ya no vale y necesito el id o similar
+     */
+    this.viewer.addEventListener('layer-handle', (e)=>{
+      if(e.detail.action === 'created')
+        this.layerView.addLayer(e.detail.layer);
+      else if(e.detail.action === 'deleted')
+        this.layerView.deleteLayer( e.detail.layer);
+    })
 //-----------------UNDO, REDO
-        this.dom.querySelector('#undo-redo').addEventListener('click',(evt)=>{
-          this.viewer.dispatchEvent(new CustomEvent('undo-redo',  {bubbles:true, composed:true, detail:{command:evt.target.id}}))
+  /**undo-redo
+   * 
+   */
+    this.dom.querySelector('#undo-redo').addEventListener('click',(evt)=>{
+            if(evt.target.id === 'undo'){
+                this.manager.undo();
+            } else if(evt.target.id === 'redo'){
+                this.manager.redo();
+            }
         })
 //-----------------CAPAS INICIALES
-        //Estas capas las generamos de oficio
-        //Los tratamientos son aditivos y los atributos ascii
-        //El setAttribute funciona incluso antes del connected, debemos esperar (async)
-        customElements.whenDefined('cy-layer-list').then(() => {
-          this.layerView.addLayer( 'axes'); //Estas tienen gestión interna especial
-          this.layerView.addLayer( 'grid'); //Estas tienen gestión interna especial
+    //Estas capas las generamos de oficio
+    //Los tratamientos son aditivos y los atributos ascii
+    //El setAttribute funciona incluso antes del connected, debemos esperar (async)
+    customElements.whenDefined('cy-layer-list').then(() => {
+      this.layerView.addLayer( JSON.stringify(this.viewer.axesLayer), false); //Estas tienen gestión interna especial
+      this.layerView.addLayer( JSON.stringify(this.viewer.gridLayer), false); //Estas tienen gestión interna especial
 
-          //Al crearla se debe poner activa ella sola
-          this.viewer.dispatchEvent(new CustomEvent('create-layer', {bubbles:true, composed:true, detail: {layer:undefined, action: 'create'}}))
-          //this.dataLayer0 = this.viewer.layerDraw.addLayer(); //faltarían los estilos
-        });
+      //Al crearla se debe poner activa ella sola. Y compruebo que viene bien
+      const layerData = this.createLayer()
+      //this.layerView.addLayer( JSON.stringify(layerData));
+      //this.dataLayer0 = this.viewer.layerDraw.addLayer(); //faltarían los estilos
+    });
     }
     handleKeys = (e)=>{
         if((e.key === 'Escape') || (e.key === 'Delete') || (e.key === 'Enter')){

@@ -48,22 +48,30 @@ class layerStyle{
 // Modelo Layer
 // ------------------------
 class Layer {
-  constructor(id, name, style = layerStyle.default(), visible = true) {
-    this.id = id;
-    this.name = name;
-    this.style = style;
-    this.visible = visible;
-    this.blocks = new Set(); // ids de shapes asignados a esta capa
-  }
-  save() {
-    return {
-        id: this.id,
-        name: this.name,
-        style: this.style,
-        visible: this.visible,
-        blocks: [...this.blocks],
-    };
-  }
+    constructor(id, name, style = layerStyle.default(), visible = true) {
+        this.id = id;
+        this.name = name;
+        this.style = style;
+        this.visible = visible;
+        this.blocks = new Set(); // ids de shapes asignados a esta capa
+    }   
+    getStyle(){
+        return this.style;
+    }
+    //puede haber cambiado el nombre también, pero NO el id, por eso llega aquí
+    setStyle(newLayer){
+        this.name = newLayer.name,
+        this.style = newLayer.style;
+    }
+    save() {
+        return {
+            id: this.id,
+            name: this.name,
+            style: this.style,
+            visible: this.visible,
+            blocks: [...this.blocks],
+        };
+    }
   restore(data){
     this.id = data.id;
     this.name = data.name;
@@ -210,10 +218,10 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     addLayer(name, style = layerStyle.default()) {
         const theId = this.nextLayerId++;
         const lyId = `L${theId}`;
-        const lname = name !== undefined ? name : `Layer-${theId}`;
+        const lname = name !== undefined ? name : `Layer${theId}`;
         const layer = new Layer(lyId, lname, style, true);
         this.layers.set(lyId, layer);
-        this.dispatchEvent(new CustomEvent('layer-handle', {bubbles: true, composed:true, detail:{action:'created', name:lname}})); 
+        //this.dispatchEvent(new CustomEvent('layer-handle', {bubbles: true, composed:true, detail:{action:'created', layer:JSON.stringify(layer)}})); 
         this._activeLayerId = lyId;
         return lyId;
     }
@@ -224,12 +232,29 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
  * además se podrían pasar los elementos a otra capa provisional?
  */
     deleteLayer(layerId) {
+        if(this.layers.size <= 1) return;
         const layer = this.layers.get(layerId)
         this.layers.delete(layerId);
-        this.dispatchEvent(new CustomEvent('layer-handle', {bubbles: true, composed:true, detail:{action:'deleted', name:layer.name}})); 
+        this.dispatchEvent(new CustomEvent('layer-handle', {bubbles: true, composed:true, detail:{action:'deleted', layer:JSON.stringify(layer)}})); 
     // shapes siguen existiendo pero pueden quedar "huérfanos"
     // → según diseño, podrías eliminarlos o moverlos a "default"
     }
+    // getStyle(layer){
+
+    //     const id = layer.id; //this.findLayerByName(layerName);
+    //     if(id){
+    //         const ly = this.layers.get(id);
+    //         return ly.style;
+    //     }
+    // }
+    //Ha podido venir por copia, recupero id
+    // setStyle(newLayer, style){
+    //     //const ly = this.findLayerByName(layerName);
+    //     const layer = this.layers.get(newLayer.id);
+    //     layer.name = newLayer.name,
+    //     layer.style = style;
+    //     this.dispatchEvent(new CustomEvent('layer-handle', {bubbles: true, composed:true, detail:{action:'deleted', layerName:layer.name}})); 
+    // }
 /**
  * Esta sería una función para undo, redo de comandos de insertar o quitar un layer
  * 
@@ -429,7 +454,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         this.ctx.lineWidth = scalePixels2mm(w); //Esto son pixels, iría en settings o así TODO
         for (const [id, block] of this.blocks.entries()){
             if(this.ctx.isPointInStroke(block.canvasPath, p.x, p.y)){
-                return block;
+                return [block];
             } 
         }
         return undefined;

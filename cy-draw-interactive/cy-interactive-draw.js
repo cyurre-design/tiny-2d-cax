@@ -524,8 +524,8 @@ export default class CyInteractiveDraw {
         }
         //Mejor con evento?!!!
         const translate = (p)=>{
-            this.layerDraw.dispatchEvent(new CustomEvent('translate-selection',
-                {bubbles: true, composed:true, detail:{ data:{dx:this.hit.x-this.data.x0, dy:this.hit.y-this.data.y0}}}));
+            this.layerDraw.dispatchEvent(new CustomEvent('geometry-transform',
+                {bubbles: true, composed:true, detail:{ command:'translate', data:{dx:this.hit.x-this.data.x0, dy:this.hit.y-this.data.y0}}}));
             //this.status = 0;    
         };
         //Insertar los bloques como copia con o sin borrado, sería un flag
@@ -585,12 +585,12 @@ export default class CyInteractiveDraw {
             const found = this.layerDraw.hover(pi.x, pi.y, undefined, false);
             if(found && found.length>0){
                 if(found[0].type==='segment'){
-                    this.layerDraw.dispatchEvent(new CustomEvent('symmetry', {bubbles: true, composed:true,
-                                             detail:{ mode:mode, data:found[0]}}));};
+                    this.layerDraw.dispatchEvent(new CustomEvent('geometry-transform', {bubbles: true, composed:true,
+                                             detail:{ command:'symmetry', mode:mode, data:found[0]}}));};
                 }
             }
-        const symmetryXY = (pi) => { this.layerDraw.dispatchEvent(new CustomEvent('symmetry', {bubbles: true, composed:true,
-                                             detail:{ mode:mode, data:{x0:this.hit.x, y0:this.hit.y}}}));};
+        const symmetryXY = (pi) => { this.layerDraw.dispatchEvent(new CustomEvent('geometry-transform', {bubbles: true, composed:true,
+                                             detail:{ command:'symmetry', mode:mode, data:{x0:this.hit.x, y0:this.hit.y}}}));};
         //Y lo que se manda a input-data de posicines del cursor igual (mando las dos aunque solo se pinta la que toca)
         const dataSent = [['data-x0','data-y0']];
         const dataReceived = mode === 'X' ? ['y0'] : mode === 'Y' ? ['x0'] : [];

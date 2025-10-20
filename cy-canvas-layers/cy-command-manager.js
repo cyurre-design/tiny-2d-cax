@@ -34,17 +34,20 @@
 // =======================
 // Command Manager (monoproyecto)
 // =======================
+//project sería la base de datos de capas y bloques, y application la aplicación, para acceder a comandos de actualización de pantalla, etc...
 export class CommandManager {
-  constructor(project) {
+  constructor(project, application) {
     this.project = project;
+    this.app = application;
     this.undoStack = [];
     this.redoStack = [];
   }
 
   executeCommand(command) {
-    command.execute();
+    const ret = command.execute();
     this.undoStack.push(command);
     this.redoStack = [];
+    return ret;
   }
 
   undo() {
@@ -57,12 +60,14 @@ export class CommandManager {
   redo() {
     const cmd = this.redoStack.pop();
     if (!cmd) return;
-    cmd.execute();
+    const ret = cmd.execute();
     this.undoStack.push(cmd);
+    return ret;
   }
 
   makeCommand(spec) {
     const project = this.project;
+    const app = this.app;
 
     if (Array.isArray(spec)) {
       return {
@@ -72,18 +77,18 @@ export class CommandManager {
     }
 
     if (spec.targetId && spec.actionFn) {
-      const { targetId, scope = "shape", actionFn } = spec;
+      const { targetId, scope = "block", actionFn } = spec;
       return {
         execute() {
           const target =
-            scope === "layer" ? project.layers.get(targetId) : project.shapes.get(targetId);
-          this.before = target.snapshot();
+            scope === "layer" ? project.layers.get(targetId) : project.blocks.get(targetId);
+          this.before = target.save();
           actionFn(target);
-          this.after = target.snapshot();
+          this.after = target.save();
         },
         undo() {
           const target =
-            scope === "layer" ? project.layers.get(targetId) : project.shapes.get(targetId);
+            scope === "layer" ? project.layers.get(targetId) : project.blocks.get(targetId);
           if (this.before) target.restore(this.before);
         },
       };
@@ -91,8 +96,8 @@ export class CommandManager {
 
     if (typeof spec.execute === "function" && typeof spec.undo === "function") {
       return {
-        execute: () => spec.execute(project),
-        undo: () => spec.undo(project),
+        execute: () => spec.execute(project, app),
+        undo: () => spec.undo(project, app),
       };
     }
 
