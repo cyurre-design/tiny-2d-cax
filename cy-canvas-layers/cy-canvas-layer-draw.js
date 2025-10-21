@@ -212,14 +212,6 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     // shapes siguen existiendo pero pueden quedar "huérfanos"
     // → según diseño, podrías eliminarlos o moverlos a "default"
     }
-    // getStyle(layer){
-
-    //     const id = layer.id; //this.findLayerByName(layerName);
-    //     if(id){
-    //         const ly = this.layers.get(id);
-    //         return ly.style;
-    //     }
-    // }
     //puede haber cambiado el nombre también, pero NO el id, por eso llega aquí
     setStyle(layerId, newLayer){
         const ly = this.layers.get(layerId);
@@ -256,8 +248,8 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
  * @param {string} name 
  * @param {boolean} visible 
  */    
-    setVisible(name, visible) {
-        let lyId = this.findLayerByName(name);
+    setVisible(lyId, visible) {
+        //let lyId = this.findLayerByName(name);
         if(lyId !== undefined){
             this.layers.get(lyId).visible = visible;
         }
@@ -493,17 +485,6 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         blocks.forEach( p => p.selected = p.selected? false : true);
         this.draw();
     }
-    deleteSelection(layerId){
-        const blocks = (layerId !== undefined) ? this.layers.get(layerId) : this.blocks;
-        for (const [id, block] of blocks.entries()){
-            if(block.selected){
-                //deleted.push(block);
-                this.deleteBlock(id);
-            }
-        }
-        this.draw();
-        //return deleted;
-    }
     /**@function No lleva argumentos porque los bloques ya están seleccionados
      * @returns un Path con los bloques seleccionados
      */
@@ -576,41 +557,6 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         return;
     }
 
-    //en estas los bloques ya están seleccionados, no hay que pasar el layer, pero hay que copiarlo...
-    //Atton: el translate hace un clone de la parte geométrica, pero no va a recordar la capa ni ná.
-    
-    translateSelected(data){
-        this.layers.forEach(ly => {
-            const sels = [];
-            ly.blocks.forEach( id => {
-                const b = this.blocks.get(id);
-                if( b.selected) sels.push(b.translate( data.dx, data.dy, true))
-                }
-            )
-            this.addBlocks(ly.id, sels);
-        })
-        this.draw();
-    }
-    /**@param {string} axis es el eje o línea de referencia para la simetría (X,Y,L)
-     * @param data puedeser un punto (de donde cogemos x0 o y0, o un segmento)
-     * Se hace por capas para que la simetría cree los elementos en la misma capa que el original
-     * Esto son decisiones de especificación, podría cambiarse e ir a la capa activa
-     * @todo la decisión sobre ello
-     */
-    symmetrySelected(axis, data){
-        const symmetry = axis==='X' ? (b)=>b.symmetryX(data.y0) : axis==='Y' ? (b)=>b.symmetryY(data.x0) : (b)=>b.symmetryL(data)
-        this.layers.forEach(ly => {
-            const sels = [];
-            ly.blocks.forEach( id => {
-                const s = this.blocks.get(id);
-                if( s.selected)
-                    sels.push(symmetry(s))
-                }
-            )
-            this.addBlocks(ly.id, sels);   //mete los puntos también
-        })
-        this.draw();
-    }
 
 
 

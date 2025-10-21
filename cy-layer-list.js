@@ -1,13 +1,13 @@
 //Aquí pueden crecer las capas por programa. como es una acción rara, lo hago bruteforce
 
 
-const templateSingleLayer = (name, flag=true) => {
+const templateSingleLayer = (name, id, flag=true) => {
     const delButton = flag===true? ` <md-filled-button id="layer-del-${name}">Del</md-filled-button>` : '';
   return `
   <md-list-item id="${name.toLowerCase()}">
     ${name}${delButton}
-    <md-filled-button id="layer-edit-${name}">St</md-filled-button>
-    <md-switch slot="end" selected id="layer-view-${name}"></md-switch>
+    <md-filled-button id="layer-edit-${id}">St</md-filled-button>
+    <md-switch slot="end" selected id="layer-view-${id}"></md-switch>
   </md-list-item>
 `
 }
@@ -56,7 +56,7 @@ class CyLayerList extends HTMLElement {
 `}
 
     createNewList() {
-        const list = this.layers.reduce((out,ly) => (out + templateSingleLayer(ly.name, ly.erasable)), '<md-list id="full-list">') + '</md-list>';
+        const list = this.layers.reduce((out,ly) => (out + templateSingleLayer(ly.name, ly.id, ly.erasable)), '<md-list id="full-list">') + '</md-list>';
         return list; 
     }
     //Aquí recibimos el evento de que se quiere visualizar o tapar una capa, por ejemplo

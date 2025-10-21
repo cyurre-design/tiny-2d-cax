@@ -85,12 +85,12 @@ export default class CyCanvasViewer extends HTMLElement {
      * @param {boolean} value true/false
      * No he virtyualizado ejes / grid porque no merece mucho la pena, la verdad
      */
-    setVisible(layer, value){
-        if(layer === 'grid')
+    setVisible(layerId, value){
+        if(layerId === 'GRID')
             this.layerAxes.setGridVisible(value);
-        else if(layer === 'axes')
+        else if(layerId === 'AXES')
             this.layerAxes.setAxesVisible(value);
-        else this.layerDraw.setVisible(layer, value);
+        else this.layerDraw.setVisible(layerId, value);
     }
     /**
      * 
@@ -160,8 +160,8 @@ export default class CyCanvasViewer extends HTMLElement {
          */
         this.dispatchEvent(new CustomEvent('zoom_end'));
         //Hasta que no se ha inicializado no puedo poner los extents y hacer draws (el setVisible hace draw)
-        this.layerAxes.setAxesVisible(true);
-        this.layerAxes.setGridVisible(true);
+        this.setVisible('GRID', true);
+        this.setVisible('AXES', true);
         this.layerDraw.setVisible(true);
         this.layerDraft.setVisible(true);
 
