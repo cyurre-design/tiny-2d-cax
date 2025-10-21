@@ -144,20 +144,7 @@ export default class CyCanvasViewer extends HTMLElement {
             this._redrawLayers();
         });
 
-        //Comandos de transformación que en principio no ccrean ni destruyen elementos
-        this.addEventListener('geometry-transform',  (evt)=>{
-            const command = evt.detail.command;
-            switch(command){
-                case 'translate':
-                    break;
-                case 'symmetry':
-                    break;
 
-            }
-            this.layerDraw.translateSelected(evt.detail.data);
-             //this.layerDraw.symmetrySelected(evt.detail.mode, evt.detail.data));
-        })
-        
        
         /**@listens scale-change podría estar en el zoom-end pero es más específico, indica que la escala hacambiado y sirve
          * para cambiar el tamaño del cursor de búsque o cosas relacionadas

@@ -33,10 +33,7 @@ class layerStyle{
         this.pointDimension= pointDimension;
     }
     static default = ()=> new layerStyle();
-    save(){ return this}
-    restore(data){
-        Object.entries(data.forEach(([K,v]) => this[k] = v))
-    }
+
     toJSON(){
         return this;
     }
@@ -56,25 +53,7 @@ class Layer {
         this.erasable = erasable;
         this.blocks = new Set(); // ids de shapes asignados a esta capa
     }   
-    getStyle(){
-        return this.style;
-    }
-    save() {
-        return {
-            id: this.id,
-            name: this.name,
-            style: this.style,
-            visible: this.visible,
-            blocks: [...this.blocks],
-        };
-    }
-  restore(data){
-    this.id = data.id;
-    this.name = data.name;
-    this.style = data.style;
-    this.visible = data.visible;
-    this.blocks = new Set(data.blocks);
-  }
+
   toJSON() {
     return {
         id: this.id,
@@ -248,22 +227,19 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         ly.name = newLayer.name,
         ly.style = newLayer.style;
         return old;
-    }/**
- * Esta sería una función para undo, redo de comandos de insertar o quitar un layer
- * 
- */
-    saveLayers(){
-        return {
-            _activeLayerId:this._activeLayerId,
-            nextLayerId: this.nextLayerId,
-            layers: Object.fromEntries(this.layers.entries())
-        }
     }
-    restoreLayers(data){
-        this._activeLayerId = data._activeLayerId;
-        this.nextLayerId    = data.nextLayerId;
-        this.layers         = new Set(data.layers);
-    }
+    // saveLayers(){
+    //     return {
+    //         _activeLayerId:this._activeLayerId,
+    //         nextLayerId: this.nextLayerId,
+    //         layers: Object.fromEntries(this.layers.entries())
+    //     }
+    // }
+    // restoreLayers(data){
+    //     this._activeLayerId = data._activeLayerId;
+    //     this.nextLayerId    = data.nextLayerId;
+    //     this.layers         = new Set(data.layers);
+    // }
 /**
  * 
  * @param {string} name nombre de la capa

@@ -308,6 +308,41 @@ class cyCad1830App extends HTMLElement {
       });
     this.manager.executeCommand(theCommand);
   }
+  blockDelete = (blocks) => {
+    const theCommand = this.manager.makeCommand({
+      execute(p, a) {
+          this.blocks = blocks;
+          this.blocks.forEach( b => p.deleteBlock(b.id))
+          p.draw();
+      },
+      undo(p, a) {
+          if (this.blocks) 
+            p.addBlocks(undefined, this.blocks); //array...?
+          p.draw();
+      },
+      });
+    this.manager.executeCommand(theCommand);    
+  }
+
+  blockTransform = (blocks, op, data) => {
+    const theCommand = this.manager.makeCommand({
+    execute(p, a) {
+        this.blocks = blocks;
+        this.newBlocks = this.blocks.map( b => b[op]( data))
+        p.addBlocks( undefined, this.newBlocks);
+        p.draw();
+    },
+    undo(p, a) {
+        if (this.newBlocks) 
+          this.newBlocks.forEach(b=>p.deleteBlock(b.id));
+        p.draw();
+    }
+    });
+    this.manager.executeCommand(theCommand);    
+    }
+
+
+
   connectedCallback(){
     this.viewer = this.dom.querySelector("#viewer");
     this.manager = new CommandManager(this.viewer.layerDraw, this); // o this....
@@ -400,7 +435,23 @@ class cyCad1830App extends HTMLElement {
       this.blockCreate(blocks);
   });
 
-
+//--------------------- TRANSFORMACIONES   ------------------------  
+  this.addEventListener('geometry-transform',  (evt)=>{
+      let op = evt.detail.command, mode = evt.detail.mode || '', data = evt.detail.data;
+      op += mode;
+      let arg;
+      switch(op){
+        case 'symmetryX':  arg = data.y0;  break;
+        case 'symmetryY':  arg = data.x0;  break;
+        case 'symmetryL':  arg = data;     break;
+        case 'translate': 
+        default:          arg = data;     break;
+      }
+      const blocks = this.viewer.layerDraw.getSelectedBlocks();
+      this.blockTransform(blocks, op, arg)
+        //this.layerDraw.symmetrySelected(evt.detail.mode, evt.detail.data));
+  })
+        
 //-----------------UNDO, REDO -------- BOTONES
   /**undo-redo
    * 
@@ -439,7 +490,11 @@ class cyCad1830App extends HTMLElement {
             switch(sub1){
               case 'invert': this.viewer.layerDraw.invertSelection(); break;
               case 'all':this.viewer.layerDraw.deselectAll(); break;
-              case 'del':this.viewer.layerDraw.deleteSelection(); break;
+              case 'del':{
+                const blocks = this.viewer.layerDraw.getSelectedBlocks();
+                this.blockDelete(blocks);
+              }
+              break;
               case 'cut':{
                   const selectedPaths = this.viewer.layerDraw.getSelectedBlocks();
                   //Hago las manipulaciones de propiedades en la rutina findAllCuts que es específica

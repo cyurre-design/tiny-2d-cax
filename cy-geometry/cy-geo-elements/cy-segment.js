@@ -34,12 +34,6 @@ export class Segment {
     get pi(){ return ({x:this.x0,y:this.y0})} 
     get pf(){ return ({x:this.x1,y:this.y1})} 
 
-    save(){
-        return this;
-    }
-    restore(data){
-        Object.entries(data).forEach(([k,v]) => this[k]=v)
-    }
     toJSON(){ //Lo necesario para el constructos, para no llamar a createDraw,
         return {type:"segment", data:{x0:this.x0, y0:this.y0, x1:this.x1, y1: this.y1}};
     }
