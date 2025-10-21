@@ -4,6 +4,7 @@ import "./cy-layer-list.js"
 import './cy-input-data.js';
 import {findAllCuts} from './cy-geometry/cy-geometry-library.js'
 import {CommandManager } from './cy-canvas-layers/cy-command-manager.js';
+import {createDrawElement} from './cy-geometry/cy-geometry-basic-elements.js';
 
 const templateMainMenu =`
   <div  id="hidden-row" >
@@ -234,6 +235,7 @@ class cyCad1830App extends HTMLElement {
       this.dom = this.attachShadow({ mode: 'open' });
       this.dom.innerHTML = template + style;
     }
+//---------------------------------- COMANDOS LAYER ---------------------------
     /**
      * @method
      */
@@ -291,7 +293,21 @@ class cyCad1830App extends HTMLElement {
         }})
         return this.manager.executeCommand(theCommand);
       }
-
+//--------------------------------- COMANDOS BLOCK  -----------------------------
+  blockCreate = (blocks) => {
+    const theCommand = this.manager.makeCommand({
+      execute(p, a) {
+          this.blocks = blocks;
+          this.ids = p.addBlocks(undefined, this.blocks); //array...?
+          p.draw();
+      },
+      undo(p, a) {
+          if (this.ids) this.ids.forEach(id=>p.deleteBlock(id));
+          p.draw();
+      },
+      });
+    this.manager.executeCommand(theCommand);
+  }
   connectedCallback(){
     this.viewer = this.dom.querySelector("#viewer");
     this.manager = new CommandManager(this.viewer.layerDraw, this); // o this....
@@ -374,8 +390,17 @@ class cyCad1830App extends HTMLElement {
         this.layerDelete(e.layerId);    //de momento es siempre undefined por el modo de trabajo
       } else if(e.action === 'set-style')
         this.layerSetStyle(e.layerId, e.value);
-
     })
+//--------------------- CREACION DE BLOQUES ------------------
+  /**@listens new-block Aquí es donde se recibe la petición de insertar geometría
+   * tras terminar la parte interactiva !!! */
+  this.addEventListener('new-block', e=>{
+      //this.layerDraft.clear();
+      const blocks = createDrawElement(e.detail.type, e.detail.data);
+      this.blockCreate(blocks);
+  });
+
+
 //-----------------UNDO, REDO -------- BOTONES
   /**undo-redo
    * 

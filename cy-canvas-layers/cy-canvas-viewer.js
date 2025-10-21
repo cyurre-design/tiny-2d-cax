@@ -6,7 +6,7 @@ import './cy-canvas-layer-draft.js';
 
 import CyCanvasHandler from './cy-canvas-handler.js';
 import CyInteractiveDraw from '../cy-draw-interactive/cy-interactive-draw.js';
-import {createDrawElement} from '../cy-geometry/cy-geometry-basic-elements.js';
+//import {createDrawElement} from '../cy-geometry/cy-geometry-basic-elements.js';
 //import {CommandManager } from './cy-command-manager.js';
 
 
@@ -143,23 +143,7 @@ export default class CyCanvasViewer extends HTMLElement {
             this.layerDraw.setOrigin(-e.detail.data.x0, -e.detail.data.y0);
             this._redrawLayers();
         });
-        /**@listens new-block Aquí es donde se recibe la petición de insertar geometría
-         * tras terminar la parte interactiva !!! */
-        this.addEventListener('new-block', e=>{
-            this.layerDraft.clear();
-            const theCommand = this.manager.makeCommand({
-            blocks : createDrawElement(e.detail.type, e.detail.data),
-            execute(p) {
-                this.ids = p.addBlocks(undefined, this.blocks); //array...?
-                p.draw();
-            },
-            undo(p) {
-                if (this.ids) this.ids.forEach(id=>p.deleteBlock(id));
-                p.draw();
-            },
-            });
-            this.manager.executeCommand(theCommand);
-        });
+
         //Comandos de transformación que en principio no ccrean ni destruyen elementos
         this.addEventListener('geometry-transform',  (evt)=>{
             const command = evt.detail.command;
