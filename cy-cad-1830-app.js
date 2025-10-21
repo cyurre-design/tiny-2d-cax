@@ -237,13 +237,13 @@ class cyCad1830App extends HTMLElement {
     /**
      * @method
      */
-  createLayer = (name = undefined, data = undefined) => {
+  layerCreate = (name = undefined, data = undefined) => {
       const theCommand = this.manager.makeCommand({
           execute(p, a) {
               this.id = p.addLayer(name || this.name);
               const layer = p.layers.get(this.id);
               this.name = layer.name;
-              a.viewer.layerCommands._redrawLayers();
+              a.viewer._redrawLayers();
               a.layerView.addLayer(JSON.stringify(layer));
               return layer;
           },
@@ -253,6 +253,43 @@ class cyCad1830App extends HTMLElement {
           },
       });
       return this.manager.executeCommand(theCommand);
+      }      
+  layerDelete = (id) => {
+      const theCommand = this.manager.makeCommand({
+          execute(p, a) {
+              this.id = id;
+              this.layer = p.layers.get(this.id);
+              p.deleteLayer(this.id);
+              a.viewer._redrawLayers();
+              a.layerView.deleteLayer(this.id);
+              //return layer;
+          },
+          undo(p,a) {
+              if (this.layer) {
+                p.addLayer(this.layer.name, this.layer.style);
+                a.layerView.addLayer(JSON.stringify(this.layer));
+              }
+          },
+      });
+      return this.manager.executeCommand(theCommand);
+      }      
+  layerSetStyle = (layerId, data) => {
+    const theCommand = this.manager.makeCommand({
+        execute(p, a) {
+            this.id = layerId;
+            this.data = a.viewer.setStyle(this.id, data);
+            a.viewer._redrawLayers();
+            a.layerView.setStyle(this.id, data)
+            return this.data;
+        },
+        undo(p,a) {
+            if (this.id){
+              a.viewer.setStyle(this.id, this.data);
+              a.layerView.setStyle(this.id, this.data)
+              a.viewer._redrawLayers();
+            }
+        }})
+        return this.manager.executeCommand(theCommand);
       }
 
   connectedCallback(){
@@ -321,40 +358,25 @@ class cyCad1830App extends HTMLElement {
     this.dom.addEventListener('keyup',this.handleKeys,true);
 
 //--------------Gestión de CAPAS, LAYERS
-    //Aunque el evento va y viene, se pueden generar capas por proceso diferente al load
+    //se pueden generar capas bien en el Load, bien en la propia aplicación (menú)
     //si se crea una capa, por ejemplo al leer un fichero, generamos su control de ver/etc..
     //Si en la lista de capas se desea ver/no ver, etc..., viene aquí
     //y si se crea en la propia lista también
-    //El recorrido cuando viene de lista es que primero se concentra aquí, se manda crear
-    //en layerdraw y el propio proceso debe volver aquí y de aquí vuelve a la lista
-    //rebuscado pero por separar
+    //La gestión se centraliza aquí que para eso es la aplicación, y los comandos se preparan para undo, redo
     this.layerView = this.dom.querySelector('#layer-view');
     this.layerView.addEventListener('layer-handle', (data)=>{
       const e = data.detail;
       if(e.action === 'visibility')
-        this.viewer.layerCommands.setVisible(e.layer, e.value);
+        this.viewer.setVisible(e.layerId, e.value);
       else if(e.action === 'create'){
-        const layer = this.createLayer(e.layer);    //de momento es siempre undefined por el modo de trabajo
-        //this.viewer.layerCommands._redrawLayers();
-        //this.layerView.addLayer(JSON.stringify(layer));
+        const layer = this.layerCreate(e.layer);    //de momento es siempre undefined por el modo de trabajo
       } else if(e.action === 'delete'){
-        this.viewer.layerCommands.deleteLayer(e.layer);    //de momento es siempre undefined por el modo de trabajo
-        this.viewer.layerCommands._redrawLayers();
+        this.layerDelete(e.layerId);    //de momento es siempre undefined por el modo de trabajo
       } else if(e.action === 'set-style')
-        this.viewer.layerCommands.setStyle(e.layerId, e.value)
+        this.layerSetStyle(e.layerId, e.value);
 
     })
-    /**
-     * @listens layer-handle que viene de layerDraw, la estructura de datos
-     * me paso todo porque cuando cambio el nombre. el viejo ya no vale y necesito el id o similar
-     */
-    this.viewer.addEventListener('layer-handle', (e)=>{
-      if(e.detail.action === 'created')
-        this.layerView.addLayer(e.detail.layer);
-      else if(e.detail.action === 'deleted')
-        this.layerView.deleteLayer( e.detail.layer);
-    })
-//-----------------UNDO, REDO
+//-----------------UNDO, REDO -------- BOTONES
   /**undo-redo
    * 
    */
@@ -365,18 +387,15 @@ class cyCad1830App extends HTMLElement {
                 this.manager.redo();
             }
         })
-//-----------------CAPAS INICIALES
+//-----------------CREAR CAPAS INICIALES
     //Estas capas las generamos de oficio
     //Los tratamientos son aditivos y los atributos ascii
-    //El setAttribute funciona incluso antes del connected, debemos esperar (async)
     customElements.whenDefined('cy-layer-list').then(() => {
-      this.layerView.addLayer( JSON.stringify(this.viewer.axesLayer), false); //Estas tienen gestión interna especial
-      this.layerView.addLayer( JSON.stringify(this.viewer.gridLayer), false); //Estas tienen gestión interna especial
+      this.layerView.addLayer( JSON.stringify(this.viewer.axesLayer)); //Estas tienen gestión interna especial
+      this.layerView.addLayer( JSON.stringify(this.viewer.gridLayer)); //Estas tienen gestión interna especial
 
       //Al crearla se debe poner activa ella sola. Y compruebo que viene bien
-      const layerData = this.createLayer()
-      //this.layerView.addLayer( JSON.stringify(layerData));
-      //this.dataLayer0 = this.viewer.layerDraw.addLayer(); //faltarían los estilos
+      const layerData = this.layerCreate()
     });
     }
     handleKeys = (e)=>{

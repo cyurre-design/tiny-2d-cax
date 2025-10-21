@@ -71,49 +71,41 @@ export default class CyCanvasViewer extends HTMLElement {
         `;
         return template;
     }
-    layerCommands = {
     //Auxiliar para redibujar las capas en casos de cambios de coordenadas, zoom... que afectan al canvas
-        _redrawLayers: ()=>{
-            let ext = this.canvasHandler.getExtents();
-            this.canvasLayers.forEach(ly => {
-                ly.setExtents(ext);
-                ly.draw();
-                })},
-        //Desde aquí hacia arriba no se debería saber si no hace falta qué tipo de capa es, etc...
-        /**
-         * 
-         * @param {string} layer  la capa que queremos ocultarver
-         * @param {boolean} value true/false
-         * No he virtyualizado ejes / grid porque no merece mucho la pena, la verdad
-         */
-        setVisible(layer, value){
-            if(layer === 'grid')
-                this.layerAxes.setGridVisible(value);
-            else if(layer === 'axes')
-                this.layerAxes.setAxesVisible(value);
-            else this.layerDraw.setVisible(layer, value);
-        },
-        /**
-         * 
-         * @param {string} layer 
-         * @param {string} newName 
-         * @param {object} value incluye el propio name, id y style con atributos
-         */
-        setStyle(layerId, value){
-            if(layerId === 'GRID')
-                this.layerAxes.setGridStyle(value);
-            else if(layerId === 'AXES')
-                this.layerAxes.setAxesStyle(value);
-            else {
-                const theCommand = this.manager.makeCommand({
-                    targetId: layerId,
-                    scope: 'layer',
-                    actionFn: (layer) => layer.setStyle(value)
-                    });
-                    this.manager.executeCommand(theCommand);
-                }
-            }            
-        }
+    _redrawLayers(){
+        let ext = this.canvasHandler.getExtents();
+        this.canvasLayers.forEach(ly => {
+            ly.setExtents(ext);
+            ly.draw();
+            })}
+    //Desde aquí hacia arriba no se debería saber si no hace falta qué tipo de capa es, etc...
+    /**
+     * 
+     * @param {string} layer  la capa que queremos ocultarver
+     * @param {boolean} value true/false
+     * No he virtyualizado ejes / grid porque no merece mucho la pena, la verdad
+     */
+    setVisible(layer, value){
+        if(layer === 'grid')
+            this.layerAxes.setGridVisible(value);
+        else if(layer === 'axes')
+            this.layerAxes.setAxesVisible(value);
+        else this.layerDraw.setVisible(layer, value);
+    }
+    /**
+     * 
+     * @param {string} layer 
+     * @param {string} newName 
+     * @param {object} value incluye el propio name, id y style con atributos
+     */
+    setStyle(layerId, value){
+        if(layerId === 'GRID')
+            return this.layerAxes.setGridStyle(value);
+        else if(layerId === 'AXES')
+            return this.layerAxes.setAxesStyle(value);
+        else 
+            return this.layerDraw.setStyle(layerId, value)
+        }            
     connectedCallback() {
         this.dom.innerHTML  = this.createStyle() + this.createTemplate();
 
@@ -141,37 +133,15 @@ export default class CyCanvasViewer extends HTMLElement {
         this.interactiveDrawing = new CyInteractiveDraw(this.canvasHandler, this.layerDraft);
         /**@listens zoom-end cambios en la relación window - viewport , o sea, coordenadas mundo y bitamp */
         this.addEventListener('zoom_end', e => 
-            this.layerCommands._redrawLayers());
+            this._redrawLayers());
         //--------------------------------------
-        // hasta aquí son comandos que no se recuperan, son intrínsecos
-        // Inicializamos los listeners para los comandos que luego se podrán deshacer
-        //this.manager = new CommandManager(this.layerDraw); // o this....
 
-        //-----------------------------------------
-        // /**@listens create-layer
-        //  * Aquí controlamos las capas y el do/undo/redo
-        //  */
-
-        // this.addEventListener('create-layer', e => {
-        //     const theCommand = this.manager.makeCommand({
-        //     execute(p) {
-        //         this.id = p.addLayer(e.detail.name);
-        //         const layer = p.layers.get(this.id)
-        //         //e.this.name = .name;
-        //     },
-        //     undo(p) {
-        //         if (this.id) p.deleteLayer(this.id);
-        //     },
-        //     });
-        //     this.manager.executeCommand(theCommand);
-        //     //this.layerDraw.addLayer( e.layer );
-        // })
         /**@listens set-origin cuando se ejecuta de verdad el comando definido de forma interactiva */
         //Los comandos en realidad no se ejecutan al accionar el menú sino cuando se dan por concluidas las partes interactivas
         this.addEventListener('set-origin', e=>{
             this.canvasHandler.view("fgPane", {x:e.detail.data.x0, y:e.detail.data.y0});  //rehace los cálculos del handler
             this.layerDraw.setOrigin(-e.detail.data.x0, -e.detail.data.y0);
-            this.layerCommands._redrawLayers();
+            this._redrawLayers();
         });
         /**@listens new-block Aquí es donde se recibe la petición de insertar geometría
          * tras terminar la parte interactiva !!! */
@@ -260,7 +230,7 @@ export default class CyCanvasViewer extends HTMLElement {
                                   {x: 0.5*(bbox.x0 + bbox.x1), y: 0.5*(bbox.y0 + bbox.y1)},
                                   {w: 1.1*(bbox.x1 - bbox.x0), h: 1.1*(bbox.y1 - bbox.y0)});
         this.canvasHandler.view('fgSetHome');
-        this.layerCommands._redrawLayers();
+        this._redrawLayers();
     }
     //Gestión de los cursores, TODO
     /**@todo */

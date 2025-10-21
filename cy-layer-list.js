@@ -56,7 +56,7 @@ class CyLayerList extends HTMLElement {
 `}
 
     createNewList() {
-        const list = this.layers.reduce((out,ly) => (out + templateSingleLayer(ly.layer.name, ly.erasable)), '<md-list id="full-list">') + '</md-list>';
+        const list = this.layers.reduce((out,ly) => (out + templateSingleLayer(ly.name, ly.erasable)), '<md-list id="full-list">') + '</md-list>';
         return list; 
     }
     //Aquí recibimos el evento de que se quiere visualizar o tapar una capa, por ejemplo
@@ -65,7 +65,7 @@ class CyLayerList extends HTMLElement {
         //No metemos semántica aquí, simplemente informamos de que lo que se quier hacer (ocultar, etc...) y qué capa
         const idn = e.target.id.split('-').pop();
         const s = e.target.selected; //boolean
-        this.dispatchEvent(new CustomEvent('layer-handle', {bubbles:true, composed:true, detail: {layer:idn, action: 'visibility', value:s}} ))
+        this.dispatchEvent(new CustomEvent('layer-handle', {bubbles:true, composed:true, detail: {layerId:idn, action: 'visibility', value:s}} ))
     }
     connectedCallback() {
         this.dom.innerHTML= this.createStyle() + this.createTemplate();
@@ -74,11 +74,16 @@ class CyLayerList extends HTMLElement {
         this.list.addEventListener('change', (e)=>this.handleLayers(e)); 
         this.list.addEventListener(`click`, (evt => {
             const data = evt.target.id.split('-');
-            console.log(evt)
+            this.editedLayer = this.layers.find((l)=>l.name === data[2]);
+            
             if(data[1] === 'edit'){
-                this.editedLayer = this.layers.find((l)=>l.layer.name === data[2]).layer;
                 this.dialog.innerHTML = this.createDialog(this.editedLayer);
                 this.dialog.showModal();
+            } else if (data[1] === 'del'){
+                /**
+                 * @todo hay que sacar un dialogo si la capa no está vacía ??!
+                 */
+                this.dispatchEvent(new CustomEvent('layer-handle', {bubbles:true, composed:true, detail: {layerId:this.editedLayer.id, action: 'delete'}}))
             }
         }))
         this.dom.querySelector('#edit-style').addEventListener('click', (e)=> {
@@ -105,9 +110,9 @@ class CyLayerList extends HTMLElement {
             this.dispatchEvent(new CustomEvent('layer-handle', {bubbles:true, composed:true, detail: {layer:undefined, action: 'create'}} )))
     }
     //Decido que venga en json, para forzar copia
-    addLayer(strLayer, erasable = true){
+    addLayer(strLayer){
         const layer = JSON.parse(strLayer);
-        this.layers.push({layer:layer, erasable:erasable});
+        this.layers.push(layer);
         this.layers = [...new Set(this.layers)]; //Quito repes just in case
         this.list.innerHTML = this.createNewList();
     }
@@ -115,10 +120,21 @@ class CyLayerList extends HTMLElement {
      * 
      * @param {@todo} name 
      */
-    deleteLayer(name){
-        const ix = this.layers.findIndex( v => v.name === name);
+    deleteLayer(id){
+        const ix = this.layers.findIndex( v => v.id === id);
         this.layers.splice(ix,1);
         this.list.innerHTML = this.createNewList();
+    }
+    /**
+     * 
+     * @param {string} id 
+     * @param {object} data 
+     * Refresco en caso de edición
+     */
+    setStyle(id, data){
+        const layer = this.layers.find( ly => ly.id === id);
+        layer.name = data.name;
+        layer.style = data.style;
     }
     disconnectedCallback() {
     }

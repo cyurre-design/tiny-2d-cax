@@ -48,20 +48,16 @@ class layerStyle{
 // Modelo Layer
 // ------------------------
 class Layer {
-    constructor(id, name, style = layerStyle.default(), visible = true) {
+    constructor(id, name, style = layerStyle.default(), visible = true, erasable = true) {
         this.id = id;
         this.name = name;
         this.style = style;
         this.visible = visible;
+        this.erasable = erasable;
         this.blocks = new Set(); // ids de shapes asignados a esta capa
     }   
     getStyle(){
         return this.style;
-    }
-    //puede haber cambiado el nombre también, pero NO el id, por eso llega aquí
-    setStyle(newLayer){
-        this.name = newLayer.name,
-        this.style = newLayer.style;
     }
     save() {
         return {
@@ -221,7 +217,6 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         const lname = name !== undefined ? name : `Layer${theId}`;
         const layer = new Layer(lyId, lname, style, true);
         this.layers.set(lyId, layer);
-        //this.dispatchEvent(new CustomEvent('layer-handle', {bubbles: true, composed:true, detail:{action:'created', layer:JSON.stringify(layer)}})); 
         this._activeLayerId = lyId;
         return lyId;
     }
@@ -235,7 +230,6 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         if(this.layers.size <= 1) return;
         const layer = this.layers.get(layerId)
         this.layers.delete(layerId);
-        this.dispatchEvent(new CustomEvent('layer-handle', {bubbles: true, composed:true, detail:{action:'deleted', layer:JSON.stringify(layer)}})); 
     // shapes siguen existiendo pero pueden quedar "huérfanos"
     // → según diseño, podrías eliminarlos o moverlos a "default"
     }
@@ -247,15 +241,14 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     //         return ly.style;
     //     }
     // }
-    //Ha podido venir por copia, recupero id
-    // setStyle(newLayer, style){
-    //     //const ly = this.findLayerByName(layerName);
-    //     const layer = this.layers.get(newLayer.id);
-    //     layer.name = newLayer.name,
-    //     layer.style = style;
-    //     this.dispatchEvent(new CustomEvent('layer-handle', {bubbles: true, composed:true, detail:{action:'deleted', layerName:layer.name}})); 
-    // }
-/**
+    //puede haber cambiado el nombre también, pero NO el id, por eso llega aquí
+    setStyle(layerId, newLayer){
+        const ly = this.layers.get(layerId);
+        const old = JSON.parse(JSON.stringify(ly));
+        ly.name = newLayer.name,
+        ly.style = newLayer.style;
+        return old;
+    }/**
  * Esta sería una función para undo, redo de comandos de insertar o quitar un layer
  * 
  */

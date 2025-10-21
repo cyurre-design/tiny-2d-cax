@@ -21,7 +21,8 @@ export default class CyCanvasLayerAxes extends CyCanvasLayer {
                 tickColor: '#aaaa00',
                 textColor: '#aaaa00',
             },
-            visible: true
+            visible: true,
+            erasable: false
         };
         this.gridLayer = {
             id: 'GRID',
@@ -30,7 +31,8 @@ export default class CyCanvasLayerAxes extends CyCanvasLayer {
                 pathColor: '#005500',
                 pathWidth: 2,
             },
-            visible: true
+            visible: true,
+            erasable: false
         }
     }
     connectedCallback() {
@@ -39,15 +41,21 @@ export default class CyCanvasLayerAxes extends CyCanvasLayer {
         }
 
     setAxesStyle(layer ){
-        this.axesLayer.style.pathColor = layer.style.pathColor;
-        this.axesLayer.style.pathWidth = layer.style.pathWidth;
-        this.axesLayer.style.tickColor = layer.style.selectedColor;
-        this.axesLayer.style.tickWidth = layer.style.selectedWidth;
+        const old = {style:{}};
+        ['pathColor', 'pathWidth', 'tickColor', 'tickWidth'].forEach( prop => {
+            old.style[prop] = this.axesLayer.style[prop];
+            this.axesLayer.style[prop] = layer.style[prop];
+        })
+        return old;
     }
     //viene con los datos de un layer completo, cogemos lo que necesitamos
-    setGridStyle(layer){
-        this.gridLayer.style.pathColor = layer.style.pathColor;
-        this.gridLayer.style.pathWidth = layer.style.pathWidth;
+    setGridStyle(layer ){
+        const old = {style:{}};
+        ['pathColor', 'pathWidth'].forEach( prop => {
+            old.style[prop] = this.gridLayer.style[prop];
+            this.axesLayer.style[prop] = layer.style[prop];
+        })
+        return old;
     }
     drawAxis(x=0, y=0){
         const ww = this.extents; //por comodidad, window        
