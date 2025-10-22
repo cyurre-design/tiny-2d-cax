@@ -39,6 +39,18 @@ export default class CyInteractiveDraw {
         this.mouseOut = ()=>{};
         this.layerDraft.clear(); //Cada vez que cambia de modo borro por si acaso
     }
+    quit(){
+        this.leftClick = ()=>{};
+        this.leftClickStart = () => {};
+        this.leftClickMove = () => {};
+        this.leftClickUp = () => {};
+        this.rightClick = () => {};
+        this.handleKey = () => {};
+        this.mouseMove = ()=>{};
+        this.updateData = ()=>{};
+        this.mouseOut = ()=>{};
+        this.layerDraft.clear(); //Cada vez que cambia de modo borro por si acaso
+    }
     // setLayer(layerDraw) {
     //     this.layerDraw = layerDraw;
     // }
@@ -505,24 +517,20 @@ export default class CyInteractiveDraw {
         deleteData();
         this.setDrawingMode();
     }
+
+    //El translate está definido con clone, cada vez que muevo se crea.... pero a la larga es más comprensible
     drawTranslate(layerDraw) {
         this.init(layerDraw, 'move');
         this.data = {};
         //hay cosas commo el submodo y el radio, etc... que no se deben borrar
         const deleteData = () => {['x0','x1','y0','y1'].forEach(k => delete this.data[k]); this.status = 0;};
-        //const newBlock = (p) => {this.layerDraw.dispatchEvent(new CustomEvent('new-block', {bubbles: true, composed:true, detail:{type:'polygon', data:this.data}}));};
-        //const draw = (pi) => {this.hit = this.highLight(pi.x, pi.y, createDrawElement('polygon', this.data ))}
-        //Y lo que se manda a input-data de posicines del cursor igual
         const dataSent = [['data-x0','data-y0'],['data-x1','data-y1'],[]];
         const dataReceived = ['x0','x1','y0','y1'];
         deleteData();
-        const pathToMove = this.layerDraw.getSelectedPaths(); //viene ya un path de dibujar
-        this.layerDraft.setDraftPath( pathToMove);
-        const move = (pi)=>{ //hemos guardado x0,y0 en la rutina p0, ahora cambiamos la transformada
-            this.layerDraft.setTranslation({x:this.data.x0, y:this.data.y0}, this.hit /*, pathToMove*/);
-            this.layerDraft.draw();
+        const blocksToMove = this.layerDraw.getSelectedBlocks();
+        const move = (pi)=>{ //hemos guardado x0,y0 originales en data en la rutina p0
+            this.hit = this.highLight(pi.x, pi.y, blocksToMove.map(b => b.translate(pi.x-this.data.x0, pi.y-this.data.y0)));
         }
-        //Mejor con evento?!!!
         const translate = (p)=>{
             this.layerDraw.dispatchEvent(new CustomEvent('geometry-transform',
                 {bubbles: true, composed:true, detail:{ command:'translate', data:{dx:this.hit.x-this.data.x0, dy:this.hit.y-this.data.y0}}}));
@@ -532,7 +540,7 @@ export default class CyInteractiveDraw {
         //const translate = (p) => {
             //this.layerDraw.translateSelected(this.hit.x-this.data.x0, this.hit.y-this.data.y0, true); //flag de copia o move
         //}
-        this.click = [[this.p0], [this.m1 , translate /*, deleteData*/]];
+        this.click = [[this.p0], [this.m1 , translate, deleteData, this.quit ]];
         this.move = [[this.h], [this.h, move], []];
 
         this.leftClick = (pi, evt) => {

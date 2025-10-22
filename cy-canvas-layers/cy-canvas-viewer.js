@@ -41,14 +41,6 @@ export default class CyCanvasViewer extends HTMLElement {
                     height: 100%;
                 }
 
-                #axes{
-                    --axes-width: 2;
-                    --axes-color: green;
-                    --grid-width: 1;
-                    --grid-color: darkgray;
-                    --font-size: 15;
-                    pointer-events: none;
-                }
                 /* START CURSORS STYLES */
                 .zoomInCursor {
                   cursor: zoom-in;
@@ -162,7 +154,7 @@ export default class CyCanvasViewer extends HTMLElement {
         //Hasta que no se ha inicializado no puedo poner los extents y hacer draws (el setVisible hace draw)
         this.setVisible('GRID', true);
         this.setVisible('AXES', true);
-        this.layerDraw.setVisible(true);
+        //this.layerDraw.setVisible(true);
         this.layerDraft.setVisible(true);
 
     }

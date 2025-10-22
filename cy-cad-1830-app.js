@@ -76,7 +76,7 @@ const templateMainMenu =`
     </md-menu>
     <md-filled-button id="transform-menu-anchor">TRANSFORM</md-filled-button>
     <md-menu has-overflow positioning="popover" id="transform-menu" anchor="transform-menu-anchor">
-        <md-menu-item id="select"><div slot="headline">SELECT</div></md-menu-item>        
+        <md-menu-item id="cut"><div slot="headline">CUT</div></md-menu-item>        
         <md-menu-item id="translate"><div slot="headline">TRANSLATE</div></md-menu-item>    
         <md-menu-item id="origin"><div slot="headline" >SET ORIGIN</div></md-menu-item>
         <md-menu-item id="rotate"><div slot="headline" >ROTATE</div></md-menu-item>
@@ -108,14 +108,20 @@ const templateMainMenu =`
 </span>
 `
 //tools y settings fijos
-//Aquí pueden crecer las capas por programa. como es una acción rara, lo hago bruteforce
-const templateSingleLayer = (name) => {
-  return `
-  <md-list-item>
-    ${name}<md-switch slot="end" selected id="view-layer-${name}"></md-switch>
-  </md-list-item>
+
+//Esto aparecería en los comandos de transform por ejemplo
+//Aprovecho y pongo aquí el width de selección, por ejemplo
+const templateSelectInputData =`
+<div>
+    <md-filled-text-field id="data-penWidth" all" label="Select Tolerance" type="number" value="1" max="5" min="0.5" step="0.5"></md-filled-text-field>
+    <div id="menu-select">
+        <md-filled-button class="submenu _25" id="select-all">ALL</md-filled-button>
+        <md-filled-button class="submenu _25" id="select-invert">INV</md-filled-button>
+        <md-filled-button class="submenu _25" id="select-del">DEL</md-filled-button>
+        <md-filled-button class="submenu _25" id="select-sel">SEL</md-filled-button-->
+    </div>
+</div>
 `
-}
 const templateLayers = `
 <div id=show-layers>
 LAYERS <md-filled-button id="layer-add">ADD</md-filled-button><md-switch slot="end" selected id="layer-show"></md-switch>
@@ -143,6 +149,7 @@ const template = `
     <div id="left" class="column" >
     <cy-layer-list id="layer-view"></cy-layer-list>
     ${templateUndo}
+    ${templateSelectInputData}
     <div>
       </md-filled-text-field><md-filled-text-field label="Link Tolerance" class="half" type="number" value="0.1" max="5" min="0.01" step="0.1"></md-filled-text-field>
         </div>   
@@ -328,7 +335,7 @@ class cyCad1830App extends HTMLElement {
     const theCommand = this.manager.makeCommand({
     execute(p, a) {
         this.blocks = blocks;
-        this.newBlocks = this.blocks.map( b => b[op]( data))
+        this.newBlocks = this.blocks.map( b => b[op]( ...data))
         p.addBlocks( undefined, this.newBlocks);
         p.draw();
     },
@@ -441,11 +448,11 @@ class cyCad1830App extends HTMLElement {
       op += mode;
       let arg;
       switch(op){
-        case 'symmetryX':  arg = data.y0;  break;
-        case 'symmetryY':  arg = data.x0;  break;
-        case 'symmetryL':  arg = data;     break;
+        case 'symmetryX':  arg = [data.y0];  break;
+        case 'symmetryY':  arg = [data.x0];  break;
+        case 'symmetryL':  arg = [data];     break;
         case 'translate': 
-        default:          arg = data;     break;
+        default:          arg = [data.dx, data.dy];     break;
       }
       const blocks = this.viewer.layerDraw.getSelectedBlocks();
       this.blockTransform(blocks, op, arg)
@@ -463,12 +470,39 @@ class cyCad1830App extends HTMLElement {
                 this.manager.redo();
             }
         })
+//----------------- SEL, ALL, INV, DEL -------- BOTONES
+  /**select
+   * 
+   */
+    this.dom.querySelector('#menu-select').addEventListener('click',(evt)=>{
+      const cmd = evt.target.id.split('-')[1];
+      switch(cmd){
+        case 'all':               case 'all':this.viewer.layerDraw.deselectAll(); break;
+        case 'invert':  this.viewer.layerDraw.invertSelection(); break;
+        case 'del'  :{
+                const blocks = this.viewer.layerDraw.getSelectedBlocks();
+                this.blockDelete(blocks);
+              }
+              break;
+        case 'sel':{
+            //Aunque haga otras cosas, pongo modo select, habrçia que cambiar cursor..?!
+            //this.viewer.layerDraft.clear();
+            this.viewer.interactiveDrawing.drawSelection(this.viewer.layerDraw);
+            //El attribute es lo que cambia el html !!
+            //this.mData.setAttribute('type','select');
+            }
+            break;
+      }
+
+        })
+
 //-----------------CREAR CAPAS INICIALES
     //Estas capas las generamos de oficio
     //Los tratamientos son aditivos y los atributos ascii
     customElements.whenDefined('cy-layer-list').then(() => {
       this.layerView.addLayer( JSON.stringify(this.viewer.axesLayer)); //Estas tienen gestión interna especial
       this.layerView.addLayer( JSON.stringify(this.viewer.gridLayer)); //Estas tienen gestión interna especial
+      
 
       //Al crearla se debe poner activa ella sola. Y compruebo que viene bien
       const layerData = this.layerCreate()
@@ -483,42 +517,29 @@ class cyCad1830App extends HTMLElement {
     //Por separar los posibles switches y que quede más claro
     //nos pasamos un string con submenu-tipo-subtipo
     handleSubmenu = (idn) => {
-        const [_, main, sub1] = idn.split('-');
-        console.log(main, sub1);
-        switch(main){
-          case 'select':{ //El mData principal se pone en el menú arriba
-            switch(sub1){
-              case 'invert': this.viewer.layerDraw.invertSelection(); break;
-              case 'all':this.viewer.layerDraw.deselectAll(); break;
-              case 'del':{
-                const blocks = this.viewer.layerDraw.getSelectedBlocks();
-                this.blockDelete(blocks);
-              }
-              break;
-              case 'cut':{
-                  const selectedPaths = this.viewer.layerDraw.getSelectedBlocks();
-                  //Hago las manipulaciones de propiedades en la rutina findAllCuts que es específica
-                  let points = findAllCuts(selectedPaths);
-                  if(points){
-                    this.mData.setAttribute('type','cutPoints');
-                    //el algoritmo puede devolver puntos de corte en las extensiones, se pueden filtrar aquí o interactivo
-                    this.viewer.layerDraw.deselectAll();
-                    this.viewer.layerDraw.addCutPointsToActiveLayer(points);
-                    //this.viewer.interactiveDrawing.selectElements(this.viewer.layerDraw, points);
-                  }
-                }
-                break;
-            }
-            break;
-        }
-        case 'translate':
-          switch(sub1){
-            case 'copy': break;
-            case 'escape': break;
-            case 'replace': break;
-          }
-        break;
-      }
+      //   const [_, main, sub1] = idn.split('-');
+      //   console.log(main, sub1);
+      //   switch(main){
+      //     case 'select':{ //El mData principal se pone en el menú arriba
+      //       switch(sub1){
+
+      //         case 'cut':{
+      //             const selectedPaths = this.viewer.layerDraw.getSelectedBlocks();
+      //             //Hago las manipulaciones de propiedades en la rutina findAllCuts que es específica
+      //             let points = findAllCuts(selectedPaths);
+      //             if(points){
+      //               this.mData.setAttribute('type','cutPoints');
+      //               //el algoritmo puede devolver puntos de corte en las extensiones, se pueden filtrar aquí o interactivo
+      //               this.viewer.layerDraw.deselectAll();
+      //               this.viewer.layerDraw.addCutPointsToActiveLayer(points);
+      //               //this.viewer.interactiveDrawing.selectElements(this.viewer.layerDraw, points);
+      //             }
+      //           }
+      //           break;
+      //       }
+      //       break;
+      //   }
+      // }
     }
     handleMenus = (e) => {
       //Nos ponemos una nomenclatura razonable para poner orden en los ids
@@ -545,14 +566,6 @@ class cyCad1830App extends HTMLElement {
             }
             break;
         }
-        case 'select':{
-            //Aunque haga otras cosas, pongo modo select, habrçia que cambiar cursor..?!
-            //this.viewer.layerDraft.clear();
-            this.viewer.interactiveDrawing.drawSelection(this.viewer.layerDraw);
-            //El attribute es lo que cambia el html !!
-            this.mData.setAttribute('type','select');
-            }
-            break;
         case 'origin':{
             this.viewer.interactiveDrawing.drawOrigin(this.viewer.layerDraw);
             //El attribute es lo que cambia el html !!
@@ -566,6 +579,18 @@ class cyCad1830App extends HTMLElement {
             //  this.mData.updateData(this.dataStore.symmetry);
         }
         break;
+        case 'cut':{
+          const selectedPaths = this.viewer.layerDraw.getSelectedBlocks();
+          //Hago las manipulaciones de propiedades en la rutina findAllCuts que es específica
+          let points = findAllCuts(selectedPaths);
+          if(points){
+            this.mData.setAttribute('type','cutPoints');
+            //el algoritmo puede devolver puntos de corte en las extensiones, se pueden filtrar aquí o interactivo
+            this.viewer.layerDraw.deselectAll();
+            this.viewer.layerDraw.addCutPointsToActiveLayer(points);
+            //this.viewer.interactiveDrawing.selectElements(this.viewer.layerDraw, points);
+          }}
+          break;
         case 'scale':
         case 'translate': {
             this.viewer.interactiveDrawing.drawTranslate(this.viewer.layerDraw);

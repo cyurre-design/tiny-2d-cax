@@ -332,11 +332,6 @@ const templateTranslateInputData = `
     </md-filled-text-field><md-filled-text-field id="data-y1" label="Yf" class="half" type="number" value="0" step="0.5"></md-filled-text-field>
  </span>
 </div>
-<div>
-    <md-filled-button class="data _33" id="submenu-translate-replace">REP</md-filled-button>
-    <md-filled-button class="data _33" id="submenu-translate-copy">COPY</md-filled-button>
-    <md-filled-button class="data _33" id="submenu-translate-escape">ESC</md-filled-button>
-    </div>
 </div>`
 const templateRotateInputData = `<cy-angle-data id="data-a" class="data"></cy-angle-data>`
 

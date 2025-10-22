@@ -181,7 +181,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     //   }
 //    }
 
-//-------------------- Creación de elementos y gestión de id y 
+//-------------------- Creación y Edición de LAYERS 
 /**
  * 
  * @param {string} name el nombre de la capa (que puede ser generado automáticamente)
@@ -237,36 +237,24 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
  * @param {string} name nombre de la capa
  * @returns LyId de la capa o undefined si no existe
  */
-    findLayerByName(name){
-        for (const [lyId, layer] of this.layers.entries()){
-            if(name === layer.name) return lyId;
-        }
-        return undefined;
-    }
+    // findLayerByName(name){
+    //     for (const [lyId, layer] of this.layers.entries()){
+    //         if(name === layer.name) return lyId;
+    //     }
+    //     return undefined;
+    // }
 /**
  * 
  * @param {string} name 
  * @param {boolean} visible 
  */    
     setVisible(lyId, visible) {
-        //let lyId = this.findLayerByName(name);
         if(lyId !== undefined){
             this.layers.get(lyId).visible = visible;
         }
         this.draw();
     }
-/**
- * 
- * @param {string} name 
- * @returns boolean si existe o undefined si no existe
- */
-    isVisible(name) {
-        let lyId = this.findLayerByName(name);
-        if(lyId !== undefined){
-            return this.layers.get(lyId).visible;
-        }
-        return undefined;
-    }
+
 // ------------------------ Gestión de bloques , árbol y puntos, etc...
 
 /**
@@ -337,16 +325,16 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
      * @param {Number} newLayerId 
      * @returns nothing
      */
-    moveBlockToLayer(blockId, newLayerId) {
-        const block = this.blocks.get(blockId);
-        if (!block) return;
-        if (!this.layers.has(newLayerId)) throw new Error(`Layer ${newLayerId} no existe`);
-        // quitar de la capa antigua
-        this.layers.get(block.layerId)?.block.delete(blockId);
-        // asignar nueva capa
-        block.layerId = newLayerId;
-        this.layers.get(newLayerId).blocks.add(blockId);
-    }
+    // moveBlockToLayer(blockId, newLayerId) {
+    //     const block = this.blocks.get(blockId);
+    //     if (!block) return;
+    //     if (!this.layers.has(newLayerId)) throw new Error(`Layer ${newLayerId} no existe`);
+    //     // quitar de la capa antigua
+    //     this.layers.get(block.layerId)?.block.delete(blockId);
+    //     // asignar nueva capa
+    //     block.layerId = newLayerId;
+    //     this.layers.get(newLayerId).blocks.add(blockId);
+    // }
     /**
      * 
      * @param {Number} layerId 
@@ -358,8 +346,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         if (!layer) return [];
         return [...layer.blocks].map(id => this.blocks.get(id));
     }
-    setActiveLayerId(name){
-        const lyId = this.findLayerByName(name);
+    setActiveLayerId(lyId){
         if(lyId)
             this._activeLayerId = lyId;
         return this._activeLayerId;

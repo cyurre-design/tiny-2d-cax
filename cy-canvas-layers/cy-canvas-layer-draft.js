@@ -7,8 +7,8 @@ export default class CyCanvasLayerDraft extends CyCanvasLayer {
     constructor() {
         super('draft');
         //this.dom = this.attachShadow({mode:'open'});
-        this.dataLayers = [];
-        this._activeLayer = undefined;
+        //this.dataLayers = [];
+        //this._activeLayer = undefined;
         }
     createStyle() {
         return`
@@ -37,11 +37,6 @@ export default class CyCanvasLayerDraft extends CyCanvasLayer {
         this.pathColor = style.getPropertyValue('--path-color') || 'magenta';
         this.selectedWidth = +style.getPropertyValue('--selected-width') || 2;
         this.selectedColor = style.getPropertyValue('--selected-color') || 'gray';
-        this.draftPath = {
-            tr : this.ctx.getTransform(),
-            path: new Path2D()
-        }
-
     }
     disconnectedCallback(){
         //Aquí hay que quitar los listeners siendo formales
@@ -57,34 +52,6 @@ export default class CyCanvasLayerDraft extends CyCanvasLayer {
         default:break;
       }
     }
-    draw() {
-        super.clear();
-        const tr = this.ctx.getTransform();
-        this.ctx.setTransform(this.draftPath.tr);
-        super._drawPaths(this.draftPath.path, this.pathWidth, this.pathColor);
-        this.ctx.setTransform(tr);
-        return;
-    }
-    setTranslation(pi,pf){
-        const dx = pf.x - pi.x, dy = pf.y - pi.y;
-        const tr = this.ctx.getTransform();
-        this.ctx.translate(dx,dy);
-        this.draftPath.tr = this.ctx.getTransform();
-        this.ctx.setTransform(tr);
-    }
-    setDraftPath(path){
-        this.draftPath.path = path;
-    }
-    drawTransformedPaths( pi, pf /*, paths*/){
-        this.setTranslation(pi,pf);
-        this.draw();
 
-        // const dx = pf.x - pi.x, dy = pf.y - pi.y;
-        // const tr = this.ctx.getTransform();
-        // this.ctx.translate(dx,dy);
-        // super._drawPaths(this.draftPath.path, this.pathWidth, this.pathColor);
-        // this.draftPath = this.ctx.getTransform();
-        // this.ctx.setTransform(tr);
-    }
 }
 customElements.define('cy-canvas-layer-draft', CyCanvasLayerDraft);
