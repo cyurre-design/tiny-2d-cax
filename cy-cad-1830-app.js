@@ -347,7 +347,22 @@ class cyCad1830App extends HTMLElement {
     });
     this.manager.executeCommand(theCommand);    
     }
-
+  getCutPoints = (cutPoints) => {
+    const theCommand = this.manager.makeCommand({
+    execute(p, a) {
+      this.cutPoints = cutPoints;
+      if(this.cutPoints){
+        p.deselectAll();
+        p.addCutPoints(this.cutPoints);
+        p.draw();
+      }
+    },
+    undo(p,a){
+      p.deleteCutPoints(this.cutPoints);
+      p.draw();
+    }})
+    this.manager.executeCommand(theCommand);    
+  }
 
 
   connectedCallback(){
@@ -398,8 +413,8 @@ class cyCad1830App extends HTMLElement {
         const type = e.detail.split('-')[0]; //submenu, data
         if(type === 'data')
           this.viewer.interactiveDrawing.updateData(e.detail);
-        else if(type === 'submenu')
-          this.handleSubmenu(e.detail)
+        // else if(type === 'submenu')
+        //   this.handleSubmenu(e.detail)
         });
     
 
@@ -477,24 +492,16 @@ class cyCad1830App extends HTMLElement {
     this.dom.querySelector('#menu-select').addEventListener('click',(evt)=>{
       const cmd = evt.target.id.split('-')[1];
       switch(cmd){
-        case 'all':               case 'all':this.viewer.layerDraw.deselectAll(); break;
-        case 'invert':  this.viewer.layerDraw.invertSelection(); break;
-        case 'del'  :{
-                const blocks = this.viewer.layerDraw.getSelectedBlocks();
-                this.blockDelete(blocks);
-              }
+        case 'all'    : this.viewer.layerDraw.deselectAll(); break;
+        case 'invert' : this.viewer.layerDraw.invertSelection(); break;
+        case 'del'    : {
+                          const blocks = this.viewer.layerDraw.getSelectedBlocks();
+                          this.blockDelete(blocks);
+                        }
               break;
-        case 'sel':{
-            //Aunque haga otras cosas, pongo modo select, habrçia que cambiar cursor..?!
-            //this.viewer.layerDraft.clear();
-            this.viewer.interactiveDrawing.drawSelection(this.viewer.layerDraw);
-            //El attribute es lo que cambia el html !!
-            //this.mData.setAttribute('type','select');
-            }
-            break;
+        case 'sel'    : this.viewer.interactiveDrawing.drawSelection(this.viewer.layerDraw); break;
       }
-
-        })
+    })
 
 //-----------------CREAR CAPAS INICIALES
     //Estas capas las generamos de oficio
@@ -504,42 +511,17 @@ class cyCad1830App extends HTMLElement {
       this.layerView.addLayer( JSON.stringify(this.viewer.gridLayer)); //Estas tienen gestión interna especial
       
 
-      //Al crearla se debe poner activa ella sola. Y compruebo que viene bien
+      //Al crearla se debe poner activa ella sola.
       const layerData = this.layerCreate()
     });
-    }
+    
     handleKeys = (e)=>{
         if((e.key === 'Escape') || (e.key === 'Delete') || (e.key === 'Enter')){
           this.viewer.interactiveDrawing.doKeyAction(e.key);
           e.stopPropagation();
         }
     }
-    //Por separar los posibles switches y que quede más claro
-    //nos pasamos un string con submenu-tipo-subtipo
-    handleSubmenu = (idn) => {
-      //   const [_, main, sub1] = idn.split('-');
-      //   console.log(main, sub1);
-      //   switch(main){
-      //     case 'select':{ //El mData principal se pone en el menú arriba
-      //       switch(sub1){
 
-      //         case 'cut':{
-      //             const selectedPaths = this.viewer.layerDraw.getSelectedBlocks();
-      //             //Hago las manipulaciones de propiedades en la rutina findAllCuts que es específica
-      //             let points = findAllCuts(selectedPaths);
-      //             if(points){
-      //               this.mData.setAttribute('type','cutPoints');
-      //               //el algoritmo puede devolver puntos de corte en las extensiones, se pueden filtrar aquí o interactivo
-      //               this.viewer.layerDraw.deselectAll();
-      //               this.viewer.layerDraw.addCutPointsToActiveLayer(points);
-      //               //this.viewer.interactiveDrawing.selectElements(this.viewer.layerDraw, points);
-      //             }
-      //           }
-      //           break;
-      //       }
-      //       break;
-      //   }
-      // }
     }
     handleMenus = (e) => {
       //Nos ponemos una nomenclatura razonable para poner orden en los ids
@@ -579,17 +561,10 @@ class cyCad1830App extends HTMLElement {
             //  this.mData.updateData(this.dataStore.symmetry);
         }
         break;
-        case 'cut':{
-          const selectedPaths = this.viewer.layerDraw.getSelectedBlocks();
-          //Hago las manipulaciones de propiedades en la rutina findAllCuts que es específica
-          let points = findAllCuts(selectedPaths);
-          if(points){
-            this.mData.setAttribute('type','cutPoints');
-            //el algoritmo puede devolver puntos de corte en las extensiones, se pueden filtrar aquí o interactivo
-            this.viewer.layerDraw.deselectAll();
-            this.viewer.layerDraw.addCutPointsToActiveLayer(points);
-            //this.viewer.interactiveDrawing.selectElements(this.viewer.layerDraw, points);
-          }}
+        case 'cut':
+          const selectedBlocks = this.viewer.layerDraw.getSelectedBlocks();
+          const cutPoints = findAllCuts(selectedBlocks);
+          this.getCutPoints(cutPoints); //ye un comando con undo
           break;
         case 'scale':
         case 'translate': {

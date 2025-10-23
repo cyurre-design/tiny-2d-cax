@@ -358,13 +358,21 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     addCutPoints( points){ //estos ya vienen pretratados
         if(!points) console.log('puntos?'); //esto debe tratar el indefinido, el no array y el longitud 0
         points.forEach(p=>{
-            p.canvasPath = getPathFromBlocks([p], this.pointDimension);
-            p.style = this.style;
-            p.id = this.nextBlockId++;
+            p.canvasPath = getPathFromBlocks([p], this.style.pointDimension);
+            //p.style = this.style;
+            p.id = 'CP'+this.nextBlockId++;
             this.points.set(p.id, p);
             this.pointsTree.insert({minX:p.x0, maxX:p.x0, minY:p.y0, maxY: p.y0, id:p.id});    //Al tree para buscar rápido
         });
-        this.draw();
+        //this.draw();
+    }
+    deleteCutPoints( points){
+        if(!points) return;
+        points.forEach(p => {
+            this.points.delete(p.id);
+            this.pointsTree.remove(  {minX: Infinity, minY: Infinity, maxX: -Infinity, maxY: -Infinity, id:p.id }, (a, b) => a.id === b.id)
+        })
+        //this.draw();
     }
 //--------------Gestión de RBush y cercanía al ratón------------------
     //No miro por capas, si hace falta se filtra por layerId posteriormente
