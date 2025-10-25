@@ -104,12 +104,12 @@ export function segment_arc_intr(segment, arc, eps = geometryPrecision) {
     const point_lies_on_arc_and_segment = (pt, t2) => {
         if( !pointOnSegment(segment,pt) ) return false;
         if(arc.type==='circle') return true;    //Por usar la misma rutina 
-        return arc.pointWithinArcSweep( pt, eps); //esto yatá por definición && fuzzy_eq(distancePointToPoint(pt.x, pt.y, arc.x, arc.y), arc.r, eps)
+        return pointWithinArcSweep( arc, pt, eps); //esto yatá por definición && fuzzy_eq(distancePointToPoint(pt.x, pt.y, arc.x, arc.y), arc.r, eps)
     };
     if(fuzzy_eq(shortest_dist, arc.r, eps)) {
         let point =  {x: x0, y:y0}
         if( !pointOnSegment(segment,point) ) return {r:Cut.NoIntersect};
-        if( !arc.pointWithinArcSweep( point, eps)) return {r:Cut.NoIntersect};
+        if( !pointWithinArcSweep( arc, point, eps)) return {r:Cut.NoIntersect};
         return {r:Cut.TangentIntersect, point: point };
     }
 

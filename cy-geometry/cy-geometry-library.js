@@ -205,7 +205,19 @@ export function arcWay(data ){//https://www.w3.org/TR/SVG/implnote.html
     // newdata.fS = delta > 0? 1: 0;
     return newdata;
 }
-
+export function pointWithinArcSweep(arc, p, eps = geometryPrecision){
+        //Habría que afinar con eps pero implica pasar a alfa = atan2(eps/r) o algo así... TODO
+        let a = Math.atan2(p.y - arc.cy, p.x - arc.cx)
+        //el arco tiene calculados el alfa inicial(a1) y el delta (da, con signo)  
+        //Uso el mismo cálculo de delta que se usa para inicializar el arco
+        let delta = normalize_radians(a - arc.ai) ;
+        delta = arc.fS === 1 ? delta - _2PI : delta;
+        if(arc.da >= 0){
+            return ((delta>=0) && (delta <= arc.da))
+        } else {
+            return ((delta<=0) && (delta >= arc.da))
+        }
+    }
 
 //rutina pesada que calcula los puntos de corte entre los elementos que se le pasan, mirando dos a dos
 

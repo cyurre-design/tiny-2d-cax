@@ -1,4 +1,4 @@
-import { sqDistancePointToPoint, distancePointToPoint} from "./cy-geometry-library.js";
+import { sqDistancePointToPoint, distancePointToPoint, pointWithinArcSweep} from "./cy-geometry-library.js";
 import { geometryPrecision, fuzzy_eq_zero , fuzzy_eq_point ,fuzzy_eq, fuzzy_lt, fuzzy_gt} from "./cy-geometry-library.js";
 //import { BArc } from "./cy-geometry-extended-elements.js";
 import {Cut} from "./cy-cut-types.js";
@@ -53,14 +53,14 @@ export function circle_circle_intr( c1, c2, pos_equal_eps= geometryPrecision)
 export function arc_arc_intr(a1, a2, pos_equal_eps=geometryPrecision){
     // helper function to test if a point lies on arc1 segment
     const point_lies_on_arc1 = (pt) => {
-        return( a1.pointWithinArcSweep(pt, pos_equal_eps)  && fuzzy_eq( distancePointToPoint(pt.x, pt.y, a1.x, a1.y), a1.r, pos_equal_eps))
+        return( pointWithinArcSweep(a1, pt, pos_equal_eps)  && fuzzy_eq( distancePointToPoint(pt.x, pt.y, a1.x, a1.y), a1.r, pos_equal_eps))
         }
     // helper function to test if a point lies on arc2 segment
     const point_lies_on_arc2 = (pt) => {
-        return( a2.pointWithinArcSweep(pt, pos_equal_eps)  && fuzzy_eq( distancePointToPoint(pt.x, pt.y, a2.x, a2.y), a2.r, pos_equal_eps))
+        return( pointWithinArcSweep(a2, pt, pos_equal_eps)  && fuzzy_eq( distancePointToPoint(pt.x, pt.y, a2.x, a2.y), a2.r, pos_equal_eps))
         };
     const both_arcs_sweep_point = (pt) => {
-        return( a1.pointWithinArcSweep( pt, pos_equal_eps ) && a2.pointWithinArcSweep(  pt, pos_equal_eps ));
+        return( pointWithinArcSweep(a1, pt, pos_equal_eps ) && pointWithinArcSweep(a2,  pt, pos_equal_eps ));
     }
     let intr_result = circle_circle_intr( a1 , a2, pos_equal_eps);
         //YURRE: Esto merece un repaso posteriormente, pero uso la misma estructura en la devolución
@@ -192,7 +192,7 @@ export function circle_arc_intr(c, a2, pos_equal_eps=geometryPrecision){
             //else if (point_lies_on_arc2(a1.pf)) {  intr_result.point = a1.pf; }
             //else if (both_arcs_sweep_point(intr_result.point)) {/*intr_result.point = intr_result.point;*/ } //Ya viene como queremos
             //else intr_result.r = Cut.NoIntersect;
-            if(! a2.pointWithinArcSweep( intr_result.point, pos_equal_eps )) 
+            if(! pointWithinArcSweep(a2, intr_result.point, pos_equal_eps )) 
                 intr_result.r = Cut.NoIntersect;
             return intr_result; //Caso normal, se devuelve el punto de tangencia
         }
@@ -215,8 +215,8 @@ export function circle_arc_intr(c, a2, pos_equal_eps=geometryPrecision){
             //TODO: Comprobar que, efectivamente, los puntos sticky funcionana en el both_arcs_sweep_point1/2 !!!
             let pt1 = stickToArc(intr_result.point1);
             let pt2 = stickToArc(intr_result.point2); 
-            let pt1_in_sweep = a2.pointWithinArcSweep( pt1, pos_equal_eps );   //el point1 es corte de verdad
-            let pt2_in_sweep = a2.pointWithinArcSweep( pt2, pos_equal_eps );   //el point2 es corte de verdad
+            let pt1_in_sweep = pointWithinArcSweep(a2, pt1, pos_equal_eps );   //el point1 es corte de verdad
+            let pt2_in_sweep = pointWithinArcSweep(a2, pt2, pos_equal_eps );   //el point2 es corte de verdad
             if(pt1_in_sweep && pt2_in_sweep) {
                 //En principio se ordenan según distancia al comienzo de a2...no sé si luego vale para nada...
                 [pt1,pt2] = sqDistancePointToPoint (a2.pi.x, a2.pi.y, pt1.x, pt1.y) < sqDistancePointToPoint(a2.pi.x, a2.pi.y, pt2.x, pt2.y) ? [pt1, pt2] : [pt2, pt1]; 

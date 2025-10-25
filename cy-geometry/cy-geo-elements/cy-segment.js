@@ -12,7 +12,10 @@ import { translatePoint, transformPoint, pointSymmetricSegment } from '../cy-geo
 // De esa manera se pueden separar los códigos para parsers o interactivo de forma más sencilla
 
 export function createSegment(data) {
-        const segment = {x0 : data.x0, y0 : data.y0, x1 : data.x1, y1 : data.y1, type : 'segment'}
+        const segment = {
+            type : 'segment', x0 : data.x0, y0 : data.y0, x1 : data.x1, y1 : data.y1,
+            get pi(){ return ({x:this.x0,y:this.y0})} , get pf(){ return ({x:this.x1,y:this.y1})} 
+        }
         segmentCalculate(segment);
         return segment;
     }

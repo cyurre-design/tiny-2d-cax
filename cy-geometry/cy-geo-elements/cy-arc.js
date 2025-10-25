@@ -5,9 +5,13 @@ import {geometryPrecision, _2PI, normalize_radians, translatePoint, arc2PC2SVG, 
 //Falta tratamiento de errores
 //Para conservar igualdad de nomenclatura mantenemos el x0,y0 como centro, como en el círculo
 export function createArc(data = {}) {
-    const a = Object.assign({type : 'arc'}, data);       
+    const p = {type : 'arc', get pi(){ return ({x:this.x1, y: this.y1})}, get pf(){ return ({x:this.x2, y: this.y2})}}
+    const a = Object.assign(p, data);       
     //a.x0 = data.x0; a.y0 = data.y0;
     a.bbox = _boundingBox(a);
+    console.log(a.bbox);
+    //Object.defineProperty(a, "pi", {  get() { return {x:a.x1, y:a.y1}},    configurable: true, enumerable: true});
+    //Object.defineProperty(a, "pf", {  get() { return {x:a.x2, y:a.y2}},    configurable: true, enumerable: true});
     return a;
     }
     
@@ -46,26 +50,26 @@ function _boundingBox (a, eps = geometryPrecision){
             //cuadrantes 1 y 3, inicio en 1, hay un salto de 2 y el fA no marca el sentido, uso fS
             case 0b0010: return(a.fS === 0? Object.assign(bboxS, {x0:bboxC.x0, y1:bboxC.y1}) : Object.assign(bboxS, {x1:bboxC.x1, y0:bboxC.y0}));
             //cuadrantes del 3 al 1 (al revés)
-            case 0b0100: return(a.fS === 1? Object.assign(bboxS, {x0:bboxC.x0, y1:bboxC.y1}) : Object.assign(bboxS, {x1:bboxC.x1, y0:bboxC.y0}));
+            case 0b1000: return(a.fS === 1? Object.assign(bboxS, {x0:bboxC.x0, y1:bboxC.y1}) : Object.assign(bboxS, {x1:bboxC.x1, y0:bboxC.y0}));
             //cuadrantes 2 y 4, inicio en 2, hay un salto de 2 y el fA no marca el sentido, uso fS
             case 0b0111: return(a.fS === 0? Object.assign(bboxS, {x0:bboxC.x0, y0:bboxC.y0}) : Object.assign(bboxS, {x0:bboxC.x0, y0:bboxC.y0}));
             //cuadrantes del 4 al 2 (al revés)
             case 0b1101: return(a.fS === 1? Object.assign(bboxS, {x0:bboxC.x0, y0:bboxC.y0}) : Object.assign(bboxS, {x0:bboxC.x0, y0:bboxC.y0}));
         }          
     }
-export function pointWithinArcSweep(arc, p, eps = geometryPrecision){
-        //Habría que afinar con eps pero implica pasar a alfa = atan2(eps/r) o algo así... TODO
-        let a = Math.atan2(p.y - arc.cy, p.x - arc.cx)
-        //el arco tiene calculados el alfa inicial(a1) y el delta (da, con signo)  
-        //Uso el mismo cálculo de delta que se usa para inicializar el arco
-        let delta = normalize_radians(a - arc.ai) ;
-        delta = arc.fS === 1 ? delta - _2PI : delta;
-        if(this.da >= 0){
-            return ((delta>=0) && (delta <= arc.da))
-        } else {
-            return ((delta<=0) && (delta >= arc.da))
-        }
-    }
+// export function pointWithinArcSweep(arc, p, eps = geometryPrecision){
+//         //Habría que afinar con eps pero implica pasar a alfa = atan2(eps/r) o algo así... TODO
+//         let a = Math.atan2(p.y - arc.cy, p.x - arc.cx)
+//         //el arco tiene calculados el alfa inicial(a1) y el delta (da, con signo)  
+//         //Uso el mismo cálculo de delta que se usa para inicializar el arco
+//         let delta = normalize_radians(a - arc.ai) ;
+//         delta = arc.fS === 1 ? delta - _2PI : delta;
+//         if(this.da >= 0){
+//             return ((delta>=0) && (delta <= arc.da))
+//         } else {
+//             return ((delta<=0) && (delta >= arc.da))
+//         }
+//     }
 
 function arcClone(a) {   //un solo nivel de atributos, copio todo
         return createArc(a);
