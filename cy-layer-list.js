@@ -74,7 +74,7 @@ class CyLayerList extends HTMLElement {
         this.list.addEventListener('change', (e)=>this.handleLayers(e)); 
         this.list.addEventListener(`click`, (evt => {
             const data = evt.target.id.split('-');
-            this.editedLayer = this.layers.find((l)=>l.name === data[2]);
+            this.editedLayer = this.layers.find((l)=>l.id === data[2]);
             
             if(data[1] === 'edit'){
                 this.dialog.innerHTML = this.createDialog(this.editedLayer);

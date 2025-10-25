@@ -3,14 +3,8 @@ import CyCanvasLayer from './cy-canvas-layer.js';
 import {scalePixels2mm, scaleMm2pixels, position2pixels} from './cy-canvas-handler.js';
 import { checkBbox, insideBbox,  }  from '../cy-geometry/cy-geometry-library.js';
 import { getRelevantPoints }  from '../cy-geometry/cy-geometry-basic-elements.js';
-//import {CyDataLayer, canvasCSS} from './cy-data-layer.js';
 import {getPathFromBlocks} from './cy-elements-to-canvas.js'
-// import {Path} from '../cy-geometry/cy-geo-elements/cy-path.js'
-// import {Polygon} from '../cy-geometry/cy-geo-elements/cy-polygon.js'
-// import {Circle} from '../cy-geometry/cy-geo-elements/cy-circle.js'
-// import {Segment} from '../cy-geometry/cy-geo-elements/cy-segment.js'
-// import {Arc} from '../cy-geometry/cy-geo-elements/cy-arc.js'
-// import {Point, CutPoint} from '../cy-geometry/cy-geo-elements/cy-point.js'
+
 
 export const canvasCSS = {
     pathColor: 'green',
@@ -22,33 +16,14 @@ export const canvasCSS = {
     pointDimension : 3
 }
 
-class layerStyle{
-    constructor( st = {pathColor: 'green', pathWidth: 2, selectedColor: 'yellow', selectedWidth: 3, printColor: 'black', printWidth: 2, pointDimension : 3}){
-        this.pathColor=     st.pathColor;
-        this.pathWidth=     st.pathWidth;
-        this.selectedColor= st.selectedColor;
-        this.selectedWidth= st.selectedWidth;
-        this.printColor =   st.printColor;
-        this.printWidth =   st.printWidth;
-        this.pointDimension= st.pointDimension;
-    }
-    static default = ()=> new layerStyle();
-
-    toJSON(){
-        return this;
-    }
-    fromJSON(data){ return new layerStyle(data);
-
-    }
-}
 // ------------------------
 // Modelo Layer
 // ------------------------
 class Layer {
-    constructor(id, name, style = layerStyle.default(), visible = true, erasable = true) {
+    constructor(id, name, style = canvasCSS, visible = true, erasable = true) {
         this.id = id;
         this.name = name;
-        this.style = style;
+        this.style = Object.assign({},style);
         this.visible = visible;
         this.erasable = erasable;
         this.blocks = new Set(); // ids de shapes asignados a esta capa
@@ -184,7 +159,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
  * @todo no crear si ya existe
  * @todo definir clase o similar (serializable) para el estilo de pintada en canvas
  */
-    addLayer(name, style = layerStyle.default(), id) {
+    addLayer(name, style = canvasCSS, id) {
         const theId = this.nextLayerId++;
         const lyId = id !== undefined? id : `L${theId}`;
         const lname = name !== undefined ? name : `Layer${theId}`;
