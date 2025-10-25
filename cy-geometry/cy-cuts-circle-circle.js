@@ -1,6 +1,6 @@
 import { sqDistancePointToPoint, distancePointToPoint} from "./cy-geometry-library.js";
 import { geometryPrecision, fuzzy_eq_zero , fuzzy_eq_point ,fuzzy_eq, fuzzy_lt, fuzzy_gt} from "./cy-geometry-library.js";
-import { BArc } from "./cy-geometry-extended-elements.js";
+//import { BArc } from "./cy-geometry-extended-elements.js";
 import {Cut} from "./cy-cut-types.js";
 
 //YURRE: Cambio de nomeclatura y poner nombres equivalentes a circle y arc

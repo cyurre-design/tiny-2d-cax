@@ -4,66 +4,46 @@ import { translatePoint, pointSymmetricSegment } from '../cy-geometry-library.js
 
 //args: centro(x0,y0), radio, edges, delta, alfa inicial
 
-export class Polygon{
-    constructor(data = {}) {
-        this.type = 'polygon';
-        this.edges = data.edges;
-        this.cx = data.cx; this.cy = data.cy;
-        this.x0 = this.cx; this.y0 = this.cy;
-        this.r = data.r;
-        //en data ya me viene delta y alfa
-        this.delta = data.delta;     //2 * Math.PI / this.edges;
-        this.alfai = data.alfai;       //this.alfa * Math.PI /180;
-        this._calculateSegments();
-        this.bbox = this._bbox()    ;
+export function createPolygon(data = {}) {
+    const p = { type : 'polygon', edges : data.edges,
+        cx : data.cx, cy : data.cy,
+        x0 : data.cx, y0 : data.cy,
+        r : data.r, delta : data.delta,     //2 * Math.PI / edges;
+        alfai : data.alfai,       //alfa * Math.PI /180;
     }
-    get p0() {  return {x:this.x0, y: this.y0};    }
-    get c() {  return {x:this.x0, y: this.y0};    }
+    p.segments = _calculateSegments(p);
+    p.bbox = _bbox(p);
+    return p;
+}
+    // get p0() {  return {x:this.x0, y: this.y0};    }
+    // get c() {  return {x:this.x0, y: this.y0};    }
     //NO genero todos los segmentos, porque de momento no hacen falta como clases independientes
-    _calculateSegments(){
-        this.segments = [];
-        for(let i = 0; i < this.edges; i++){
-            this.segments.push({x0:this.cx + this.r*Math.cos(this.alfai + i * this.delta), y0:this.cy + this.r*Math.sin(this.alfai + i * this.delta)});
+    function _calculateSegments(p){
+        const segments = [];
+        for(let i = 0; i < p.edges; i++){
+            segments.push({x0:p.cx + p.r*Math.cos(p.alfai + i * p.delta), y0:p.cy + p.r*Math.sin(p.alfai + i * p.delta)});
         }
+        return segments;
     }
     //esta no es exacta....TODO
-    _bbox(){ return({x0: this.cx - this.r, y0: this.cy - this.r, x1: this.cx + this.r, y1: this.cy + this.r})}
-    translate(dx,dy){
-        const [cx, cy] = translatePoint(this.cx, this.cy, dx, dy);
-        return new Polygon({cx:cx, cy:cy, r:this.r, edges:this.edges, delta:this.delta, alfai:this.alfai});
+    function _bbox(p){ return({x0: p.cx - p.r, y0: p.cy - p.r, x1: p.cx + p.r, y1: p.cy + p.r})}
+    function polygonTranslate(p, dx, dy){
+        const [cx, cy] = translatePoint(p.cx, p.cy, dx, dy);
+        return createPolygon({cx:cx, cy:cy, r:p.r, edges:p.edges, delta:p.delta, alfai:p.alfai});
     }
-    clone() { 
-        return new Polygon(this);
+    function polygonClone(p) { 
+        return JSON.parse(JSON.stringify(p));
     }
-    symmetryX( y){
-        return new Polygon({cx:this.cx, cy:2*y - this.cy, r:this.r, edges:this.edges, delta:-this.delta, alfai:-this.alfai});
+    function polygonSymmetryX(p, y){
+        return createPolygon({cx:p.cx, cy:2*y - p.cy, r:p.r, edges:p.edges, delta:-p.delta, alfai:-p.alfai});
     }
-    symmetryY( x){
-        return new Polygon({cx:2*x - this.cx, cy:this.cy, r:this.r, edges:this.edges, delta:-this.delta, alfai:Math.PI-this.alfai});
+    function polygonSymmetryY(p, x){
+        return createPolygon({cx:2*x - p.cx, cy:p.cy, r:p.r, edges:p.edges, delta:-p.delta, alfai:Math.PI-p.alfai});
     }
-    symmetryL(s){
-        const [x, y] = pointSymmetricSegment(s, this.segments[0].x0, this.segments[0].y0);
-        const [cx, cy] = pointSymmetricSegment(s, this.cx, this.cy);
+    function polygonSymmetryL(p, s){
+        const [x, y] = pointSymmetricSegment(s, p.segments[0].x0, p.segments[0].y0);
+        const [cx, cy] = pointSymmetricSegment(s, p.cx, p.cy);
         const alfai = Math.atan2(y - cy, x - cx)
-        return new Polygon({cx:cx, cy:cy, r:this.r, edges:this.edges, delta:-this.delta, alfai:alfai});
+        return createPolygon({cx:cx, cy:cy, r:p.r, edges:p.edges, delta:-p.delta, alfai:alfai});
     }
     
-    isEqual(c) {
-       // return (Math.abs(c.x - this.x) <= geometryPrecision && Math.abs(c.y - this.y) <= geometryPrecision && Math.abs(c.r - this.r) <= geometryPrecision);
-    }
-    // isInside(r) {
-    //     //return (r.contains({x: this.x + this.r, y: this.y}) && r.contains({x: this.x - this.r, y: this.y}) && r.contains({x: this.x, y: this.y + this.r}) && r.contains({x: this.x, y: this.y - this.r}));
-    // }
-    // isPointed(x, y, tol) { //TODO
-    //     if(Math.abs(distancePointToPoint(this.cx, this.cy, x, y) - this.r) <= tol) return true;
-    //     return(this.segments.some(s=>s.isPointed(x,y,tol)));
-
-    // }
-    toJSON(){
-        return {type:"polygon", data:{r:this.r, cx:this.cx, cy:this.cy, edges:this.edges, delta:this.delta, alfai:this.alfai}};
-    }
-    static deserialize(data){
-        return new Polygon(data);
-    }
-}
-

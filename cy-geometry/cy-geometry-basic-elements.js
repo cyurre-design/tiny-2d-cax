@@ -3,31 +3,40 @@
 import {geometryPrecision, centerFrom2PR, circleFrom3Points, arc3P2SVG, arc2PR2SVG, arcCPA, arcWay} from './cy-geometry-library.js'
 import { translatePoint } from './cy-geometry-library.js'
 
-import {Segment} from './cy-geo-elements/cy-segment.js'
-import {Circle} from './cy-geo-elements/cy-circle.js'
-import {Arc} from './cy-geo-elements/cy-arc.js'
-import {Polygon} from './cy-geo-elements/cy-polygon.js'
-import {Path} from './cy-geo-elements/cy-path.js'
+import {createSegment} from './cy-geo-elements/cy-segment.js'
+import {createCircle} from './cy-geo-elements/cy-circle.js'
+import {createArc} from './cy-geo-elements/cy-arc.js'
+import {createPolygon} from './cy-geo-elements/cy-polygon.js'
+import {createPath} from './cy-geo-elements/cy-path.js'
 //import './cy-geo-elements/bezier.js'
 //import './cy-geo-elements/biarc.js'
 
 
-//igual, pero el constructor garantiza x0 <x1 e y0 < y1
-export class Bbox  {
-    constructor(data = {}) {    //suponemos que no exportaré la clase y los puntos vienen definidos
-        this.x0 = Math.min(data.x0, data.x1);
-        this.y0 = Math.min(data.y0, data.y1);
-        this.x1 = Math.max(data.x0, data.x1);
-        this.y1 = Math.max(data.y0, data.y1);
-        this.type = 'bbox';
-    }
-    translate(dx,dy){
-        [this.x0, this.y0] = translatePoint(this.x0, this.y0, dx, dy);
-        [this.x1, this.y1] = translatePoint(this.x1, this.y1, dx, dy);       
+// //igual, pero el constructor garantiza x0 <x1 e y0 < y1
+// export function createBbox(data = {}) {    //suponemos que los puntos vienen definidos
+//     return {x0 : Math.min(data.x0, data.x1),
+//         y0 : Math.min(data.y0, data.y1),
+//         x1 : Math.max(data.x0, data.x1),
+//         y1 : Math.max(data.y0, data.y1),
+//         type : 'bbox'
+//     }
+// }
+// //Atton, esta la hago por referencia    
+// export function bboxTranslate(b, dx, dy){
+//         [b.x0, b.y0] = translatePoint(this.x0, this.y0, dx, dy);
+//         [b.x1, b.y1] = translatePoint(this.x1, this.y1, dx, dy);       
+//     }
+
+        
+export function getRelevantPoints(b){
+    switch(b.type){
+        case 'segment': return [{x0:b.x0, y0:b.y0}, {x0:b.x1, y0:b.y1}];
+        case 'circle'   : return [{x0:b.cx, y0:b.cy}];
+        case 'arc'      : return [{x0:b.cx, y0:b.cy}, {x0:b.x1, y0:b.y1}, {x0:b.x2, y0:b.y2}]
+        case 'polygon'  : return [{x0:b.cx, y0:b.cy}].concat(b.segments.map(p=> ({x0:p.x0, y0:p.y0})));
+        case 'path'     : return b.elements.map(getRelevantPoints(b)).flat();
     }
 }
-        
-
 
 export function createDrawElement(type, data ) {
     let element; //para tratarlo después del switch
@@ -58,7 +67,7 @@ export function createDrawElement(type, data ) {
                     default: return undefined;
                 }
             }
-            element = new Segment(Object.assign(data)); //el estandarizado es con punto final
+            element = createSegment(Object.assign(data)); //el estandarizado es con punto final
         }
             break;
         //añado el tratamiento de datos no completos o inconsistentes para devolver un segmento en ese caso
@@ -68,16 +77,16 @@ export function createDrawElement(type, data ) {
             switch(data.subType){
                 case 'CR':{
                     if(data.cx !== undefined) //Podríamos añadir el x1 porque en este caso viene dado...
-                        element = new Circle({cx:data.cx, cy:data.cy, x1:data.cx + data.r, y1:data.cy});
+                        element = createCircle({cx:data.cx, cy:data.cy, x1:data.cx + data.r, y1:data.cy});
                     else if(data.x0 !== undefined)
-                        element = new Circle({cx:data.x0, cy:data.y0, x1:data.x0 + data.r, y1:data.y0});
+                        element = createCircle({cx:data.x0, cy:data.y0, x1:data.x0 + data.r, y1:data.y0});
                     }
                     break;
                 case 'CP':{
                     if(data.cx !== undefined)
-                        element = new Circle({cx:data.cx, cy:data.cy, x1:data.x1, y1:data.y1});
+                        element = createCircle({cx:data.cx, cy:data.cy, x1:data.x1, y1:data.y1});
                     else if(data.x0 !== undefined)
-                        element = new Circle({cx:data.x0, cy:data.y0, x1:data.x1, y1:data.y1});
+                        element = createCircle({cx:data.x0, cy:data.y0, x1:data.x1, y1:data.y1});
                     }
                     break;
                 case '3P':{ //TODO EPSILON
@@ -87,18 +96,18 @@ export function createDrawElement(type, data ) {
                     else
                         center = circleFrom3Points({x:data.x0, y:data.y0},{x:data.x1, y:data.y1},{x:data.x1, y:data.y1});
                     if(!center)
-                        element = new Segment({x0:data.x0, y0:data.y0, x1:data.x1, y1:data.y1});
+                        element = createSegment({x0:data.x0, y0:data.y0, x1:data.x1, y1:data.y1});
                     else{
-                        element = new Circle(center);
+                        element = createCircle(center);
                     }
                 }
                 break;
                 case '2PR':{ //TODO EPSILON  
                     const newdata = centerFrom2PR(data); 
                     if(!newdata)
-                        element = new Segment({x0:data.x0, y0:data.y0, x1:data.x1, y1:data.y1});
+                        element = createSegment({x0:data.x0, y0:data.y0, x1:data.x1, y1:data.y1});
                     else
-                        element = new Circle(newdata);
+                        element = createCircle(newdata);
                     }
                 break;
             }
@@ -125,7 +134,7 @@ export function createDrawElement(type, data ) {
             data.r = r;
             data.delta = delta;
             data.alfai = alfai;
-            element = new Polygon(Object.assign(data));
+            element = createPolygon(Object.assign(data));
             break;
         case 'bezier': 
             element = new Bezier(Object.assign(data));
@@ -134,7 +143,7 @@ export function createDrawElement(type, data ) {
             data.elements = data.elements || [];
             data.elements = data.elements.filter(el=>el!== undefined); //limpieza, mejor no meterlos....
             //if(data.elements.length === 0) data.elements.push(new Segment({x0:0, y0:0, x1:1, y1:1}));
-            element = new Path(Object.assign(data));
+            element = createPath(Object.assign(data));
             break;
         case 'arc':
             //La clase ARC toma 3 puntos x0,x1,x2 === cx, pi.x, pf.x 
@@ -142,9 +151,9 @@ export function createDrawElement(type, data ) {
                 case '2PR':{
                         const arc = arc2PR2SVG({x:data.x0,y:data.y0},{x:data.x1,y:data.y1},Math.abs(data.r));
                         if(!arc)
-                            element = new Segment({x0:data.x0,y0:data.y0,x1:data.x1,y1:data.y1});
+                            element = createSegment({x0:data.x0,y0:data.y0,x1:data.x1,y1:data.y1});
                         else
-                            element = new Arc(arc);
+                            element = createArc(arc);
                     }
                     break;
                 case '3P':{//llegan p0, pm, p1, Atton
@@ -154,25 +163,25 @@ export function createDrawElement(type, data ) {
                     else 
                         arc = arc3P2SVG({x:data.x0, y:data.y0},{x:data.xm, y:data.ym},{x:data.xm, y:data.ym});
                     if(!arc)
-                        element = new Segment(({x0:data.x0,y0:data.y0,x1:data.xm, y1:data.ym}));
+                        element = createSegment(({x0:data.x0,y0:data.y0,x1:data.xm, y1:data.ym}));
                     else{
-                        element = new Arc(arc);
+                        element = createArc(arc);
                 }}
                     break;
                 case 'CPA':{ //llega a, centro (x0,y0) y punto inicial(x1,y1)
                     const arc = arcCPA({x:data.x0, y:data.y0}, {x:data.x1, y:data.y1}, data.a);
-                    element = new Arc(arc);
+                    element = createArc(arc);
                 }
                 break;
                 //subtype:'way', cx: prf.x0, cy: prf.y0, x0: prf.xi, y0: prf.yi, x1: prf.xf, y1: prf.yf, way: arcWay
                 case 'way':{//https://www.w3.org/TR/SVG/implnote.html
                     const newdata = arcWay(data);
-                    element = new Arc( newdata);
+                    element = createArc( newdata);
                     }
                     break;
                 case 'SVG':{ //aquí solo vienen los de svg con inicial y final, r y flags
                             //https://www.w3.org/TR/SVG/implnote.html
-                    element = new Arc(data)    
+                    element = createArc(data)    
                     // let xm = 0.5 * (data.x0 - data.x1);
                     // let ym = 0.5 * (data.y0 - data.y1);
                     // let k = Math.sqrt((data.r*data.r - xm*xm - ym*ym) / (ym*ym + xm*xm));
@@ -200,23 +209,6 @@ export function createDrawElement(type, data ) {
     return(element);
 }
 
-//Espero el contenido de una capa, pero no meto aquí ese conocimiento
-//Recibo un array de elementos(objetos)  y devuelvo lo mismo pero con clases
-export function deserialize(layerObjects){
-  const parsed = Array.isArray(layerObjects)?layerObjects:[layerObjects];
-  //esta solo lee los individuales
-  const parseElement = (geoEl) => {
-    switch(geoEl.type){
-        case 'arc'      :   return(Arc.deserialize(geoEl.data));
-        case 'segment'  :   return(Segment.deserialize(geoEl.data));
-        case 'circle'   :   return(Circle.deserialize(geoEl.data));
-        case 'polygon'  :   return(Polygon.deserialize(geoEl.data));
-        case 'path'     :   return(Path.deserialize(geoEl.data));
-        default: console.error('tipo no contemplador')
-    }
-  }
-   return (parsed.map(el => parseElement(el)));
-}
 
 // export function test_arcsweep(){
 //     let randomAngles = Array.from({length: 30}, () => Math.floor((Math.random() - 0.5) * 360));

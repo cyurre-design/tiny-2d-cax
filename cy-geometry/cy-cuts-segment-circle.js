@@ -1,6 +1,6 @@
 
 import { geometryPrecision, fuzzy_eq, fuzzy_eq_point, fuzzy_eq_zero, sqDistancePointToPoint} from "./cy-geometry-library.js"
-import {BArc, BSegment} from "./cy-geometry-extended-elements.js"
+//import {BArc, BSegment} from "./cy-geometry-extended-elements.js"
 import {Cut} from "./cy-cut-types.js";
 //YURRE: He traido aquí la siguiente lógica
     // Note if intersect is detected we check if the line segment starts or ends on the arc

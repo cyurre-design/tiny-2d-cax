@@ -1,16 +1,16 @@
 "use strict";
 import CyCanvasLayer from './cy-canvas-layer.js';
 import {scalePixels2mm, scaleMm2pixels, position2pixels} from './cy-canvas-handler.js';
-import { checkBbox, insideBbox }  from '../cy-geometry/cy-geometry-library.js';
-//import {createDrawElement }  from '../cy-geometry/cy-geometry-basic-elements.js';
+import { checkBbox, insideBbox,  }  from '../cy-geometry/cy-geometry-library.js';
+import { getRelevantPoints }  from '../cy-geometry/cy-geometry-basic-elements.js';
 //import {CyDataLayer, canvasCSS} from './cy-data-layer.js';
 import {getPathFromBlocks} from './cy-elements-to-canvas.js'
-import {Path} from '../cy-geometry/cy-geo-elements/cy-path.js'
-import {Polygon} from '../cy-geometry/cy-geo-elements/cy-polygon.js'
-import {Circle} from '../cy-geometry/cy-geo-elements/cy-circle.js'
-import {Segment} from '../cy-geometry/cy-geo-elements/cy-segment.js'
-import {Arc} from '../cy-geometry/cy-geo-elements/cy-arc.js'
-import {Point, CutPoint} from '../cy-geometry/cy-geo-elements/cy-point.js'
+// import {Path} from '../cy-geometry/cy-geo-elements/cy-path.js'
+// import {Polygon} from '../cy-geometry/cy-geo-elements/cy-polygon.js'
+// import {Circle} from '../cy-geometry/cy-geo-elements/cy-circle.js'
+// import {Segment} from '../cy-geometry/cy-geo-elements/cy-segment.js'
+// import {Arc} from '../cy-geometry/cy-geo-elements/cy-arc.js'
+// import {Point, CutPoint} from '../cy-geometry/cy-geo-elements/cy-point.js'
 
 export const canvasCSS = {
     pathColor: 'green',
@@ -23,14 +23,14 @@ export const canvasCSS = {
 }
 
 class layerStyle{
-    constructor( pathColor= 'green', pathWidth= 2, selectedColor= 'yellow', selectedWidth= 3, printColor= 'black', printWidth= 2, pointDimension = 3){
-        this.pathColor=     pathColor;
-        this.pathWidth=     pathWidth;
-        this.selectedColor= selectedColor;
-        this.selectedWidth= selectedWidth;
-        this.printColor =   printColor;
-        this.printWidth =   printWidth;
-        this.pointDimension= pointDimension;
+    constructor( st = {pathColor: 'green', pathWidth: 2, selectedColor: 'yellow', selectedWidth: 3, printColor: 'black', printWidth: 2, pointDimension : 3}){
+        this.pathColor=     st.pathColor;
+        this.pathWidth=     st.pathWidth;
+        this.selectedColor= st.selectedColor;
+        this.selectedWidth= st.selectedWidth;
+        this.printColor =   st.printColor;
+        this.printWidth =   st.printWidth;
+        this.pointDimension= st.pointDimension;
     }
     static default = ()=> new layerStyle();
 
@@ -112,20 +112,21 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
      * 2.- salvar o recuperar un proyecto (por ejemplo para añsdir figuras)
      * En el segundo caso NO se usará toda la info @todo
      */
-
+    //Hay que separar la parte geométrica de la otra porque si no se usa el toJSON de esa parte y perdemos la info añadida
     toJSON(){
-        return {blocks:Object.fromEntries(this.blocks.entries()), points:(Object.fromEntries(this.points.entries())), layers: Object.fromEntries(this.layers.entries()),
+        return {blocks:Array.from(this.blocks.values()), points:Array.from(this.points.values()), layers: Array.from(this.layers.values()),
             _activeLayerId: this._activeLayerId, nextBlockId:this.nextBlockId, nextLayerId: this.nextLayerId,
             pointsTree:this.pointsTree, blocksTree:this.blocksTree}
         //console.log (JSON.stringify(this));
     }
-    static fromJSON(file){
-        const rawLayers = JSON.parse(file);
-        rawLayers.forEach(ly => {
-            const newLayer = this.addLayer(ly.name);
-            newLayer.addBlocks(deserialize(ly.blocks));
-        })   
-    }
+
+    // static fromJSON(file){
+    //     const rawLayers = JSON.parse(file);
+    //     rawLayers.forEach(ly => {
+    //         const newLayer = this.addLayer(ly.name);
+    //         newLayer.addBlocks(deserialize(ly.blocks));
+    //     })   
+    // }
 
 
     createStyle() {
@@ -156,13 +157,6 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         this.pathColor = style.getPropertyValue('--path-color') || 'green';
         this.selectedWidth = +style.getPropertyValue('--selected-width') || 2;
         this.selectedColor = style.getPropertyValue('--selected-color') || 'yellow';
-
-        //Voy a probar a extender las clases geométricas con los métodos de dibujo
-        Circle.prototype.getRelevantPoints  = function(){ return [new Point({x:this.cx, y:this.cy})]};
-        Segment.prototype.getRelevantPoints = function(){ return [new Point({x:this.x0, y:this.y0}), new Point({x:this.x1, y:this.y1})]};
-        Polygon.prototype.getRelevantPoints = function(){ return [new Point({x:this.cx, y:this.cy})].concat(this.segments.map(p=>(new Point({x:p.x0, y:p.y0}))))};
-        Arc.prototype.getRelevantPoints     = function(){ return [new Point({x:this.cx, y:this.cy}),new Point({x:this.x1, y:this.y1}),new Point({x:this.x2, y:this.y2})]};
-        Path.prototype.getRelevantPoints    = function(){ return (this.elements.map(el=>el.getRelevantPoints())).flat()};
     }
     // disconnectedCallback(){
     //     //Aquí hay que quitar los listeners siendo formales
@@ -190,9 +184,9 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
  * @todo no crear si ya existe
  * @todo definir clase o similar (serializable) para el estilo de pintada en canvas
  */
-    addLayer(name, style = layerStyle.default()) {
+    addLayer(name, style = layerStyle.default(), id) {
         const theId = this.nextLayerId++;
-        const lyId = `L${theId}`;
+        const lyId = id !== undefined? id : `L${theId}`;
         const lname = name !== undefined ? name : `Layer${theId}`;
         const layer = new Layer(lyId, lname, style, true);
         this.layers.set(lyId, layer);
@@ -289,7 +283,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
                 this.layers.get(b.layerId).blocks.add(b.id);    //la mete en el map de la capa que sea
                 this.blocksTree.insert({minX:b.bbox.x0,minY:b.bbox.y0,maxX:b.bbox.x1,maxY:b.bbox.y1, id:b.id})
                 //gestión de sus puntos
-                const points = b.getRelevantPoints();
+                const points = getRelevantPoints(b);
                 points.forEach(p=>{ 
                     p.bid = b.id;   //para saber a qué bloque pertenece el punto 
                     p.id = `P${this.nextBlockId++}`; //el id que estamos poniendo es el del bloque, en getRelevantPoints

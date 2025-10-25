@@ -11,101 +11,88 @@ import { translatePoint, transformPoint, pointSymmetricSegment } from '../cy-geo
 // con tipos y subtipos de parámetros.
 // De esa manera se pueden separar los códigos para parsers o interactivo de forma más sencilla
 
-export class Segment {
-    constructor(data = {}) {    //suponemos que no exportaré la clase y los puntos vienen definidos
-        this.x0 = data.x0; this.y0 = data.y0;
-        this.x1 = data.x1; this.y1 = data.y1;
-        this._calculate();
-        this.type = 'segment';
+export function createSegment(data) {
+        const segment = {x0 : data.x0, y0 : data.y0, x1 : data.x1, y1 : data.y1, type : 'segment'}
+        segmentCalculate(segment);
+        return segment;
     }
-    _calculate(){
-        const dx = (this.x1-this.x0), dy = (this.y1-this.y0);
-        this.d = Math.hypot(dx, dy);
-        this.ux = dx / this.d; this.uy = dy / this.d; 
-        this.alfa = Math.atan2(this.uy, this.ux) * 180 / Math.PI;
+function segmentCalculate(segment){
+        const dx = (segment.x1-segment.x0), dy = (segment.y1-segment.y0);
+        segment.d = Math.hypot(dx, dy);
+        segment.ux = dx / segment.d; segment.uy = dy / segment.d; 
+        segment.alfa = Math.atan2(segment.uy, segment.ux) * 180 / Math.PI;
         //pero hay que recalcular c, distancia de la recta al punto 0,0
-        this.c = this.y0 * this.ux - this.x0 * this.uy;
-        this.bbox = this._calculateBbox( );
+        segment.c = segment.y0 * segment.ux - segment.x0 * segment.uy;
+        segment.bbox = calculateBbox(segment );
     }
-    _calculateBbox(){
-        return({x0: Math.min(this.x0, this.x1), y0:Math.min(this.y0, this.y1), x1:Math.max(this.x0, this.x1), y1:Math.max(this.y0, this.y1)})
+function calculateBbox(segment){
+        return({x0: Math.min(segment.x0, segment.x1), y0:Math.min(segment.y0, segment.y1), x1:Math.max(segment.x0, segment.x1), y1:Math.max(segment.y0, segment.y1)})
     }
     //Para poder tener acceso en modo punto
-    get pi(){ return ({x:this.x0,y:this.y0})} 
-    get pf(){ return ({x:this.x1,y:this.y1})} 
+    // get pi(){ return ({x:this.x0,y:this.y0})} 
+    // get pf(){ return ({x:this.x1,y:this.y1})} 
 
-    toJSON(){ //Lo necesario para el constructos, para no llamar a createDraw,
-        return {type:"segment", data:{x0:this.x0, y0:this.y0, x1:this.x1, y1: this.y1}};
-    }
-    static fromJSON(data){
-        return new Segment(data);
-    }
+    // toJSON(){ //Lo necesario para el constructos, para no llamar a createDraw,
+    //     return {type:"segment", data:{x0:this.x0, y0:this.y0, x1:this.x1, y1: this.y1}};
+    // }
+    // static fromJSON(data){
+    //     return new Segment(data);
+    // }
 
-    isClosed() {
-        return true;
-    }
     //TODO
     // isEqual(el) {
     //     return (Math.abs(el.x - this.x) < geometryPrecision && Math.abs(el.y - this.y) < geometryPrecision);
     // }
-    clone() {
-        return new Segment(this);
+export function segmentClone(segment) {
+        return JSON.parse(JSON.stringify(segment));
     }
-    midpoint(){
-        return({x: 0.5*(this.x0 + this.x1), y: 0.5*(this.y0 + this.y1)})
+export function segmentMidpoint(segment){
+        return({x: 0.5*(segment.x0 + segment.x1), y: 0.5*(segment.y0 + segment.y1)})
     }
-    translate(dx, dy) {
-        const [x0, y0] = translatePoint(this.x0, this.y0, dx, dy);
-        const [x1, y1] = translatePoint(this.x1, this.y1, dx, dy);
-        return new Segment({x0:x0, y0:y0, x1:x1, y1:y1});
+export function segmentTranslate(segment, dx, dy) {
+        const newSegment = segmentClone(segment);
+        [newSegment.x0, newSegment.y0] = translatePoint(segment.x0, segment.y0, dx, dy);
+        [newSegment.x1, newSegment.y1] = translatePoint(segment.x1, segment.y1, dx, dy);
+        return newSegment;
     }
-    transform(M) {
-        //super.transform(M); //transformo punto
- //coordenadas homogéneas
-        //usamos la misma filosofía de svg, 6 elementos: a,b,c,d,e,f , en un objeto
-        [this.x0, this.y0] = transformPoint(this.x0, this.y0, M);
-        [this.x1, this.y1] = transformPoint(this.x1, this.y1, M);
-        this._calculate();
+//     transform(M) {
+//         //super.transform(M); //transformo punto
+//  //coordenadas homogéneas
+//         //usamos la misma filosofía de svg, 6 elementos: a,b,c,d,e,f , en un objeto
+//         [this.x0, this.y0] = transformPoint(this.x0, this.y0, M);
+//         [this.x1, this.y1] = transformPoint(this.x1, this.y1, M);
+//         this._calculate();
+//     }
+export function segmentSymmetryX(segment, y) {
+        const newSegment = segmentClone(segment);
+        newSegment.y0 = 2*y - segment.y0;
+        newSegment.y1 = 2*y - segment.y1;
+        return newSegment;
     }
-    symmetryX(y) {
-        return new Segment({x0:this.x0, y0:2*y - this.y0, x1:this.x1, y1:2*y - this.y1});
-    }
-    symmetryY(x) {
-        return new Segment({x0:2*x - this.x0, y0:this.y0, x1:2*x - this.x1, y1:this.y1});
-    }
-    //Simetría respecto a un segmento, me deben pasar una clase segmento
-    symmetryL(s) {
-        const [x0, y0] = pointSymmetricSegment(s, this.x0, this.y0, s);
-        const [x1, y1] = pointSymmetricSegment(s, this.x1, this.y1, s);
-        return new Segment({x0:x0, y0:y0, x1:x1, y1:y1});
-    }
-    rotate(x, y, M) {
-        this.translate(x, y);
-        this.transform(M);
-        this.translate(-x, -y);
-    }
-    scale(x, y, M) {
-        this.translate(x, y);
-        this.transform(M);
-        this.translate(-x, -y);
-    }
-    reverse() {
-        [this.x0, this.x1] = [this.x1, this.x0];
-        [this.y0, this.y1] = [this.y1, this.y0];
-        this._calculate();
-    }
-    // isPointed(x, y, tol) {
-    //     //suponemos que ya hemos mirado que está en el bbox del segmento!!
-    //     return distancePointToLine(x, y, this) <= tol;
-    // }
-    isInside(r) {
-        //return (r.contains(this.pi) && r.contains(this.pf)); //design: both inside
-    }
-    points() {
-        return [];
-    }
-    pathPoints() {
-        return [];
+export function segmentSymmetryY(segment, x) {
+        const newSegment = segmentClone(segment);
+        newSegment.x0 = 2*x - segment.x0;
+        newSegment.x1 = 2*x - segment.x1;
+        return newSegment;
     }
 
-}
+    //Simetría respecto a un segmento, me deben pasar una clase segmento
+export function segmentSymmetryL(segment, s) {
+        const newSegment = segmentClone(segment);
+        [newSegment.x0, newSegment.y0] = pointSymmetricSegment(s, segment.x0, segment.y0);
+        [newSegment.x1, newSegment.y1] = pointSymmetricSegment(s, segment.x1, segment.y1);
+        return newSegment;
+    }
+export function segmentRotate(segment, x, y, M) {
+        return segmentTranslate(segmentRotate0(segmentTranslate(segmentClone(segment), x, y), alfa), -x, -y);
+    }
+export function segmentScale(x, y, M) {
+        return segmentTranslate(segmentScale0(segmentTranslate(segmentClone(segment), x, y), alfa), -x, -y);
+    }
+export function segmentReverse() {
+        const newSegment = segmentClone(segment);
+        [newSegment.x0, newSegment.x1] = [newSegment.x1, newSegment.x0];
+        [newSegment.y0, newSegment.y1] = [newSegment.y1, newSegment.y0];
+        calculate(newSegment);
+        return newSegment;
+    }
