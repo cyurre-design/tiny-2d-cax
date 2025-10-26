@@ -19,33 +19,15 @@ export const canvasCSS = {
 // ------------------------
 // Modelo Layer
 // ------------------------
-class Layer {
-    constructor(id, name, style = canvasCSS, visible = true, erasable = true) {
-        this.id = id;
-        this.name = name;
-        this.style = Object.assign({},style);
-        this.visible = visible;
-        this.erasable = erasable;
-        this.blocks = new Set(); // ids de shapes asignados a esta capa
-    }   
+function createLayer(id, name, style = canvasCSS, visible = true, erasable = true) {
+    this.id = id;
+    this.name = name;
+    this.style = Object.assign({},style);
+    this.visible = visible;
+    this.erasable = erasable;
+    this.blocks = new Set(); // ids de shapes asignados a esta capa
+}   
 
-  toJSON() {
-    return {
-        id: this.id,
-        name: this.name,
-        style: this.style,
-        visible: this.visible,
-        blocks: [...this.blocks],
-    };
-  }
-
-  static fromJSON(data) {
-    const layer = new Layer(data.id, data.name, data.style, data.visible);
-    layer.blocks = new Set(data.blocks);
-    return layer;
-  }
-
-}
 //Heredo de layer genérica que me da los métodos de borrado, etc...
 //29-09-25 La gestión de undo, redo, etc... se enmorralla bastante con las capas en varios sets
 //Probamos a que la capa sea un atributo de cada elemento, path, etc...
@@ -163,7 +145,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         const theId = this.nextLayerId++;
         const lyId = id !== undefined? id : `L${theId}`;
         const lname = name !== undefined ? name : `Layer${theId}`;
-        const layer = new Layer(lyId, lname, style, true);
+        const layer = createLayer(lyId, lname, style, true);
         this.layers.set(lyId, layer);
         this._activeLayerId = lyId;
         return lyId;
