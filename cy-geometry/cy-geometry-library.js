@@ -5,6 +5,12 @@ import {circle_circle_intr, arc_arc_intr, circle_arc_intr} from './cy-cuts-circl
 import {segment_arc_intr} from './cy-cuts-segment-circle.js'
 import {line_line_intr} from './cy-cuts-segment-segment.js'
 
+import {segmentTranslate} from './cy-geo-elements/cy-segment.js'
+import {arcTranslate} from './cy-geo-elements/cy-arc.js'
+import {circleTranslate} from './cy-geo-elements/cy-circle.js'
+import {polygonTranslate} from './cy-geo-elements/cy-polygon.js'
+import {pathTranslate} from './cy-geo-elements/cy-path.js'
+
 
 export const geometryPrecision = 0.0001;
 export const geometryPrecision2 = 0.00000001;
@@ -277,6 +283,50 @@ export function findAllCuts(elements) { //busca los cortes , un array de ellos
         }
     }
     points = Array.isArray(points)?points:[points];
-    console.log(points);
+    //console.log(points);
     return points;
     }
+
+//------------------ Funciones geométricas agrupadas --------------------
+export function blockTranslate( block, dx, dy){
+    switch(block.type){
+        case 'segment': return segmentTranslate(block, dx, dy);
+        case 'circle': return circleTranslate(block, dx, dy);
+        case 'arc': return arcTranslate(block, dx, dy);
+        case 'polygon': return polygonTranslate(block, dx, dy);
+        case 'path': return pathTranslate(block, dx, dy);
+        default: console.log('no contemplado');
+    }
+}
+
+export function blockSymmetryX(block, y){
+    switch(block.type){
+        case 'segment': return segmentSymmetryX(block, y);
+        case 'circle': return circleSymmetryX(block, y);
+        case 'arc': return arcSymmetryX(block, y);
+        case 'polygon': return polygonSymmetryX(block, y);
+        case 'path': return pathSymmetryX(block, y);
+        default: console.log('no contemplado');
+    }
+}
+export function blockSymmetryY(block, x){
+    switch(block.type){
+        case 'segment': return segmentSymmetryY(block, x);
+        case 'circle': return circleSymmetryY(block, x);
+        case 'arc': return arcSymmetryY(block, x);
+        case 'polygon': return polygonSymmetryY(block, x);
+        case 'path': return pathSymmetryY(block, x);
+        default: console.log('no contemplado');
+    }
+}
+export function blockSymmetryL(block, s){
+    switch(block.type){
+        case 'segment': return segmentSymmetryL(block, s);
+        case 'circle': return circleSymmetryL(block, s);
+        case 'arc': return arcSymmetryL(block, s);
+        case 'polygon': return polygonSymmetryL(block, s);
+        case 'path': return pathSymmetryL(block, s);
+        default: console.log('no contemplado');
+    }
+}
+

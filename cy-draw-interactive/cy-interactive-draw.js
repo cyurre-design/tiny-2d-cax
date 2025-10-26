@@ -2,6 +2,7 @@
 
 import { createDrawElement } from '../cy-geometry/cy-geometry-basic-elements.js';
 import { scalePixels2mm } from '../cy-canvas-layers/cy-canvas-handler.js';
+import {blockTranslate, blockSymmetryX, blockSymmetryY, blockSymmetryL} from '../cy-geometry/cy-geometry-library.js';
 //Para Canvas, separo el layer general , que es la de draw, de las capas de datos.
 //La idea es NO gastar un canvas entero por capa ya que redibuja de todos modos
 //el layer de clase es el general
@@ -529,7 +530,7 @@ export default class CyInteractiveDraw {
         deleteData();
         const blocksToMove = this.layerDraw.getSelectedBlocks();
         const move = (pi)=>{ //hemos guardado x0,y0 originales en data en la rutina p0
-            this.hit = this.highLight(pi.x, pi.y, blocksToMove.map(b => b.translate(pi.x-this.data.x0, pi.y-this.data.y0)));
+            this.hit = this.highLight(pi.x, pi.y, blocksToMove.map(b => blockTranslate(b, pi.x-this.data.x0, pi.y-this.data.y0)));
         }
         const translate = (p)=>{
             this.layerDraw.dispatchEvent(new CustomEvent('geometry-transform',

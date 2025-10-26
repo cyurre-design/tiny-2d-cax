@@ -57,19 +57,6 @@ function _boundingBox (a, eps = geometryPrecision){
             case 0b1101: return(a.fS === 1? Object.assign(bboxS, {x0:bboxC.x0, y0:bboxC.y0}) : Object.assign(bboxS, {x0:bboxC.x0, y0:bboxC.y0}));
         }          
     }
-// export function pointWithinArcSweep(arc, p, eps = geometryPrecision){
-//         //Habría que afinar con eps pero implica pasar a alfa = atan2(eps/r) o algo así... TODO
-//         let a = Math.atan2(p.y - arc.cy, p.x - arc.cx)
-//         //el arco tiene calculados el alfa inicial(a1) y el delta (da, con signo)  
-//         //Uso el mismo cálculo de delta que se usa para inicializar el arco
-//         let delta = normalize_radians(a - arc.ai) ;
-//         delta = arc.fS === 1 ? delta - _2PI : delta;
-//         if(this.da >= 0){
-//             return ((delta>=0) && (delta <= arc.da))
-//         } else {
-//             return ((delta<=0) && (delta >= arc.da))
-//         }
-//     }
 
 function arcClone(a) {   //un solo nivel de atributos, copio todo
         return createArc(a);
@@ -88,13 +75,13 @@ export function arcTranslate(a, dx, dy) {
                                              ai:a.ai, da:a.da, fS: a.fS, way:a.fA===0?'clock':'antiClock'}));
     }
     //en los simetría doy vuelta a los puntos pi pf
-export function symmetryX(a, y) {
+export function arcSymmetryX(a, y) {
         return createArc(arc2PC2SVG({x:a.cx, y:2*y - a.cy}, a.r, {x:a.x1, y:2*y - a.y1}, {x:a.x2, y:2*y - a.y2}, (a.fA===1?'clock':'antiClock')));
     }
-export function symmetryY(a, x) {
+export function arcSymmetryY(a, x) {
         return createArc(arc2PC2SVG({x:2*x - a.cx, y:a.cy}, a.r, {x:2*x - a.x1, y:a.y1}, {x:2*x - a.x2, y:a.y2}, (a.fA===1?'clock':'antiClock')));
     }
-export function symmetryL(a, s) {
+export function arcSymmetryL(a, s) {
         const [cx, cy] = pointSymmetricSegment(s, a.cx, a.cy, s);
         const [x1, y1] = pointSymmetricSegment(s, a.x1, a.y1, s);
         const [x2, y2] = pointSymmetricSegment(s, a.x2, a.y2, s);

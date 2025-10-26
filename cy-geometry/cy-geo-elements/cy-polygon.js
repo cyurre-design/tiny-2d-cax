@@ -27,20 +27,20 @@ export function createPolygon(data = {}) {
     }
     //esta no es exacta....TODO
     function _bbox(p){ return({x0: p.cx - p.r, y0: p.cy - p.r, x1: p.cx + p.r, y1: p.cy + p.r})}
-    function polygonTranslate(p, dx, dy){
+export function polygonTranslate(p, dx, dy){
         const [cx, cy] = translatePoint(p.cx, p.cy, dx, dy);
         return createPolygon({cx:cx, cy:cy, r:p.r, edges:p.edges, delta:p.delta, alfai:p.alfai});
     }
     function polygonClone(p) { 
         return JSON.parse(JSON.stringify(p));
     }
-    function polygonSymmetryX(p, y){
+export function polygonSymmetryX(p, y){
         return createPolygon({cx:p.cx, cy:2*y - p.cy, r:p.r, edges:p.edges, delta:-p.delta, alfai:-p.alfai});
     }
-    function polygonSymmetryY(p, x){
+export function polygonSymmetryY(p, x){
         return createPolygon({cx:2*x - p.cx, cy:p.cy, r:p.r, edges:p.edges, delta:-p.delta, alfai:Math.PI-p.alfai});
     }
-    function polygonSymmetryL(p, s){
+export function polygonSymmetryL(p, s){
         const [x, y] = pointSymmetricSegment(s, p.segments[0].x0, p.segments[0].y0);
         const [cx, cy] = pointSymmetricSegment(s, p.cx, p.cy);
         const alfai = Math.atan2(y - cy, x - cx)
