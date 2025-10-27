@@ -3,7 +3,7 @@ import './cy-canvas-layers/cy-canvas-viewer.js';
 import "./cy-layer-list.js"
 import './cy-input-data.js';
 import {findAllCuts} from './cy-geometry/cy-geometry-library.js'
-import {createCommandManager, commandLayerCreate} from './cy-commands/cy-command-definitions.js';
+import {createCommandManager, commandLayerCreate, commandBlockCreate, commandBlockDelete} from './cy-commands/cy-command-definitions.js';
 import {createDrawElement} from './cy-geometry/cy-geometry-basic-elements.js';
 
 const templateMainMenu =`
@@ -301,36 +301,6 @@ class cyCad1830App extends HTMLElement {
         }})
         return this.manager.executeCommand(theCommand);
       }
-//--------------------------------- COMANDOS BLOCK  -----------------------------
-  blockCreate = (blocks) => {
-    const theCommand = this.manager.makeCommand({
-      execute(p, a) {
-          this.blocks = blocks;
-          this.ids = p.addBlocks(undefined, this.blocks); //array...?
-          p.draw();
-      },
-      undo(p, a) {
-          if (this.ids) this.ids.forEach(id=>p.deleteBlock(id));
-          p.draw();
-      },
-      });
-    this.manager.executeCommand(theCommand);
-  }
-  blockDelete = (blocks) => {
-    const theCommand = this.manager.makeCommand({
-      execute(p, a) {
-          this.blocks = blocks;
-          this.blocks.forEach( b => p.deleteBlock(b.id))
-          p.draw();
-      },
-      undo(p, a) {
-          if (this.blocks) 
-            p.addBlocks(undefined, this.blocks); //array...?
-          p.draw();
-      },
-      });
-    this.manager.executeCommand(theCommand);    
-  }
 
   blockTransform = (blocks, op, data) => {
     const theCommand = this.manager.makeCommand({
@@ -455,7 +425,7 @@ class cyCad1830App extends HTMLElement {
   this.addEventListener('new-block', e=>{
       //this.layerDraft.clear();
       const blocks = createDrawElement(e.detail.type, e.detail.data);
-      this.blockCreate(blocks);
+      commandBlockCreate(blocks);
   });
 
 //--------------------- TRANSFORMACIONES   ------------------------  
@@ -497,7 +467,7 @@ class cyCad1830App extends HTMLElement {
         case 'invert' : this.viewer.layerDraw.invertSelection(); break;
         case 'del'    : {
                           const blocks = this.viewer.layerDraw.getSelectedBlocks();
-                          this.blockDelete(blocks);
+                          commandBlockDelete(blocks);
                         }
               break;
         case 'sel'    : this.viewer.interactiveDrawing.drawSelection(this.viewer.layerDraw); break;

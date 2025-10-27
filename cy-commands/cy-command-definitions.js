@@ -37,4 +37,34 @@ export function commandLayerCreate (name = undefined, data = undefined) {
     });
     return commandManager.execute(theCommand);
     }
-   
+
+//--------------------------------- COMANDOS BLOCK  -----------------------------
+export function commandBlockCreate(blocks){
+    const theCommand = commandManager.makeCommand({
+      execute(p, a) {
+          this.blocks = blocks;
+          this.ids = p.addBlocks(undefined, this.blocks); //array...?
+          p.draw();
+      },
+      undo(p, a) {
+          if (this.ids) this.ids.forEach(id=>p.deleteBlock(id));
+          p.draw();
+      },
+      });
+    commandManager.execute(theCommand);
+  }
+export function commandBlockDelete(blocks) {
+    const theCommand = commandManager.makeCommand({
+      execute(p, a) {
+          this.blocks = blocks;
+          this.blocks.forEach( b => p.deleteBlock(b.id))
+          p.draw();
+      },
+      undo(p, a) {
+          if (this.blocks) 
+            p.addBlocks(undefined, this.blocks); //array...?
+          p.draw();
+      },
+      });
+    commandManager.execute(theCommand);    
+  }
