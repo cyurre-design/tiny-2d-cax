@@ -87,3 +87,27 @@ export function commandBlockDelete(blocks) {
     });
     commandManager.execute(theCommand);    
     }
+
+    //------------------ CUT ---------------------
+export function commandCreateCutPoints(cutPoints){
+    const theCommand = commandManager.makeCommand({
+    execute(p, a) {
+      this.cutPoints = cutPoints;
+      if(this.cutPoints){
+        p.deselectAll();
+        p.addCutPoints(this.cutPoints);
+        p.draw();
+      }
+    },
+    undo(p,a){
+      p.deleteCutPoints(this.cutPoints);
+      //p.draw();
+    },
+    redo(p,a){
+      if(this.cutPoints){
+        p.addCutPoints(this.cutPoints);
+        //p.draw();
+      }
+    }})
+    commandManager.execute(theCommand);    
+  }

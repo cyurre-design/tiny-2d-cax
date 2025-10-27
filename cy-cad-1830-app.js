@@ -3,7 +3,7 @@ import './cy-canvas-layers/cy-canvas-viewer.js';
 import "./cy-layer-list.js"
 import './cy-input-data.js';
 import {findAllCuts, blockTranslate, blockSymmetryX, blockSymmetryY, blockSymmetryL} from './cy-geometry/cy-geometry-library.js'
-import {createCommandManager, commandLayerCreate, commandBlockCreate, commandBlockDelete, commandBlockTransform} from './cy-commands/cy-command-definitions.js';
+import {createCommandManager, commandLayerCreate, commandBlockCreate, commandBlockDelete, commandBlockTransform, commandCreateCutPoints} from './cy-commands/cy-command-definitions.js';
 import {createDrawElement} from './cy-geometry/cy-geometry-basic-elements.js';
 
 const templateMainMenu =`
@@ -286,22 +286,6 @@ class cyCad1830App extends HTMLElement {
         return this.manager.executeCommand(theCommand);
       }
 
-  getCutPoints = (cutPoints) => {
-    const theCommand = this.manager.makeCommand({
-    execute(p, a) {
-      this.cutPoints = cutPoints;
-      if(this.cutPoints){
-        p.deselectAll();
-        p.addCutPoints(this.cutPoints);
-        p.draw();
-      }
-    },
-    undo(p,a){
-      p.deleteCutPoints(this.cutPoints);
-      p.draw();
-    }})
-    this.manager.executeCommand(theCommand);    
-  }
 
 
   connectedCallback(){
@@ -503,7 +487,7 @@ class cyCad1830App extends HTMLElement {
         case 'cut':
           const selectedBlocks = this.viewer.layerDraw.getSelectedBlocks();
           const cutPoints = findAllCuts(selectedBlocks);
-          this.getCutPoints(cutPoints); //ye un comando con undo
+          commandCreateCutPoints(cutPoints); //ye un comando con undo
           break;
         case 'scale':
         case 'translate': {

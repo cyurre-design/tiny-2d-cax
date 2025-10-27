@@ -35,8 +35,8 @@ import {Cut} from "./cy-cut-types.js";
 
 export function segment_arc_intr(segment, arc, eps = geometryPrecision) {
 
-    if((! arc instanceof BArc) || (! segment instanceof BSegment))
-         console.log('me paso morralla')
+    // if((! arc instanceof BArc) || (! segment instanceof BSegment))
+    //      console.log('me paso morralla')
 
     // This function solves for t by solving for cartesian intersect points via geometric
     // equations with the circle centered at (0, 0). Using the line equation of the form
