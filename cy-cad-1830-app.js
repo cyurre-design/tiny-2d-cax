@@ -3,7 +3,7 @@ import './cy-canvas-layers/cy-canvas-viewer.js';
 import "./cy-layer-list.js"
 import './cy-input-data.js';
 import {findAllCuts} from './cy-geometry/cy-geometry-library.js'
-import {CommandManager } from './cy-canvas-layers/cy-command-manager.js';
+import {createCommandManager, commandLayerCreate} from './cy-commands/cy-command-definitions.js';
 import {createDrawElement} from './cy-geometry/cy-geometry-basic-elements.js';
 
 const templateMainMenu =`
@@ -246,23 +246,24 @@ class cyCad1830App extends HTMLElement {
     /**
      * @method
      */
-  layerCreate = (name = undefined, data = undefined) => {
-      const theCommand = this.manager.makeCommand({
-          execute(p, a) {
-              this.id = p.addLayer(name || this.name);
-              const layer = p.layers.get(this.id);
-              this.name = layer.name;
-              a.viewer._redrawLayers();
-              a.layerView.addLayer(JSON.stringify(layer));
-              return layer;
-          },
-          undo(p,a) {
-              if (this.id) p.deleteLayer(this.id);
-              a.layerView.deleteLayer(this.name);
-          },
-      });
-      return this.manager.executeCommand(theCommand);
-      }      
+
+  // layerCreate = (name = undefined, data = undefined) => {
+  //     const theCommand = makeCommand({
+  //         execute(p, a) {
+  //             this.id = p.addLayer(name || this.name);
+  //             const layer = p.layers.get(this.id);
+  //             this.name = layer.name;
+  //             a.viewer._redrawLayers();
+  //             a.layerView.addLayer(JSON.stringify(layer));
+  //             return layer;
+  //         },
+  //         undo(p,a) {
+  //             if (this.id) p.deleteLayer(this.id);
+  //             a.layerView.deleteLayer(this.name);
+  //         },
+  //     });
+  //     return this.manager.execute(theCommand);
+  //     }      
   layerDelete = (id) => {
       const theCommand = this.manager.makeCommand({
           execute(p, a) {
@@ -367,7 +368,7 @@ class cyCad1830App extends HTMLElement {
 
   connectedCallback(){
     this.viewer = this.dom.querySelector("#viewer");
-    this.manager = new CommandManager(this.viewer.layerDraw, this); // o this....
+    this.manager =  createCommandManager( this.viewer.layerDraw, this ); // 
 
     //--------------MENUS
     const menus = ['file', 'zoom', /*'select',*/ 'draw', 'support', 'transform' ]
@@ -442,7 +443,7 @@ class cyCad1830App extends HTMLElement {
       if(e.action === 'visibility')
         this.viewer.setVisible(e.layerId, e.value);
       else if(e.action === 'create'){
-        const layer = this.layerCreate(e.layer);    //de momento es siempre undefined por el modo de trabajo
+        const layer = commandLayerCreate(e.layer);    //de momento es siempre undefined por el modo de trabajo
       } else if(e.action === 'delete'){
         this.layerDelete(e.layerId);    //de momento es siempre undefined por el modo de trabajo
       } else if(e.action === 'set-style')
@@ -512,7 +513,7 @@ class cyCad1830App extends HTMLElement {
       
 
       //Al crearla se debe poner activa ella sola.
-      const layerData = this.layerCreate()
+      const layerData = commandLayerCreate()
     });
     
     handleKeys = (e)=>{

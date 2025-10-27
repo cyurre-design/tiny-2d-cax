@@ -20,12 +20,14 @@ export const canvasCSS = {
 // Modelo Layer
 // ------------------------
 function createLayer(id, name, style = canvasCSS, visible = true, erasable = true) {
-    this.id = id;
-    this.name = name;
-    this.style = Object.assign({},style);
-    this.visible = visible;
-    this.erasable = erasable;
-    this.blocks = new Set(); // ids de shapes asignados a esta capa
+    return {
+        id      : id,
+        name    : name,
+        style   : Object.assign({},style),
+        visible : visible,
+        erasable: erasable,
+        blocks  : new Set() // ids de shapes asignados a esta capa
+    }
 }   
 
 //Heredo de layer genérica que me da los métodos de borrado, etc...
@@ -171,18 +173,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         ly.style = newLayer.style;
         return old;
     }
-    // saveLayers(){
-    //     return {
-    //         _activeLayerId:this._activeLayerId,
-    //         nextLayerId: this.nextLayerId,
-    //         layers: Object.fromEntries(this.layers.entries())
-    //     }
-    // }
-    // restoreLayers(data){
-    //     this._activeLayerId = data._activeLayerId;
-    //     this.nextLayerId    = data.nextLayerId;
-    //     this.layers         = new Set(data.layers);
-    // }
+
 /**
  * 
  * @param {string} name nombre de la capa
