@@ -93,38 +93,50 @@ export function createHistorySystem( model, app, options = {}) {
   // 🧩 FACTORY DE COMANDOS
   // ============================================================
   function makeCommand(def) {
-    const {
-      type,
-      params = {},
-      execute,
-      undo,
-      redo,
-      isHeavy = false,
-      useSnapshot = false,
-      forceCheckpoint = false,
-      incremental = false,
-      skipRedraw = false,
-    } = def;
+  const {
+    type,
+    params = {},
+    execute,
+    undo,
+    redo, // opcional
+    isHeavy = false,
+    useSnapshot = false,
+    forceCheckpoint = false,
+    incremental = false,
+    skipRedraw = false,
+  } = def;
 
-    return {
-      type,
-      params,
-      isHeavy,
-      useSnapshot,
-      forceCheckpoint,
-      incremental,
-      skipRedraw,
-      execute(model, app) {
-        execute.call(this, model, app, params);
-      },
-      undo(model, app) {
-        if (undo) undo.call(this, model, app, params);
-      },
-      redo(model, app) {
-        if (redo) redo.call(this, model, app, params);
-      },
+  if (typeof execute !== "function") {
+    throw new Error(`Comando '${type}' requiere una función 'execute'`);
+  }
+
+  const cmd = {
+    type,
+    params,
+    isHeavy,
+    useSnapshot,
+    forceCheckpoint,
+    incremental,
+    skipRedraw,
+
+    execute(model, app) {
+      execute.call(this, model, app, params);
+    },
+
+    undo(model, app) {
+      if (undo) undo.call(this, model, app, params);
+    },
+  };
+
+  // Solo añadimos `redo` si realmente se ha pasado una función
+  if (typeof redo === "function") {
+    cmd.redo = function (model, app) {
+      redo.call(this, model, app, params);
     };
   }
+
+  return cmd;
+}
 
   function registerCommand(name, factoryFn) {
     commandRegistry.set(name, factoryFn);

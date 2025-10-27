@@ -5,11 +5,11 @@ import {circle_circle_intr, arc_arc_intr, circle_arc_intr} from './cy-cuts-circl
 import {segment_arc_intr} from './cy-cuts-segment-circle.js'
 import {line_line_intr} from './cy-cuts-segment-segment.js'
 
-import {segmentTranslate} from './cy-geo-elements/cy-segment.js'
-import {arcTranslate} from './cy-geo-elements/cy-arc.js'
-import {circleTranslate} from './cy-geo-elements/cy-circle.js'
-import {polygonTranslate} from './cy-geo-elements/cy-polygon.js'
-import {pathTranslate} from './cy-geo-elements/cy-path.js'
+import {segmentTranslate, segmentSymmetryX, segmentSymmetryY, segmentSymmetryL } from './cy-geo-elements/cy-segment.js'
+import {arcTranslate, arcSymmetryX, arcSymmetryY,  arcSymmetryL} from './cy-geo-elements/cy-arc.js'
+import {circleTranslate, circleSymmetryX, circleSymmetryY, circleSymmetryL} from './cy-geo-elements/cy-circle.js'
+import {polygonTranslate, polygonSymmetryX, polygonSymmetryY, polygonSymmetryL} from './cy-geo-elements/cy-polygon.js'
+import {pathTranslate, pathSymmetryX, pathSymmetryY, pathSymmetryL} from './cy-geo-elements/cy-path.js'
 
 
 export const geometryPrecision = 0.0001;

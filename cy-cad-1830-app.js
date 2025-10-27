@@ -2,8 +2,8 @@ import "./cy-elements/cy-file-loader.js"
 import './cy-canvas-layers/cy-canvas-viewer.js';
 import "./cy-layer-list.js"
 import './cy-input-data.js';
-import {findAllCuts} from './cy-geometry/cy-geometry-library.js'
-import {createCommandManager, commandLayerCreate, commandBlockCreate, commandBlockDelete} from './cy-commands/cy-command-definitions.js';
+import {findAllCuts, blockTranslate, blockSymmetryX, blockSymmetryY, blockSymmetryL} from './cy-geometry/cy-geometry-library.js'
+import {createCommandManager, commandLayerCreate, commandBlockCreate, commandBlockDelete, commandBlockTransform} from './cy-commands/cy-command-definitions.js';
 import {createDrawElement} from './cy-geometry/cy-geometry-basic-elements.js';
 
 const templateMainMenu =`
@@ -247,23 +247,7 @@ class cyCad1830App extends HTMLElement {
      * @method
      */
 
-  // layerCreate = (name = undefined, data = undefined) => {
-  //     const theCommand = makeCommand({
-  //         execute(p, a) {
-  //             this.id = p.addLayer(name || this.name);
-  //             const layer = p.layers.get(this.id);
-  //             this.name = layer.name;
-  //             a.viewer._redrawLayers();
-  //             a.layerView.addLayer(JSON.stringify(layer));
-  //             return layer;
-  //         },
-  //         undo(p,a) {
-  //             if (this.id) p.deleteLayer(this.id);
-  //             a.layerView.deleteLayer(this.name);
-  //         },
-  //     });
-  //     return this.manager.execute(theCommand);
-  //     }      
+ 
   layerDelete = (id) => {
       const theCommand = this.manager.makeCommand({
           execute(p, a) {
@@ -302,22 +286,6 @@ class cyCad1830App extends HTMLElement {
         return this.manager.executeCommand(theCommand);
       }
 
-  blockTransform = (blocks, op, data) => {
-    const theCommand = this.manager.makeCommand({
-    execute(p, a) {
-        this.blocks = blocks;
-        this.newBlocks = this.blocks.map( b => b[op]( ...data))
-        p.addBlocks( undefined, this.newBlocks);
-        p.draw();
-    },
-    undo(p, a) {
-        if (this.newBlocks) 
-          this.newBlocks.forEach(b=>p.deleteBlock(b.id));
-        p.draw();
-    }
-    });
-    this.manager.executeCommand(theCommand);    
-    }
   getCutPoints = (cutPoints) => {
     const theCommand = this.manager.makeCommand({
     execute(p, a) {
@@ -432,16 +400,16 @@ class cyCad1830App extends HTMLElement {
   this.addEventListener('geometry-transform',  (evt)=>{
       let op = evt.detail.command, mode = evt.detail.mode || '', data = evt.detail.data;
       op += mode;
-      let arg;
+      let opData;
       switch(op){
-        case 'symmetryX':  arg = [data.y0];  break;
-        case 'symmetryY':  arg = [data.x0];  break;
-        case 'symmetryL':  arg = [data];     break;
-        case 'translate': 
-        default:          arg = [data.dx, data.dy];     break;
+        case 'symmetryX':  opData = {op: blockSymmetryX, arg : [data.y0]};  break;
+        case 'symmetryY':  opData = {op: blockSymmetryY, arg : [data.x0]};  break;
+        case 'symmetryL':  opData = {op: blockSymmetryL, arg : [data]};     break;
+        case 'translate':  opData = {op: blockTranslate, arg: [data.dx, data.dy]}
+        default:          break;
       }
       const blocks = this.viewer.layerDraw.getSelectedBlocks();
-      this.blockTransform(blocks, op, arg)
+      commandBlockTransform(blocks, opData)
         //this.layerDraw.symmetrySelected(evt.detail.mode, evt.detail.data));
   })
         

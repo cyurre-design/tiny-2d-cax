@@ -68,3 +68,22 @@ export function commandBlockDelete(blocks) {
       });
     commandManager.execute(theCommand);    
   }
+
+  //--------------------- BOCK TRANSLATE, SYMMETRY...
+  
+  export function commandBlockTransform(blocks, opData){
+    const theCommand = commandManager.makeCommand({
+    execute(p, a) {
+        this.blocks = blocks;
+        this.newBlocks = this.blocks.map( b => opData.op(b, ...opData.arg))
+        p.addBlocks( undefined, this.newBlocks);
+        p.draw();
+    },
+    undo(p, a) {
+        if (this.newBlocks) 
+          this.newBlocks.forEach(b=>p.deleteBlock(b.id));
+        p.draw();
+    }
+    });
+    commandManager.execute(theCommand);    
+    }

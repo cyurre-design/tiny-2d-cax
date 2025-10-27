@@ -48,6 +48,9 @@ export function pathSymmetryX(p, y) {
 export function pathSymmetryY(p, y) {
     return createPath( {elements: p.elements.map(el => el.type === 'segment'? segmentSymmetryY(el, x): arcSymetryY(el, x))})
     }
+export function pathSymmetryL(p, s) {
+    return createPath( {elements: p.elements.map(el => el.type === 'segment'? segmentSymmetryL(el, s): arcSymetryL(el, s))})
+    }
 
     // reverse() {
     //     this.elements.forEach(e => e.reverse());
