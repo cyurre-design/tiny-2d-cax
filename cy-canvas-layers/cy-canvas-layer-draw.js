@@ -19,11 +19,11 @@ export const canvasCSS = {
 // ------------------------
 // Modelo Layer
 // ------------------------
-function createLayer(id, name, style = canvasCSS, visible = true, erasable = true) {
+function createLayer(id, name, layerStyle = canvasCSS, visible = true, erasable = true) {
     return {
         id      : id,
         name    : name,
-        style   : Object.assign({},style),
+        layerStyle   : Object.assign({},layerStyle),
         visible : visible,
         erasable: erasable,
         blocks  : new Set() // ids de shapes asignados a esta capa
@@ -73,19 +73,28 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
      */
     //Hay que separar la parte geométrica de la otra porque si no se usa el toJSON de esa parte y perdemos la info añadida
     toJSON(){
-        return {blocks:Array.from(this.blocks.values()), points:Array.from(this.points.values()), layers: Array.from(this.layers.values()),
+        return {blocks:Array.from(this.blocks.entries()), points:Array.from(this.points.entries()), layers: Array.from(this.layers.entries()),
             _activeLayerId: this._activeLayerId, nextBlockId:this.nextBlockId, nextLayerId: this.nextLayerId,
-            pointsTree:this.pointsTree, blocksTree:this.blocksTree}
+            pointsTree:this.pointsTree.toJSON(), blocksTree:this.blocksTree.toJSON()}
         //console.log (JSON.stringify(this));
     }
 
-    // static fromJSON(file){
-    //     const rawLayers = JSON.parse(file);
-    //     rawLayers.forEach(ly => {
-    //         const newLayer = this.addLayer(ly.name);
-    //         newLayer.addBlocks(deserialize(ly.blocks));
-    //     })   
-    // }
+    deserialize(saved){
+        this.blocks = new Map(saved.blocks);
+        this.points = new Map(saved.points);
+        this.layers = new Map(saved.layers);
+        this.pointsTree.fromJSON( saved.pointsTree);
+        this.blocksTree.fromJSON( saved.blocksTree);
+        this._activeLayerId = saved._activeLayerId;
+        this.nextBlockId = saved.nextBlockId;
+        this.nextLayerId = saved. nextLayerId;
+        //Pero los paths se han perdido ...
+        this.blocks.forEach(b => b.canvasPath = getPathFromBlocks(b));
+        this.points.forEach(b => b.canvasPath = getPathFromBlocks(b));
+        this.draw();
+
+    }
+    
 
 
     createStyle() {
@@ -111,11 +120,11 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     //Atención al orden de los canvas. Para que los eventos de mouse lleguen a draw, tiene que estar encima
     connectedCallback(){
         super.connectedCallback();
-        const style = getComputedStyle(this);
-        this.pathWidth = +style.getPropertyValue('--path-width') || 2;
-        this.pathColor = style.getPropertyValue('--path-color') || 'green';
-        this.selectedWidth = +style.getPropertyValue('--selected-width') || 2;
-        this.selectedColor = style.getPropertyValue('--selected-color') || 'yellow';
+        const layerStyle = getComputedStyle(this);
+        this.pathWidth = +layerStyle.getPropertyValue('--path-width') || 2;
+        this.pathColor = layerStyle.getPropertyValue('--path-color') || 'green';
+        this.selectedWidth = +layerStyle.getPropertyValue('--selected-width') || 2;
+        this.selectedColor = layerStyle.getPropertyValue('--selected-color') || 'yellow';
     }
     // disconnectedCallback(){
     //     //Aquí hay que quitar los listeners siendo formales
@@ -138,16 +147,16 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
 /**
  * 
  * @param {string} name el nombre de la capa (que puede ser generado automáticamente)
- * @param {*} style valore de color para pintar los bloques. Se deberán guardar
+ * @param {*} layerStyle valore de color para pintar los bloques. Se deberán guardar
  * @returns la referencia a la capa recién creada
  * @todo no crear si ya existe
  * @todo definir clase o similar (serializable) para el estilo de pintada en canvas
  */
-    addLayer(name, style = canvasCSS, id) {
+    addLayer(name, layerStyle = canvasCSS, id) {
         const theId = this.nextLayerId++;
         const lyId = id !== undefined? id : `L${theId}`;
         const lname = name !== undefined ? name : `Layer${theId}`;
-        const layer = createLayer(lyId, lname, style, true);
+        const layer = createLayer(lyId, lname, layerStyle, true);
         this.layers.set(lyId, layer);
         this._activeLayerId = lyId;
         return lyId;
@@ -170,7 +179,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         const ly = this.layers.get(layerId);
         const old = JSON.parse(JSON.stringify(ly));
         ly.name = newLayer.name,
-        ly.style = newLayer.style;
+        ly.layerStyle = newLayer.layerStyle;
         return old;
     }
 
@@ -237,7 +246,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
                     p.id = `P${this.nextBlockId++}`; //el id que estamos poniendo es el del bloque, en getRelevantPoints
                     p.type = 'point';
                     p.canvasPath = getPathFromBlocks([p], this.pointDimension);
-                    p.style = this.style;       //TODO no sé si hace falta por cómo se gestionan luego...
+                    p.layerStyle = this.layerStyle;       //TODO no sé si hace falta por cómo se gestionan luego...
                     this.points.set(p.id, p);    //Al map 
                     this.pointsTree.insert({minX:p.x0, maxX:p.x0, minY:p.y0, maxY: p.y0, id:p.id});    //Al tree para buscar rápido
                 })
@@ -300,8 +309,8 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     addCutPoints( points){ //estos ya vienen pretratados
         if(!points) console.log('puntos?'); //esto debe tratar el indefinido, el no array y el longitud 0
         points.forEach(p=>{
-            p.canvasPath = getPathFromBlocks([p], this.style.pointDimension);
-            //p.style = this.style;
+            p.canvasPath = getPathFromBlocks([p], this.layerStyle.pointDimension);
+            //p.layerStyle = this.layerStyle;
             p.id = 'CP'+this.nextBlockId++;
             this.points.set(p.id, p);
             this.pointsTree.insert({minX:p.x0, maxX:p.x0, minY:p.y0, maxY: p.y0, id:p.id});    //Al tree para buscar rápido
@@ -486,8 +495,8 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         this.blocks.forEach( p => {
             let ly = this.layers.get(p.layerId);
             if(ly.visible){
-                this.ctx.lineWidth = scalePixels2mm(p.selected?+ly.style.selectedWidth:+ly.style.pathWidth);
-                this.ctx.strokeStyle = (p.selected)?ly.style.selectedColor:(p.hover)?ly.style.selectedColor:ly.style.pathColor;
+                this.ctx.lineWidth = scalePixels2mm(p.selected?+ly.layerStyle.selectedWidth:+ly.layerStyle.pathWidth);
+                this.ctx.strokeStyle = (p.selected)?ly.layerStyle.selectedColor:(p.hover)?ly.layerStyle.selectedColor:ly.layerStyle.pathColor;
                 this.ctx.stroke(p.canvasPath);
             }
         })

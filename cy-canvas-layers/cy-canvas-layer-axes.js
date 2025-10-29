@@ -13,7 +13,7 @@ export default class CyCanvasLayerAxes extends CyCanvasLayer {
         this.axesLayer =  {
             id: 'AXES',
             name: 'axes',
-            style: {
+            layerStyle: {
                 pathColor: '#005500',
                 pathWidth: 2,
                 tickLength: 8,
@@ -27,7 +27,7 @@ export default class CyCanvasLayerAxes extends CyCanvasLayer {
         this.gridLayer = {
             id: 'GRID',
             name: 'grid',
-            style: {
+            layerStyle: {
                 pathColor: '#005500',
                 pathWidth: 2,
             },
@@ -37,34 +37,34 @@ export default class CyCanvasLayerAxes extends CyCanvasLayer {
     }
     connectedCallback() {
         super.connectedCallback();
-        this.ctx.fillStyle = this.axesLayer.style.textColor;
+        this.ctx.fillStyle = this.axesLayer.layerStyle.textColor;
         }
 
     setAxesStyle(layer ){
-        const old = {style:{}};
+        const old = {layerStyle:{}};
         ['pathColor', 'pathWidth', 'tickColor', 'tickWidth'].forEach( prop => {
-            old.style[prop] = this.axesLayer.style[prop];
-            this.axesLayer.style[prop] = layer.style[prop];
+            old.layerStyle[prop] = this.axesLayer.layerStyle[prop];
+            this.axesLayer.layerStyle[prop] = layer.layerStyle[prop];
         })
         return old;
     }
     //viene con los datos de un layer completo, cogemos lo que necesitamos
     setGridStyle(layer ){
-        const old = {style:{}};
+        const old = {layerStyle:{}};
         ['pathColor', 'pathWidth'].forEach( prop => {
-            old.style[prop] = this.gridLayer.style[prop];
-            this.axesLayer.style[prop] = layer.style[prop];
+            old.layerStyle[prop] = this.gridLayer.layerStyle[prop];
+            this.axesLayer.layerStyle[prop] = layer.layerStyle[prop];
         })
         return old;
     }
     drawAxis(x=0, y=0){
         const ww = this.extents; //por comodidad, window        
-        const w = scalePixels2mm(this.axesLayer.style.pathWidth)
+        const w = scalePixels2mm(this.axesLayer.layerStyle.pathWidth)
         const blocks = [
             {type:'segment', x0:ww.xi, y0:y, x1:ww.xf, y1:y},
             {type:'segment', x0:x, y0:ww.yi, x1:x, y1:ww.yf}
         ]
-        this.drawBlocks(blocks, w, this.axesLayer.style.pathColor);        
+        this.drawBlocks(blocks, w, this.axesLayer.layerStyle.pathColor);        
     }
     _getScale(width){
 
@@ -88,15 +88,15 @@ export default class CyCanvasLayerAxes extends CyCanvasLayer {
             blocks.push({type:'segment', x0:ww.xi, y0:y, x1:ww.xf, y1:y});
         for(let y = 0; y <= ww.yf; y += this.scale)
             blocks.push({type:'segment', x0:ww.xi, y0:y, x1:ww.xf, y1:y});
-        const w = scalePixels2mm(this.gridLayer.style.pathWidth);
+        const w = scalePixels2mm(this.gridLayer.layerStyle.pathWidth);
         this.ctx.setLineDash([0.1*this.scale, 0.1*this.scale ]);
-        this.drawBlocks(blocks, w, this.gridLayer.style.pathColor);
+        this.drawBlocks(blocks, w, this.gridLayer.layerStyle.pathColor);
         this.ctx.setLineDash([]);
     }
     drawTicks(){
         const blocks = [];
         const ww = this.extents; //por comodidad, window        
-        let tl = scalePixels2mm(0.5*this.axesLayer.style.tickLength);
+        let tl = scalePixels2mm(0.5*this.axesLayer.layerStyle.tickLength);
         let spacing = 0.1*this.scale;
         for(let x = 0; x >= ww.xi; x -= spacing)
             blocks.push({type:'segment', x0:x, y0:-tl, x1:x, y1:tl});
@@ -107,7 +107,7 @@ export default class CyCanvasLayerAxes extends CyCanvasLayer {
         for(let y = 0; y <= ww.yf; y += spacing)
             blocks.push({type:'segment', x0:-tl, y0:y, x1:tl, y1:y});
         //Las largas
-        tl = scalePixels2mm(1.5*this.axesLayer.style.tickLength);
+        tl = scalePixels2mm(1.5*this.axesLayer.layerStyle.tickLength);
         spacing = this.scale;
         for(let x = 0; x >= ww.xi; x -= spacing)
             blocks.push({type:'segment', x0:x, y0:-tl, x1:x, y1:tl});
@@ -117,8 +117,8 @@ export default class CyCanvasLayerAxes extends CyCanvasLayer {
             blocks.push({type:'segment', x0:-tl, y0:y, x1:tl, y1:y});
         for(let y = 0; y <= ww.yf; y += spacing)
             blocks.push({type:'segment', x0:-tl, y0:y, x1:tl, y1:y});
-        const w = scalePixels2mm(this.axesLayer.style.tickWidth);
-        this.drawBlocks(blocks, w, this.axesLayer.style.tickColor);
+        const w = scalePixels2mm(this.axesLayer.layerStyle.tickWidth);
+        this.drawBlocks(blocks, w, this.axesLayer.layerStyle.tickColor);
     }
     //de momento atado al eje
     drawScaleValues(){
@@ -151,19 +151,19 @@ export default class CyCanvasLayerAxes extends CyCanvasLayer {
         this.ctx.setTransform(tr);
     }
     setAxesVisible(visible) {
-        this.axesLayer.style.visible = visible ? true : false;
+        this.axesLayer.layerStyle.visible = visible ? true : false;
         this.draw();
     }
     setGridVisible(visible) {
-        this.gridLayer.style.visible = visible ? true : false;
+        this.gridLayer.layerStyle.visible = visible ? true : false;
         this.draw();
     }
 
     draw() {
         this.clear();
-        if (this.gridLayer.style.visible)
+        if (this.gridLayer.layerStyle.visible)
             this.drawGrid();
-        if (this.axesLayer.style.visible){
+        if (this.axesLayer.layerStyle.visible){
             this.drawAxis();
             this.drawTicks();
             this.drawScaleValues();

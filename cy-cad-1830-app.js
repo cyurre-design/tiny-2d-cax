@@ -5,6 +5,7 @@ import './cy-input-data.js';
 import {findAllCuts, blockTranslate, blockSymmetryX, blockSymmetryY, blockSymmetryL} from './cy-geometry/cy-geometry-library.js'
 import {createCommandManager, commandLayerCreate, commandBlockCreate, commandBlockDelete, commandBlockTransform, commandCreateCutPoints} from './cy-commands/cy-command-definitions.js';
 import {createDrawElement} from './cy-geometry/cy-geometry-basic-elements.js';
+import { loadProject, saveProject } from "./cy-file-save-load.js";
 
 const templateMainMenu =`
   <div  id="hidden-row" >
@@ -454,9 +455,72 @@ class cyCad1830App extends HTMLElement {
       console.log(main, sub1, sub2);
       switch(main){
         case 'file':{
+          // function replacer(key, value) {
+          //   if (value instanceof Map) 
+          //     return { __type: "Map", value: Array.from(value.entries()) };
+          //   if (value instanceof Set)
+          //     return { __type: "Set", value: Array.from(value.values()) };
+          //   return value;
+          // }
+
+
+          // function reviver(key, value) {
+          //   if (value && value.__type === "Map") return new Map(value.value);
+          //   if (value && value.__type === "Set") return new Set(value.value);
+          //   return value;
+          // }
+
           switch(sub1){
-            case 'open': this.dom.querySelector("#cy-hidden-file").click();break;
-            case 'save': this.viewer.layerDraw.serialice();break;
+            case 'open': //this.dom.querySelector("#cy-hidden-file").click();break;
+            {
+              loadProject().then(text => {
+                const data = JSON.parse(text );
+                // Restaurar modelo
+                this.viewer.layerDraw.deserialize( data);//.model;
+
+    //             // Restaurar historial
+    //             undoStack.length = 0;
+    //             redoStack.length = 0;
+    //             checkpoints.length = 0;
+    //             undoStack.push(...data.history.undoStack);
+    //             redoStack.push(...data.history.redoStack);
+    //             checkpoints.push(...data.history.checkpoints);
+
+    //             // Restaurar comandos registrados
+    //             commandRegistry.clear();
+    //             for (const c of data.commands) {
+    //               try {
+    //                 const fn = eval(`(${c.source})`);
+    //                 commandRegistry.set(c.name, fn);
+    //               } catch (err) {
+    //                 console.warn(`⚠️ No se pudo restaurar comando '${c.name}'`, err);
+    //               }
+    //             }
+
+    // app?.redraw?.();
+    // console.log("📂 Proyecto cargado correctamente");
+
+              })
+            };break;
+            case 'save': {
+                const projectData = {
+                    //project: {
+                    //  name: "unnamed",
+                    //  timestamp: Date.now(),
+                    //},
+                    model: this.viewer.layerDraw,
+                    //manager: this.manager,
+                    // serializamos los comandos registrados
+                    // commands: Array.from(commandRegistry.entries()).map(([name, fn]) => ({
+                    //   name,
+                    //   source: fn.toString(),
+                    // })),
+                  };
+              const json = JSON.stringify(this.viewer.layerDraw, null, 2);
+              saveProject(null, json);
+
+            }
+              break;
           }
         }
         case 'zoom':{
@@ -492,8 +556,7 @@ class cyCad1830App extends HTMLElement {
         case 'scale':
         case 'translate': {
             this.viewer.interactiveDrawing.drawTranslate(this.viewer.layerDraw);
-            //El attribute es lo que cambia el html !!
-            this.mData.setAttribute('type','translate');
+            this.mData.setAttribute('type','translate');//El attribute es lo que cambia el html !!
             }
             break;
         case 'rotate':

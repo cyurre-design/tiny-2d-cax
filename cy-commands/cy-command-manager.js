@@ -13,12 +13,14 @@
 // ============================================================
 function replacer(key, value) {
   if (value instanceof Map) return { __type: "Map", value: Array.from(value.entries()) };
-  if (typeof value === "function") return undefined;
+  if (value instanceof Set) return { __type: "Set", value: Array.from(value.values()) };
   return value;
 }
 
+
 function reviver(key, value) {
   if (value && value.__type === "Map") return new Map(value.value);
+  if (value && value.__type === "Set") return new Set(value.value);
   return value;
 }
 
@@ -48,7 +50,7 @@ function applyDiff(model, diff) {
 }
 
 // ============================================================
-// 🧠 SISTEMA DE HISTORIAL
+//  SISTEMA DE HISTORIAL
 // ============================================================
 export function createHistorySystem( model, app, options = {}) {
   const {

@@ -34,7 +34,7 @@ class CyLayerList extends HTMLElement {
         return style;
     }
     createDialog(layer) {
-        const st = layer.style;
+        const st = layer.layerStyle;
         return `
         <input id="layer-name" type='text' value=${layer.name}></input>
         <span>path color <input type="color" id="path-color" name="path-color" value="${st.pathColor}"></span></br>
@@ -88,7 +88,7 @@ class CyLayerList extends HTMLElement {
         }))
         this.dom.querySelector('#edit-style').addEventListener('click', (e)=> {
             if(e.target.id === 'style-enter'){
-                this.editedLayer.style = {
+                this.editedLayer.layerStyle = {
                     pathWidth: this.dialog.querySelector('#path-width').value,
                     pathColor: this.dialog.querySelector('#path-color').value,
                     selectedWidth: this.dialog.querySelector('#selected-width').value,
@@ -104,7 +104,7 @@ class CyLayerList extends HTMLElement {
         })
         this.dom.querySelector('#layer-list-show').addEventListener('change', (e) => {
             const v = this.list.querySelector('#full-list');
-            v.style.display = e.target.selected ? "block" : "none";
+            v.layerStyle.display = e.target.selected ? "block" : "none";
         })
         this.dom.querySelector('#layer-add').addEventListener('click',  (e) =>
             this.dispatchEvent(new CustomEvent('layer-handle', {bubbles:true, composed:true, detail: {layer:undefined, action: 'create'}} )))
@@ -134,7 +134,7 @@ class CyLayerList extends HTMLElement {
     setStyle(id, data){
         const layer = this.layers.find( ly => ly.id === id);
         layer.name = data.name;
-        layer.style = data.style;
+        layer.layerStyle = data.layerStyle;
     }
     disconnectedCallback() {
     }
