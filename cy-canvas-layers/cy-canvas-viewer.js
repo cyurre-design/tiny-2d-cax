@@ -91,13 +91,12 @@ export default class CyCanvasViewer extends HTMLElement {
      * @param {object} value incluye el propio name, id y style con atributos
      */
     setStyle(layerId, value){
-        if(layerId === 'GRID')
-            return this.layerAxes.setGridStyle(value);
-        else if(layerId === 'AXES')
-            return this.layerAxes.setAxesStyle(value);
-        else 
-            return this.layerDraw.setStyle(layerId, value)
-        }            
+        let ret = (layerId === 'GRID') ? this.layerAxes.setGridStyle(value)
+                : (layerId === 'AXES')? this.layerAxes.setAxesStyle(value)
+                : this.layerDraw.setStyle(layerId, value);
+        this._redrawLayers()    ;
+        return ret;
+    }            
     connectedCallback() {
         this.dom.innerHTML  = this.createStyle() + this.createTemplate();
 

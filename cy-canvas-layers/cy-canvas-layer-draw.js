@@ -19,6 +19,7 @@ export const canvasCSS = {
 // ------------------------
 // Modelo Layer
 // ------------------------
+
 function createLayer(id, name, layerStyle = canvasCSS, visible = true, erasable = true) {
     return {
         id      : id,
@@ -26,7 +27,14 @@ function createLayer(id, name, layerStyle = canvasCSS, visible = true, erasable 
         layerStyle   : Object.assign({},layerStyle),
         visible : visible,
         erasable: erasable,
-        blocks  : new Set() // ids de shapes asignados a esta capa
+        blocks  : new Set(), // ids de shapes asignados a esta capa
+        toJSON(k) {
+            return {
+                id:this.id, name:this.name, layerStyle:this.layerStyle, visible: this.visible, erasable: this.erasable,
+                blocks: Array.from(this.blocks.entries())
+
+            }
+        }
     }
 }   
 
@@ -73,26 +81,32 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
      */
     //Hay que separar la parte geométrica de la otra porque si no se usa el toJSON de esa parte y perdemos la info añadida
     toJSON(){
-        return {blocks:Array.from(this.blocks.entries()), points:Array.from(this.points.entries()), layers: Array.from(this.layers.entries()),
-            _activeLayerId: this._activeLayerId, nextBlockId:this.nextBlockId, nextLayerId: this.nextLayerId,
-            pointsTree:this.pointsTree.toJSON(), blocksTree:this.blocksTree.toJSON()}
-        //console.log (JSON.stringify(this));
+        return {
+            blocks:Array.from(this.blocks.entries()),
+            points:Array.from(this.points.entries()),
+            layers: Array.from(this.layers.entries()),
+            pointsTree:this.pointsTree.toJSON(),
+            blocksTree:this.blocksTree.toJSON(),
+            nextBlockId:this.nextBlockId,
+            nextLayerId: this.nextLayerId,
+            _activeLayerId: this._activeLayerId
+        }
     }
-
+/**@todo que llegue aqu'i solo el model ? */
     deserialize(saved){
-        this.blocks = new Map(saved.blocks);
-        this.points = new Map(saved.points);
-        this.layers = new Map(saved.layers);
-        this.pointsTree.fromJSON( saved.pointsTree);
-        this.blocksTree.fromJSON( saved.blocksTree);
-        this._activeLayerId = saved._activeLayerId;
-        this.nextBlockId = saved.nextBlockId;
-        this.nextLayerId = saved. nextLayerId;
+        const model = saved.model;
+        this.blocks = new Map(model.blocks);
+        this.points = new Map(model.points);
+        this.layers = new Map(model.layers);
+        this.pointsTree.fromJSON( model.pointsTree);
+        this.blocksTree.fromJSON( model.blocksTree);
+        this._activeLayerId = model._activeLayerId;
+        this.nextBlockId = model.nextBlockId;
+        this.nextLayerId = model. nextLayerId;
         //Pero los paths se han perdido ...
         this.blocks.forEach(b => b.canvasPath = getPathFromBlocks(b));
         this.points.forEach(b => b.canvasPath = getPathFromBlocks(b));
         this.draw();
-
     }
     
 

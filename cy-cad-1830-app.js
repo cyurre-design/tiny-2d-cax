@@ -3,7 +3,7 @@ import './cy-canvas-layers/cy-canvas-viewer.js';
 import "./cy-layer-list.js"
 import './cy-input-data.js';
 import {findAllCuts, blockTranslate, blockSymmetryX, blockSymmetryY, blockSymmetryL} from './cy-geometry/cy-geometry-library.js'
-import {createCommandManager, commandLayerCreate, commandBlockCreate, commandBlockDelete, commandBlockTransform, commandCreateCutPoints} from './cy-commands/cy-command-definitions.js';
+import {createCommandManager, commandLayerCreate, commandLayerDelete, commandLayerSetStyle, commandBlockCreate, commandBlockDelete, commandBlockTransform, commandCreateCutPoints} from './cy-commands/cy-command-definitions.js';
 import {createDrawElement} from './cy-geometry/cy-geometry-basic-elements.js';
 import { loadProject, saveProject } from "./cy-file-save-load.js";
 
@@ -243,49 +243,6 @@ class cyCad1830App extends HTMLElement {
       this.dom = this.attachShadow({ mode: 'open' });
       this.dom.innerHTML = template + style;
     }
-//---------------------------------- COMANDOS LAYER ---------------------------
-    /**
-     * @method
-     */
-
- 
-  layerDelete = (id) => {
-      const theCommand = this.manager.makeCommand({
-          execute(p, a) {
-              this.id = id;
-              this.layer = p.layers.get(this.id);
-              p.deleteLayer(this.id);
-              a.viewer._redrawLayers();
-              a.layerView.deleteLayer(this.id);
-              //return layer;
-          },
-          undo(p,a) {
-              if (this.layer) {
-                p.addLayer(this.layer.name, this.layer.style);
-                a.layerView.addLayer(JSON.stringify(this.layer));
-              }
-          },
-      });
-      return this.manager.executeCommand(theCommand);
-      }      
-  layerSetStyle = (layerId, data) => {
-    const theCommand = this.manager.makeCommand({
-        execute(p, a) {
-            this.id = layerId;
-            this.data = a.viewer.setStyle(this.id, data);
-            a.viewer._redrawLayers();
-            a.layerView.setStyle(this.id, data)
-            return this.data;
-        },
-        undo(p,a) {
-            if (this.id){
-              a.viewer.setStyle(this.id, this.data);
-              a.layerView.setStyle(this.id, this.data)
-              a.viewer._redrawLayers();
-            }
-        }})
-        return this.manager.executeCommand(theCommand);
-      }
 
 
 
@@ -368,9 +325,9 @@ class cyCad1830App extends HTMLElement {
       else if(e.action === 'create'){
         const layer = commandLayerCreate(e.layer);    //de momento es siempre undefined por el modo de trabajo
       } else if(e.action === 'delete'){
-        this.layerDelete(e.layerId);    //de momento es siempre undefined por el modo de trabajo
+        commandLayerDelete(e.layerId);    //de momento es siempre undefined por el modo de trabajo
       } else if(e.action === 'set-style')
-        this.layerSetStyle(e.layerId, e.value);
+        commandLayerSetStyle(e.layerId, e.value);
     })
 //--------------------- CREACION DE BLOQUES ------------------
   /**@listens new-block Aquí es donde se recibe la petición de insertar geometría
@@ -478,13 +435,6 @@ class cyCad1830App extends HTMLElement {
                 // Restaurar modelo
                 this.viewer.layerDraw.deserialize( data);//.model;
 
-    //             // Restaurar historial
-    //             undoStack.length = 0;
-    //             redoStack.length = 0;
-    //             checkpoints.length = 0;
-    //             undoStack.push(...data.history.undoStack);
-    //             redoStack.push(...data.history.redoStack);
-    //             checkpoints.push(...data.history.checkpoints);
 
     //             // Restaurar comandos registrados
     //             commandRegistry.clear();
@@ -503,22 +453,16 @@ class cyCad1830App extends HTMLElement {
               })
             };break;
             case 'save': {
-                const projectData = {
-                    //project: {
-                    //  name: "unnamed",
-                    //  timestamp: Date.now(),
-                    //},
-                    model: this.viewer.layerDraw,
-                    //manager: this.manager,
-                    // serializamos los comandos registrados
-                    // commands: Array.from(commandRegistry.entries()).map(([name, fn]) => ({
-                    //   name,
-                    //   source: fn.toString(),
-                    // })),
-                  };
-              const json = JSON.stringify(this.viewer.layerDraw, null, 2);
+              const projectData = {
+                  project: { name: "unnamed", timestamp: Date.now()},
+                  model: this.viewer.layerDraw,
+                  //manager: this.manager
+                  // serializamos los comandos registrados
+                  //commands: Array.from(commandRegistry.entries()).map(([name, fn]) => ({ name, source: fn.toString(), })),
+                };
+              const json = JSON.stringify(projectData, null, 2);
+              //const json = JSON.stringify(this.viewer.layerDraw, null, 2);
               saveProject(null, json);
-
             }
               break;
           }
