@@ -331,7 +331,11 @@ const templateTranslateInputData = `
     <md-filled-text-field id="data-x1" label="Xf" class="half" type="number" value="0" step="0.5">
     </md-filled-text-field><md-filled-text-field id="data-y1" label="Yf" class="half" type="number" value="0" step="0.5"></md-filled-text-field>
  </span>
-</div>
+ <span>
+    <md-filled-button class="data _50" id="submenu-translate-int">INT</md-filled-button>
+    <md-filled-button class="data _50" id="submenu-translate-esc">ESC</md-filled-button>
+    <md-filled-button class="data _50" id="submenu-translate-enter">ENTER</md-filled-button>
+ </span>
 </div>`
 const templateRotateInputData = `<cy-angle-data id="data-a" class="data"></cy-angle-data>`
 
@@ -444,16 +448,12 @@ export default class CyInputData extends HTMLElement {
         //this.block = evt.detail.b;
         switch(evt.type){
             case 'click':
-                this.dispatchEvent(new CustomEvent('input-click',{bubbles:true, composed:true, detail: evt.target.id}))
-                //break;
+                const detail = {};
+                detail[evt.target.id] = evt.target.value;
+                this.dispatchEvent(new CustomEvent('input-click',{bubbles:true, composed:true, detail: detail}))
+                break;
             //Una vez que tengo el foco en el control debo mandar todos los valores, porque el usuario ya ve un 0 en los no definidos
             case 'change':
-                // const idn = evt.target.id;
-                // const v = evt.target.value;
-                //console.log(evt.target.id);
-                //Object.keys(this.data).forEach(k => this.data[k] =  this.inputs[k].value);
-                //NO defino nada que no se haya apretado o cambiado, para sincronizar con ratón
-                this.data = {};
                 this.data[evt.target.id] = evt.target.value;
                 this.dispatchEvent(new CustomEvent('input-data',{bubbles:true, composed:true, detail: this.data}))
                 break;
@@ -463,12 +463,19 @@ export default class CyInputData extends HTMLElement {
     //intento hacerlo lo más genérico posible, pero habrá switches casi seguro.
     //Me pasan pos e idn, que es un array con los id de los campos que cambian.
     // data-xx es el nombre publico entre ambos controles 
+    /**@todo generalizar? */
     update(data){
         const [ix,iy] = data.idn; //array de dos asciis, ej: data-x0 y data-y0
-        if(this.inputs[ix])
-            this.inputs[ix].value = this.format(+data.pos.x);
-        if(this.inputs[iy])
-            this.inputs[iy].value = this.format(+data.pos.y);
+        if(this.inputs[ix]){
+            const v = this.format(+data.pos.x);
+            this.inputs[ix].value = v;
+            this.data[ix] = v
+        }
+        if(this.inputs[iy]){
+            const v = this.format(+data.pos.y);
+            this.inputs[iy].value = v;
+            this.data[iy] = v
+        }
         //this.dom.querySelector('#'+iy).value = this.format(data.pos.y);
         //console.log(data.pos);
     }
@@ -483,7 +490,8 @@ export default class CyInputData extends HTMLElement {
     }
     static get observedAttributes() {
         return ['type'];
-      }   
+      }
+    /**@todo unificar a clase data la selección */   
     attributeChangedCallback(name, oldVal, newVal) {
     switch(name) {
         case 'type': if(oldVal !== newVal){

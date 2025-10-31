@@ -311,7 +311,7 @@ export default class CyCanvasHandler {
             //this.ctx.setTransform(scale, 0, 0, -scale, -scale * ex.x, dim.height + scale*ex.y);
             this.canvas.dispatchEvent(new CustomEvent('zoom_end', { bubbles: true, composed: true, scale:scale, dim:dim})); //redraw
     }
-    setZoomMode() {
+    setZoomMode = () => {
         this.app(this.application); //Instala los servicios
     }
 

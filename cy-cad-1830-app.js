@@ -6,6 +6,12 @@ import {findAllCuts, blockTranslate, blockSymmetryX, blockSymmetryY, blockSymmet
 import {createCommandManager, commandLayerCreate, commandLayerDelete, commandLayerSetStyle, commandBlockCreate, commandBlockDelete, commandBlockTransform, commandCreateCutPoints} from './cy-commands/cy-command-definitions.js';
 import {createDrawElement} from './cy-geometry/cy-geometry-basic-elements.js';
 import { loadProject, saveProject } from "./cy-file-save-load.js";
+import DrawTranslate from "./cy-draw-interactive/cy-draw-translate.js"
+import DrawSegment from "./cy-draw-interactive/cy-draw-segment.js"
+import DrawPolygon from "./cy-draw-interactive/cy-draw-polygon.js"
+import DrawCircle from "./cy-draw-interactive/cy-draw-circle.js"
+import DrawArc from "./cy-draw-interactive/cy-draw-arc.js"
+import DrawPath from "./cy-draw-interactive/cy-draw-path.js"
 
 const templateMainMenu =`
   <div  id="hidden-row" >
@@ -289,13 +295,9 @@ class cyCad1830App extends HTMLElement {
     this.mData = this.dom.querySelector('#manual-data');
     this.viewer.addEventListener('pos',(e)=>this.mData.update(e.detail));
     this.mData.addEventListener('input-data', (e) =>
-        this.viewer.interactiveDrawing.updateData(e.detail));
+        this.drawingApp.updateData(e.detail));
     this.mData.addEventListener('input-click', (e) => {
-        const type = e.detail.split('-')[0]; //submenu, data
-        if(type === 'data')
-          this.viewer.interactiveDrawing.updateData(e.detail);
-        // else if(type === 'submenu')
-        //   this.handleSubmenu(e.detail)
+          this.drawingApp.updateData(e.detail);
         });
     
 
@@ -499,12 +501,14 @@ class cyCad1830App extends HTMLElement {
           break;
         case 'scale':
         case 'translate': {
-            this.viewer.interactiveDrawing.drawTranslate(this.viewer.layerDraw);
+            //this.viewer.interactiveDrawing.drawTranslate(this.viewer.layerDraw);
+            this.viewer.interactiveDrawing.setDrawingMode( new DrawTranslate(this.viewer.layerDraw, sub1));
             this.mData.setAttribute('type','translate');//El attribute es lo que cambia el html !!
             }
             break;
         case 'rotate':
                 this.mData.setAttribute('type','rotate');
+                this.viewer.interactiveDrawing.drawRotate(this.viewer.layerDraw, sub1);
               break;
         case 'draw':{
             switch( sub1) {
@@ -524,12 +528,13 @@ class cyCad1830App extends HTMLElement {
                 case 'PDA': //En estos tres sobran cosas
                 case 'YH':
                 case 'XV':
-                  this.viewer.interactiveDrawing.drawSegment(this.viewer.layerDraw, sub1); 
+                  this.drawingApp = new DrawSegment(this.viewer.layerDraw, sub1);
+                  this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
                   //El attribute es lo que cambia el html !!
                   this.mData.setAttribute('type','segment'+sub1);
 
                   this.mData.updateData(this.dataStore.segment);
-                  this.viewer.interactiveDrawing.updateData(this.dataStore.segment);
+                  this.drawingApp.updateData(this.dataStore.segment);
 
                   // if((sub1 === 'PDA') || (sub1 === 'YH') || (sub1 === 'XV')){
                   //   this.mData.update({idn:['data-d'], pos:{x:this.dataStore.segment.d}});
@@ -552,12 +557,13 @@ class cyCad1830App extends HTMLElement {
             case '2PR': 
             case 'CP':
             case '3P': //this.viewer.interactiveDrawing.drawCircle(this.dataLayerBorrador, sub1);break;
-              this.viewer.interactiveDrawing.drawCircle(this.viewer.layerDraw, sub1 );
+              this.drawingApp = new DrawCircle(this.viewer.layerDraw, sub1);
+              this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
               break;
               
           }
           this.mData.setAttribute('type','circle'+sub1);
-          this.viewer.interactiveDrawing.updateData(this.dataStore.circle);
+          this.drawingApp.updateData(this.dataStore.circle);
           this.mData.updateData(this.dataStore.circle);
         }
         break;
@@ -567,16 +573,18 @@ class cyCad1830App extends HTMLElement {
                 case '3P':
                 case '2PR':
                 case '2PC':
-                  this.viewer.interactiveDrawing.drawArc(this.viewer.layerDraw, sub1 );
+                  this.drawingApp = new DrawArc(this.viewer.layerDraw, sub1);
+                  this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
                   break;
             }
           this.mData.setAttribute('type','arc'+sub1);
-          this.viewer.interactiveDrawing.updateData(this.dataStore.arc);
+          this.drawingApp.updateData(this.dataStore.arc);
           this.mData.updateData(this.dataStore.arc);
         }
         break;
         case 'path':{
-          this.viewer.interactiveDrawing.drawPath(this.viewer.layerDraw);
+          this.drawingApp = new DrawPath(this.viewer.layerDraw, sub1);
+          this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
           //El attribute es lo que cambia el html !!
           this.mData.setAttribute('type','path');
 
@@ -585,9 +593,11 @@ class cyCad1830App extends HTMLElement {
         }
         break;
         case 'poly' :{ //quito el menú de tipo y lo pongo en el selector de input-data
-          this.viewer.interactiveDrawing.drawPolygon(this.viewer.layerDraw);
+          this.drawingApp = new DrawPolygon(this.viewer.layerDraw, sub1)
+          this.viewer.interactiveDrawing.setDrawingMode( this.drawingApp);
+          //this.viewer.interactiveDrawing.drawPolygon(this.viewer.layerDraw);
           this.mData.setAttribute('type','poly'+sub1);
-          this.viewer.interactiveDrawing.updateData(this.dataStore.poly);
+          this.drawingApp.updateData(this.dataStore.poly);
           this.mData.updateData(this.dataStore.poly)  //inicializo, debería ser un setting y luego memorizarse TODO
         }
         break;
