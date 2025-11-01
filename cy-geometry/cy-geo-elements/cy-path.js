@@ -1,6 +1,7 @@
 "use strict";
 import {geometryPrecision, distancePointToPoint, checkBbox } from '../cy-geometry-library.js'
 //import { translatePoint, transformPoint } from './cy-geometry-library.js'
+import {segmentTranslate, segmentSymmetryX, segmentSymmetryY, segmentSymmetryL} from './cy-segment.js'
 
 //los create deben garantizar que aquí llegan bien los parámetros
 
@@ -24,7 +25,7 @@ function calculateBbox(p){
  * @returns 
  */
 export function pathTranslate(p, dx, dy){
-        return createPath( p.elements.map(el => el.type==='segment'?segmentTranslate(el, dx, dy):arcTranslate(el, dx, dy)))
+        return createPath( {elements:p.elements.map(el => el.type==='segment'?segmentTranslate(el, dx, dy):arcTranslate(el, dx, dy))})
     }
 export function pathClone(p) {
         return JSON.parse(JSON.stringify(p));

@@ -21,7 +21,7 @@ export function createCircle(data = {}) {
     //get pf() { return {x:this.x1, y: this.y1}; }
 
 export function circleBbox(circle){ return({x0: circle.cx - circle.r, y0: circle.cy - circle.r, x1: circle.cx + circle.r, y1: circle.cy + circle.r})}
-export function circleClone(clone){ return JSON.parse(JSON.stringify(circle))}
+export function circleClone(circle){ return JSON.parse(JSON.stringify(circle))}
     //TODO rehacer con un new Circle(this)
 export function circleTranslate(circle, dx, dy) {
     return createCircle({cx:circle.cx+dx, cy:circle.cy+dy, x0:circle.x0+dx, y0:circle.y0+dy, x1:circle.x1+dx, y1:circle.y1+dy})

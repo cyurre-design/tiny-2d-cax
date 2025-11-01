@@ -32,7 +32,6 @@ function createLayer(id, name, layerStyle = canvasCSS, visible = true, erasable 
             return {
                 id:this.id, name:this.name, layerStyle:this.layerStyle, visible: this.visible, erasable: this.erasable,
                 blocks: Array.from(this.blocks.entries())
-
             }
         }
     }

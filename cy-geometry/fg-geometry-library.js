@@ -1,9 +1,10 @@
 "use strict";
 
 //Punto y rectángulo los consideramos comunes, así como distancia.
-//Las funciones de este módulo tratan de elementos de soporte
-import { Point, Circle, Line, distancePointToPoint, geometryPrecision, geometryPrecision2, sqDistancePointToPoint } from './fg-geometry-basic-elements.js';
+
+import {  distancePointToPoint, geometryPrecision, geometryPrecision2, sqDistancePointToPoint } from './fg-geometry-basic-elements.js';
 export * from './fg-geometry-basic-elements.js';
+
 
 //Es la resolución de ecuaciones cuadráticas, que hay mejor que la del cole
 //YURRE: error de corte en tangencias, puede haber un discrimante muy muy pequeño pero negativo, hacemos 0

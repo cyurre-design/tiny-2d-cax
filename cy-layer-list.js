@@ -2,7 +2,7 @@
 
 
 const templateSingleLayer = (name, id, flag=true) => {
-    const delButton = flag===true? ` <md-filled-button id="layer-del-${name}">Del</md-filled-button>` : '';
+    const delButton = flag===true? ` <md-filled-button id="layer-del-${id}">Del</md-filled-button>` : '';
   return `
   <md-list-item id="${name.toLowerCase()}">
     ${name}${delButton}
