@@ -201,7 +201,7 @@ export function createDrawElement(type, data ) {
             }
             break;
         case 'bbox':
-            element = new Bbox(data);
+            element = element = {type:'bbox', x0:data.x0, y0:data.y0, x1:data.x1, y1:data.y1};
             break;
             default: return undefined;
             break;
