@@ -271,6 +271,7 @@ const templatePathInputData = `
     <md-filled-button class="data" id="data-end">END</md-filled-button>
     <md-filled-button class="data" id="data-back">BACK</md-filled-button>
     <md-filled-button class="data" id="data-del">DEL</md-filled-button>
+    <md-filled-button class="data" id="data-enter">ENTER</md-filled-button>
 </span>
 <span>
     <md-filled-text-field id="data-r" label="RADIUS" class="half" type="number" value="0" step="0.5"></md-filled-text-field>
@@ -305,12 +306,17 @@ const templateZoomBoxInputData = `
 const templateSelectInputData =`
 <div>
     <md-filled-text-field id="data-penWidth" all" label="Select Tolerance" type="number" value="1" max="5" min="0.5" step="0.5"></md-filled-text-field>
-    <div >
-        <md-filled-button class="submenu _25" id="submenu-select-all">ALL</md-filled-button>
-        <md-filled-button class="submenu _25" id="submenu-select-invert">INV</md-filled-button>
-        <md-filled-button class="submenu _25" id="submenu-select-del">DEL</md-filled-button>
-        <md-filled-button class="submenu _25" id="submenu-select-cut">CUT</md-filled-button>
-    </div>
+
+    <div>
+        <span>
+            <md-filled-text-field id="data-x0" label="X0" class="half" type="number" value="0" step="0.5">
+            </md-filled-text-field><md-filled-text-field id="data-y0" label="Y0" class="half" type="number" value="0" step="0.5"></md-filled-text-field>
+        </span>
+        <span>
+            <md-filled-text-field id="data-x1" label="X1" class="half" type="number" value="0" step="0.5">
+            </md-filled-text-field><md-filled-text-field id="data-y1" label="Y1" class="half" type="number" value="0" step="0.5"></md-filled-text-field>
+        </span>
+        </div>
 </div>
 `
 const templateCutPointsInputData =`
@@ -332,9 +338,9 @@ const templateTranslateInputData = `
     </md-filled-text-field><md-filled-text-field id="data-y1" label="Yf" class="half" type="number" value="0" step="0.5"></md-filled-text-field>
  </span>
  <span>
-    <md-filled-button class="data _50" id="submenu-translate-int">INT</md-filled-button>
-    <md-filled-button class="data _50" id="submenu-translate-esc">ESC</md-filled-button>
-    <md-filled-button class="data _50" id="submenu-translate-enter">ENTER</md-filled-button>
+    <md-filled-button class="data _50" id="translate-int">INT</md-filled-button>
+    <md-filled-button class="data _50" id="translate-esc">ESC</md-filled-button>
+    <md-filled-button class="data _50" id="translate-enter">ENTER</md-filled-button>
  </span>
 </div>`
 const templateRotateInputData = `<cy-angle-data id="data-a" class="data"></cy-angle-data>`

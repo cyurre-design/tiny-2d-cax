@@ -8,9 +8,13 @@ export default class DrawBasic {
         this.data = {};
         this.mode = mode;
         this.subMode = subMode;
-        this.deleteData();
+        this.status = 0;    
     }
-    deleteData = () => {this.status = 0;};
+    /**
+     * NO SE DEBEN LLAMAR FUNCIONES SOBRECARGABLES EN EL CONSTRUCTOR
+     * porque se llamarán con el this de la clase hija y ANTES del constructor de la clase hija!!!
+     */
+    deleteData()    { this.status = 0;}
     //Por defecto, la nomenclatura sería x0,y0 para un primer punto, x1,y1 para un segundo....
     dataSent = [['data-x0','data-y0'],['data-x1','data-y1'],[]];
     dataReceived = ['x0','x1','y0','y1'];
@@ -37,6 +41,7 @@ export default class DrawBasic {
     leftClick = (pi, evt) => {
         let p = this.hit || pi;
         this.clickFn[this.status].forEach(f=>f(p)); //secuencia de acciones
+        console.log(this.status)
     };
     mouseMove = (pi) => {
         this.moveFn[this.status].forEach(f => f(pi));
@@ -44,7 +49,7 @@ export default class DrawBasic {
             detail:{pos:this.hit, type:this.type, subType: this.subMode, idn:this.dataSent[this.status]}}));
     };
     //Habría que chequear tipos numéricos y tal, formatos...
-    updateData= (data)=>{
+    updateData(data) {
         let newData = [];
         Object.keys(data).forEach(k =>{
             const [t,idn,action] = k.split('-');

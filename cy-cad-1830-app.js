@@ -7,6 +7,10 @@ import {createCommandManager, commandLayerCreate, commandLayerDelete, commandLay
 import {createDrawElement} from './cy-geometry/cy-geometry-basic-elements.js';
 import { loadProject, saveProject } from "./cy-file-save-load.js";
 import DrawTranslate from "./cy-draw-interactive/cy-draw-translate.js"
+import DrawSymmetry from "./cy-draw-interactive/cy-draw-symmetry.js"
+import DrawSelection from "./cy-draw-interactive/cy-draw-selection.js"
+import DrawOrigin from "./cy-draw-interactive/cy-draw-origin.js"
+
 import DrawSegment from "./cy-draw-interactive/cy-draw-segment.js"
 import DrawPolygon from "./cy-draw-interactive/cy-draw-polygon.js"
 import DrawCircle from "./cy-draw-interactive/cy-draw-circle.js"
@@ -382,7 +386,12 @@ class cyCad1830App extends HTMLElement {
                           commandBlockDelete(blocks);
                         }
               break;
-        case 'sel'    : this.viewer.interactiveDrawing.drawSelection(this.viewer.layerDraw); break;
+        case 'sel'    : {
+                          this.drawingApp = new DrawSelection(this.viewer.layerDraw, '');
+                          this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
+                            this.mData.setAttribute('type','select');
+                        }
+                        break;
       }
     })
 
@@ -482,16 +491,15 @@ class cyCad1830App extends HTMLElement {
             break;
         }
         case 'origin':{
-            this.viewer.interactiveDrawing.drawOrigin(this.viewer.layerDraw);
-            //El attribute es lo que cambia el html !!
+            this.drawingApp = new DrawOrigin(this.viewer.layerDraw, sub1);
+            this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
             this.mData.setAttribute('type','origin');
             }
             break;
         case 'symmetry':{
-          this.viewer.interactiveDrawing.drawSymmetry(this.viewer.layerDraw, sub1);
-          this.mData.setAttribute('type','symmetry'+sub1);            //El attribute es lo que cambia el html !!
-            //if(sub1 === 'L')
-            //  this.mData.updateData(this.dataStore.symmetry);
+            this.drawingApp = new DrawSymmetry(this.viewer.layerDraw, sub1);
+            this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
+            this.mData.setAttribute('type','symmetry'+sub1);            //El attribute es lo que cambia el html !!
         }
         break;
         case 'cut':
@@ -501,8 +509,8 @@ class cyCad1830App extends HTMLElement {
           break;
         case 'scale':
         case 'translate': {
-            //this.viewer.interactiveDrawing.drawTranslate(this.viewer.layerDraw);
-            this.viewer.interactiveDrawing.setDrawingMode( new DrawTranslate(this.viewer.layerDraw, sub1));
+            this.drawingApp = new DrawTranslate(this.viewer.layerDraw, sub1);
+            this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
             this.mData.setAttribute('type','translate');//El attribute es lo que cambia el html !!
             }
             break;
@@ -585,7 +593,6 @@ class cyCad1830App extends HTMLElement {
         case 'path':{
           this.drawingApp = new DrawPath(this.viewer.layerDraw, sub1);
           this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
-          //El attribute es lo que cambia el html !!
           this.mData.setAttribute('type','path');
 
           //this.mData.updateData(this.dataStore.path);
@@ -595,7 +602,6 @@ class cyCad1830App extends HTMLElement {
         case 'poly' :{ //quito el menú de tipo y lo pongo en el selector de input-data
           this.drawingApp = new DrawPolygon(this.viewer.layerDraw, sub1)
           this.viewer.interactiveDrawing.setDrawingMode( this.drawingApp);
-          //this.viewer.interactiveDrawing.drawPolygon(this.viewer.layerDraw);
           this.mData.setAttribute('type','poly'+sub1);
           this.drawingApp.updateData(this.dataStore.poly);
           this.mData.updateData(this.dataStore.poly)  //inicializo, debería ser un setting y luego memorizarse TODO
