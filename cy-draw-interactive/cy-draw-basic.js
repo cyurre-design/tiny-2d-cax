@@ -14,7 +14,7 @@ export default class DrawBasic {
      * NO SE DEBEN LLAMAR FUNCIONES SOBRECARGABLES EN EL CONSTRUCTOR
      * porque se llamarán con el this de la clase hija y ANTES del constructor de la clase hija!!!
      */
-    deleteData()    { this.status = 0;}
+    deleteData = () => { this.status = 0;}
     //Por defecto, la nomenclatura sería x0,y0 para un primer punto, x1,y1 para un segundo....
     dataSent = [['data-x0','data-y0'],['data-x1','data-y1'],[]];
     dataReceived = ['x0','x1','y0','y1'];
@@ -28,7 +28,7 @@ export default class DrawBasic {
         return( {x : point.x0, y : point.y0});
     }
     
-    p0 =        (p)     => {this.data.x0 = p.x; this.data.y0 = p.y; this.status = 1;};
+    p0 =        (pi)     => {this.data.x0 = pi.x; this.data.y0 = pi.y; this.status = 1;};
     getBlocks = ()      => {this.blocksToMove = this.layerDraw.getSelectedBlocks()};
     h  =        (pi)    => {this.hit = this.highLight(pi.x, pi.y, undefined);};
     m0 =        (pi)    => {this.data.x0 = pi.x, this.data.y0 = pi.y;};

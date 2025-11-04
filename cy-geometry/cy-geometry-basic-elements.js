@@ -12,15 +12,15 @@ import {createPath} from './cy-geo-elements/cy-path.js'
 //import './cy-geo-elements/biarc.js'
 
 
-// //igual, pero el constructor garantiza x0 <x1 e y0 < y1
-// export function createBbox(data = {}) {    //suponemos que los puntos vienen definidos
-//     return {x0 : Math.min(data.x0, data.x1),
-//         y0 : Math.min(data.y0, data.y1),
-//         x1 : Math.max(data.x0, data.x1),
-//         y1 : Math.max(data.y0, data.y1),
-//         type : 'bbox'
-//     }
-// }
+//igual, pero el constructor garantiza x0 <x1 e y0 < y1
+export function createBbox(data = {}) {    //suponemos que los puntos vienen definidos
+    return {x0 : Math.min(data.x0, data.x1),
+        y0 : Math.min(data.y0, data.y1),
+        x1 : Math.max(data.x0, data.x1),
+        y1 : Math.max(data.y0, data.y1),
+        type : 'bbox'
+    }
+}
 // //Atton, esta la hago por referencia    
 // export function bboxTranslate(b, dx, dy){
 //         [b.x0, b.y0] = translatePoint(this.x0, this.y0, dx, dy);
@@ -201,7 +201,7 @@ export function createDrawElement(type, data ) {
             }
             break;
         case 'bbox':
-            element = element = {type:'bbox', x0:data.x0, y0:data.y0, x1:data.x1, y1:data.y1};
+            element = createBbox(data);
             break;
             default: return undefined;
             break;

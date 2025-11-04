@@ -9,7 +9,7 @@ export default class DrawSelection extends DrawBasic{
     }
     //mientras mueve sin click, estado 0, miramos si pincha en bloque
     hover = (pi) => {
-        this.layerDraw.hover(pi.x, pi.y, undefined, false);
+        return this.layerDraw.hover(pi.x, pi.y, undefined, false);
     };
     //Al hacer click pasa de hover a selected
     select = (pi) => {
@@ -21,7 +21,7 @@ export default class DrawSelection extends DrawBasic{
     //Evitamos usar el layerDraft que no es conocido
     move = (pi) => {this.hit = this.highLight(pi.x, pi.y, undefined)};
     draw = (pi) => {  
-        this.hit = this.highLight(pi.x, pi.y, {type:'bbox', x0: this.data.x0, y0: this.data.y0, x1: this.data.x1, y1:this.data.y1})
+        this.hit = this.highLight(pi.x, pi.y, createDrawElement('bbox', this.data))
         //this.layerDraw.hover(pi.x, pi.y, bbox, false);
     }
     //Y al dar click pasan de hover a selected ls que estén dentro del box
@@ -33,7 +33,7 @@ export default class DrawSelection extends DrawBasic{
 
     //Y lo que se manda a input-data de posicines del cursor igual
     //dataSent = [['data-x0','data-y0'],['data-x1','data-y1']];
-    clickFn = [[this.p0, this.select], [this.m1, this.selectBlocks, this.deleteData]];
+    clickFn = [[this.m0, this.select], [this.m1, this.selectBlocks, this.deleteData]];
     moveFn = [[this.m0, this.move, this.hover], [this.m1, this.draw]];
 
     updateData(data)  {
