@@ -145,4 +145,27 @@ export function commandCreateCutPoints(cutPoints){
       }
     }})
     commandManager.execute(theCommand);    
-  }
+    }
+    //------------------ ORIGIN ----------------
+export function commandChangeOrigin( dx, dy){
+    const theCommand = commandManager.makeCommand({
+        execute(p, a) {
+            this.copiaBefore = JSON.stringify(p);
+            a.translateOrigin(dx,dy);
+            p.setOrigin( -dx, -dy);
+            this.copiaAfter = JSON.stringify(p);
+            p.draw();
+    },
+    undo(p,a){
+        a.translateOrigin(-dx,-dy);
+        p.deserialize(JSON.parse(this.copiaBefore));
+        p.draw();
+    },
+    redo(p,a){
+        p.deserialize(JSON.parse(this.copiaAfter));
+        a.translateOrigin(dx,dy);
+        p.draw();
+    }
+    })
+    commandManager.execute(theCommand);  
+}

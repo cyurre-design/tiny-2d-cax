@@ -127,15 +127,6 @@ export default class CyCanvasViewer extends HTMLElement {
             this._redrawLayers());
         //--------------------------------------
 
-        /**@listens set-origin cuando se ejecuta de verdad el comando definido de forma interactiva */
-        //Los comandos en realidad no se ejecutan al accionar el menú sino cuando se dan por concluidas las partes interactivas
-        this.addEventListener('set-origin', e=>{
-            this.canvasHandler.view("fgPane", {x:e.detail.data.x0, y:e.detail.data.y0});  //rehace los cálculos del handler
-            this.layerDraw.setOrigin(-e.detail.data.x0, -e.detail.data.y0);
-            this._redrawLayers();
-        });
-
-
        
         /**@listens scale-change podría estar en el zoom-end pero es más específico, indica que la escala hacambiado y sirve
          * para cambiar el tamaño del cursor de búsque o cosas relacionadas

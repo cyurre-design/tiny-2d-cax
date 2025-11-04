@@ -1,7 +1,7 @@
 "use strict";
 import CyCanvasLayer from './cy-canvas-layer.js';
 import {scalePixels2mm, scaleMm2pixels, position2pixels} from './cy-canvas-handler.js';
-import { checkBbox, insideBbox,  }  from '../cy-geometry/cy-geometry-library.js';
+import { checkBbox, insideBbox, blockTranslate }  from '../cy-geometry/cy-geometry-library.js';
 import { getRelevantPoints }  from '../cy-geometry/cy-geometry-basic-elements.js';
 import {getPathFromBlocks} from './cy-elements-to-canvas.js'
 
@@ -93,7 +93,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     }
 /**@todo que llegue aqu'i solo el model ? */
     deserialize(saved){
-        const model = saved.model;
+        const model = saved; //.model;
         this.blocks = new Map(model.blocks);
         this.points = new Map(model.points);
         this.layers = new Map(model.layers);
@@ -486,7 +486,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         let oldBlocks=[];
         
         this.blocks.forEach((b)=> {
-            const nb = b.translate(dx,dy);
+            const nb = blockTranslate(b, dx, dy);
             nb.layerId = b.layerId;
             oldBlocks.push(nb);
         });

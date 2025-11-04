@@ -11,18 +11,18 @@
 // ============================================================
 // 🔧 UTILIDADES BASE
 // ============================================================
-function replacer(key, value) {
-  if (value instanceof Map) return { __type: "Map", value: Array.from(value.entries()) };
-  if (value instanceof Set) return { __type: "Set", value: Array.from(value.values()) };
-  return value;
-}
+// function replacer(key, value) {
+//   if (value instanceof Map) return { __type: "Map", value: Array.from(value.entries()) };
+//   if (value instanceof Set) return { __type: "Set", value: Array.from(value.values()) };
+//   return value;
+// }
 
 
-function reviver(key, value) {
-  if (value && value.__type === "Map") return new Map(value.value);
-  if (value && value.__type === "Set") return new Set(value.value);
-  return value;
-}
+// function reviver(key, value) {
+//   if (value && value.__type === "Map") return new Map(value.value);
+//   if (value && value.__type === "Set") return new Set(value.value);
+//   return value;
+// }
 
 function deepClone(obj) {
   return JSON.parse(JSON.stringify(obj, replacer), reviver);
@@ -61,17 +61,18 @@ export function createHistorySystem( model, app, options = {}) {
   const undoStack = [];
   const redoStack = [];
   const checkpoints = [];
-  const commandRegistry = new Map();
+  //const commandRegistry = new Map();
   let commandCount = 0;
 
   function snapshot() {
-    return JSON.stringify(model, replacer);
+    return JSON.stringify(model /*, replacer*/);
   }
 
   function restoreSnapshot(json) {
-    const restored = JSON.parse(json, reviver);
-    model.entities = restored.entities;
-    model.nextId = restored.nextId;
+    const restored = model.deserialize(JSON.parse(json));
+    // const restored = JSON.parse(json, reviver);
+    // model.entities = restored.entities;
+    // model.nextId = restored.nextId;
   }
 
   function createCheckpoint(label = null, incremental = false) {
@@ -140,15 +141,15 @@ export function createHistorySystem( model, app, options = {}) {
   return cmd;
 }
 
-  function registerCommand(name, factoryFn) {
-    commandRegistry.set(name, factoryFn);
-  }
+  // function registerCommand(name, factoryFn) {
+  //   commandRegistry.set(name, factoryFn);
+  // }
 
-  function create(name, params) {
-    const factory = commandRegistry.get(name);
-    if (!factory) throw new Error(`Comando no registrado: ${name}`);
-    return makeCommand(factory(params));
-  }
+  // function create(name, params) {
+  //   const factory = commandRegistry.get(name);
+  //   if (!factory) throw new Error(`Comando no registrado: ${name}`);
+  //   return makeCommand(factory(params));
+  // }
 
   // ============================================================
   // ⚙️ EJECUCIÓN Y CONTROL
@@ -231,8 +232,8 @@ export function createHistorySystem( model, app, options = {}) {
     undo,
     redo,
     makeCommand,
-    registerCommand,
-    create,
+    //registerCommand,
+    //create,
     createCheckpoint,
     restoreLastCheckpoint,
     saveHistory,

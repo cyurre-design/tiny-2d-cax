@@ -3,7 +3,9 @@ import './cy-canvas-layers/cy-canvas-viewer.js';
 import "./cy-layer-list.js"
 import './cy-input-data.js';
 import {findAllCuts, blockTranslate, blockSymmetryX, blockSymmetryY, blockSymmetryL} from './cy-geometry/cy-geometry-library.js'
-import {createCommandManager, commandLayerCreate, commandLayerDelete, commandLayerSetStyle, commandBlockCreate, commandBlockDelete, commandBlockTransform, commandCreateCutPoints} from './cy-commands/cy-command-definitions.js';
+import {createCommandManager, commandLayerCreate, commandLayerDelete, commandLayerSetStyle, 
+      commandBlockCreate, commandBlockDelete, commandBlockTransform, commandCreateCutPoints,
+      commandChangeOrigin} from './cy-commands/cy-command-definitions.js';
 import {createDrawElement} from './cy-geometry/cy-geometry-basic-elements.js';
 import { loadProject, saveProject } from "./cy-file-save-load.js";
 import DrawTranslate from "./cy-draw-interactive/cy-draw-translate.js"
@@ -315,7 +317,9 @@ class cyCad1830App extends HTMLElement {
         this.viewer.fit(); //se podría hacer solo con las visibles o así...
         //this.viewer.redraw();
     });
-    this.dom.addEventListener('keyup',this.handleKeys,true);
+   
+   
+//    this.dom.addEventListener('keyup',this.handleKeys,true);
 
 //--------------Gestión de CAPAS, LAYERS
     //se pueden generar capas bien en el Load, bien en la propia aplicación (menú)
@@ -343,7 +347,25 @@ class cyCad1830App extends HTMLElement {
       const blocks = createDrawElement(e.detail.type, e.detail.data);
       commandBlockCreate(blocks);
   });
+//--------------------- ORIGIN  --------------------------------
+/**
+ * el origen es un comanod chingo que afecta a la totalidad de la base de datos, incluidos los trees rbush
+ * la alternativa es mantener un offset en cada elemento creado y tenerlo en cuenta al pintar, etc...
+ * Se puede evaluar pero....
+ */
+    /**@listens set-origin cuando se ejecuta de verdad el comando definido de forma interactiva */
+    //Los comandos en realidad no se ejecutan al accionar el menú sino cuando se dan por concluidas las partes interactivas
+    //El dibujo se debe mantener en pantalla como estaba, por eso hay que cambar la ventana (Pane)
+    this.addEventListener('set-origin', e=>{
+      const dx = e.detail.data.x0, dy =e.detail.data.y0
+      commandChangeOrigin( dx, dy);
+        //this.canvasHandler.view("fgPane", {x:dx, y:dy});  //rehace los cálculos del handler
+        //this.layerDraw.setOrigin( -dx, -dy);
+        //this._redrawLayers();
+    });
 
+
+       
 //--------------------- TRANSFORMACIONES   ------------------------  
   this.addEventListener('geometry-transform',  (evt)=>{
       let op = evt.detail.command, mode = evt.detail.mode || '', data = evt.detail.data;
@@ -374,7 +396,7 @@ class cyCad1830App extends HTMLElement {
         })
 //----------------- SEL, ALL, INV, DEL -------- BOTONES
   /**select
-   * 
+   * Esto no está en el menú sino en la zona vertical
    */
     this.dom.querySelector('#menu-select').addEventListener('click',(evt)=>{
       const cmd = evt.target.id.split('-')[1];
@@ -405,16 +427,19 @@ class cyCad1830App extends HTMLElement {
 
       //Al crearla se debe poner activa ella sola.
       const layerData = commandLayerCreate()
-    });
-    
-    handleKeys = (e)=>{
-        if((e.key === 'Escape') || (e.key === 'Delete') || (e.key === 'Enter')){
-          this.viewer.interactiveDrawing.doKeyAction(e.key);
-          e.stopPropagation();
-        }
-    }
+    });   
 
     }
+    /**para poder llamarla desde la gestión de comandos desde donde solo queremos acceso al modelo y la app (esta) */
+    translateOrigin = (dx, dy) => {
+      this.viewer.canvasHandler.view("fgPane", {x:dx, y:dy});  //rehace los cálculos del handler
+    }
+    // handleKeys = (e)=>{
+    // if((e.key === 'Escape') || (e.key === 'Delete') || (e.key === 'Enter')){
+    //   this.viewer.interactiveDrawing.doKeyAction(e.key);
+    //   e.stopPropagation();
+    // }
+
     handleMenus = (e) => {
       //Nos ponemos una nomenclatura razonable para poner orden en los ids
       //menu, submenu, etc... separados por guiones
@@ -444,7 +469,7 @@ class cyCad1830App extends HTMLElement {
               loadProject().then(text => {
                 const data = JSON.parse(text );
                 // Restaurar modelo
-                this.viewer.layerDraw.deserialize( data);//.model;
+                this.viewer.layerDraw.deserialize( data.model);//.model;
 
 
     //             // Restaurar comandos registrados
