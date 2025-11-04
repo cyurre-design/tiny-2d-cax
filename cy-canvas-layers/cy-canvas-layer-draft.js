@@ -1,6 +1,6 @@
 //Heredo de layer genérica que me da los métodos de borrado, etc...
-import {scalePixels2mm, scaleMm2pixels, position2pixels} from './cy-canvas-handler.js';
-import CyCanvasLayer from './cy-canvas-layer.js';
+//import {scalePixels2mm, scaleMm2pixels, position2pixels} from './cy-canvas-handler.js';
+import {CyCanvasLayer, canvasCSS} from './cy-canvas-layer.js';
 
 
 export default class CyCanvasLayerDraft extends CyCanvasLayer {
@@ -32,11 +32,11 @@ export default class CyCanvasLayerDraft extends CyCanvasLayer {
     //Atención al orden de los canvas. Para que los eventos de mouse lleguen a draw, tiene que estar encima
     connectedCallback(){
         super.connectedCallback();
-        const style = getComputedStyle(this);
-        this.pathWidth = +style.getPropertyValue('--path-width') || 2;
-        this.pathColor = style.getPropertyValue('--path-color') || 'magenta';
-        this.selectedWidth = +style.getPropertyValue('--selected-width') || 2;
-        this.selectedColor = style.getPropertyValue('--selected-color') || 'gray';
+        // const style = getComputedStyle(this);
+        // this.pathWidth = +style.getPropertyValue('--path-width') || 2;
+        // this.pathColor = style.getPropertyValue('--path-color') || 'magenta';
+        // this.selectedWidth = +style.getPropertyValue('--selected-width') || 2;
+        // this.selectedColor = style.getPropertyValue('--selected-color') || 'gray';
     }
     disconnectedCallback(){
         //Aquí hay que quitar los listeners siendo formales

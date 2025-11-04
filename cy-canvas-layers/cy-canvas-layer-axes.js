@@ -1,6 +1,6 @@
 "use strict";
 import {scalePixels2mm, scaleMm2pixels, position2pixels, pixels2position} from './cy-canvas-handler.js';
-import CyCanvasLayer from './cy-canvas-layer.js';
+import {CyCanvasLayer} from './cy-canvas-layer.js';
 
 
 const divisions = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500]; //desde 1 centésima a 500mm

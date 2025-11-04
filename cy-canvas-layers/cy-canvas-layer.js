@@ -2,7 +2,17 @@
 import {getPathFromBlocks } from './cy-elements-to-canvas.js'
 import {scalePixels2mm, scaleMm2pixels, position2pixels} from './cy-canvas-handler.js';
 
-export default class CyCanvasLayer extends HTMLElement {
+export const canvasCSS = {
+    pathColor: 'green',
+    pathWidth: 2,
+    selectedColor: 'yellow',
+    selectedWidth: 3,
+    printColor: 'black',
+    printWidth: 2,
+    pointDimension : 3
+}
+
+export class CyCanvasLayer extends HTMLElement {
     constructor(name) {
         super();
         this.dom = this.attachShadow({mode:'open'});

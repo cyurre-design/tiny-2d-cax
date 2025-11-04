@@ -1,21 +1,12 @@
 "use strict";
-import CyCanvasLayer from './cy-canvas-layer.js';
+import {CyCanvasLayer, canvasCSS} from './cy-canvas-layer.js';
 import {scalePixels2mm, scaleMm2pixels, position2pixels} from './cy-canvas-handler.js';
 import { checkBbox, insideBbox, blockTranslate }  from '../cy-geometry/cy-geometry-library.js';
 import { getRelevantPoints }  from '../cy-geometry/cy-geometry-basic-elements.js';
 import {getPathFromBlocks} from './cy-elements-to-canvas.js'
 
 
-export const canvasCSS = {
-    pathColor: 'green',
-    pathWidth: 2,
-    selectedColor: 'yellow',
-    selectedWidth: 3,
-    printColor: 'black',
-    printWidth: 2,
-    pointDimension : 3
-}
-
+const selectionWithInPixels = 25;
 // ------------------------
 // Modelo Layer
 // ------------------------
@@ -24,7 +15,7 @@ function createLayer(id, name, layerStyle = canvasCSS, visible = true, erasable 
     return {
         id      : id,
         name    : name,
-        layerStyle   : Object.assign({},layerStyle),
+        layerStyle   : Object.assign({}, layerStyle),
         visible : visible,
         erasable: erasable,
         blocks  : new Set(), // ids de shapes asignados a esta capa
@@ -133,11 +124,11 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     //Atención al orden de los canvas. Para que los eventos de mouse lleguen a draw, tiene que estar encima
     connectedCallback(){
         super.connectedCallback();
-        const layerStyle = getComputedStyle(this);
-        this.pathWidth = +layerStyle.getPropertyValue('--path-width') || 2;
-        this.pathColor = layerStyle.getPropertyValue('--path-color') || 'green';
-        this.selectedWidth = +layerStyle.getPropertyValue('--selected-width') || 2;
-        this.selectedColor = layerStyle.getPropertyValue('--selected-color') || 'yellow';
+        // const layerStyle = getComputedStyle(this);
+        // this.pathWidth = +layerStyle.getPropertyValue('--path-width') || 2;
+        // this.pathColor = layerStyle.getPropertyValue('--path-color') || 'green';
+        // this.selectedWidth = +layerStyle.getPropertyValue('--selected-width') || 2;
+        // this.selectedColor = layerStyle.getPropertyValue('--selected-color') || 'yellow';
     }
     // disconnectedCallback(){
     //     //Aquí hay que quitar los listeners siendo formales
@@ -195,7 +186,12 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         ly.layerStyle = newLayer.layerStyle;
         return old;
     }
+    //Esta la hacemos general, no metemos uno por cada layer
+    getSelectionWidthInMm(){
+        const w = scalePixels2mm(selectionWithInPixels);
+        return w;
 
+    }
 /**
  * 
  * @param {string} name nombre de la capa
@@ -322,7 +318,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     addCutPoints( points){ //estos ya vienen pretratados
         if(!points) console.log('puntos?'); //esto debe tratar el indefinido, el no array y el longitud 0
         points.forEach(p=>{
-            p.canvasPath = getPathFromBlocks([p], this.layerStyle.pointDimension);
+            p.canvasPath = getPathFromBlocks([p], this.layers.get(this._activeLayerId).layerStyle.pointDimension);
             //p.layerStyle = this.layerStyle;
             p.id = 'CP'+this.nextBlockId++;
             this.points.set(p.id, p);
