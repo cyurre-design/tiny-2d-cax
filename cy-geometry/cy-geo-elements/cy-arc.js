@@ -71,7 +71,7 @@ export function arcTranslate(a, dx, dy) {
         const [x1, y1] = translatePoint(a.x1, a.y1, dx, dy);
         const [x2, y2] = translatePoint(a.x2, a.y2, dx, dy);
 
-        return createArc(arc2PC2SVG({x:cx, y:cy}, a.r, {x:x1, y:y1}, {x:x2, y:y2}, a.fA===1?'clock':'antiClock'));
+        return createArc(arc2PC2SVG({x:cx, y:cy}, a.r, {x:x1, y:y1}, {x:x2, y:y2}, a.fA===0?'clock':'antiClock'));
     }
 export function arcRotate(a, x, y, alfa){
         const [tcx, tcy] = rotateZ(a.cx - x, a.cy - y, alfa);

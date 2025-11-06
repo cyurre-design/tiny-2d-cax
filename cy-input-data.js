@@ -8,7 +8,8 @@ class CyAngleData extends HTMLElement {
 
     createStyle() {
         let style = `
-            <style>                
+            <style> 
+            host: {display: block;}
                 #container{
                     position:absolute;
                     width:100%;
@@ -25,11 +26,9 @@ class CyAngleData extends HTMLElement {
     createTemplate() {
         return `
 <div id="container">
-  <span>
     <md-slider id="data-coarse" step="15" ticks min="-90" max="90"></md-slider>
     <!--md-slider step="1" ticks min="-15" max="15"></md-slider-->
     <md-filled-text-field id="data-a" label="ALFA" type="number" value="${this.alfa}" min="-90" max="90" step="1"></md-filled-text-field>
- </span>
 </div>
         `;
     }
@@ -343,7 +342,18 @@ const templateTranslateInputData = `
     <md-filled-button class="data _50" id="translate-enter">ENTER</md-filled-button>
  </span>
 </div>`
-const templateRotateInputData = `<cy-angle-data id="data-a" class="data"></cy-angle-data>`
+const templateRotateInputData = `
+<div>
+<div>
+    <md-filled-text-field id="data-x0" label="Xi" class="half" type="number" value="0" step="0.5">
+    </md-filled-text-field><md-filled-text-field id="data-y0" label="Yi" class="half" type="number" value="0" step="0.5"></md-filled-text-field>
+ </div>
+ <cy-angle-data id="data-a" data-a="0" class="data"></cy-angle-data>
+ <div>
+    <md-filled-button class="data _50" id="rotate-esc">ESC</md-filled-button>
+    <md-filled-button class="data _50" id="rotate-enter">ENTER</md-filled-button>
+ </div>
+ </div>`
 
 const templateOriginInputData = `
 <div>
