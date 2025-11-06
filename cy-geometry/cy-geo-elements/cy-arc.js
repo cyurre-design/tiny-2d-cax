@@ -71,13 +71,13 @@ export function arcTranslate(a, dx, dy) {
         const [x1, y1] = translatePoint(a.x1, a.y1, dx, dy);
         const [x2, y2] = translatePoint(a.x2, a.y2, dx, dy);
 
-        return createArc(arc2PC2SVG({x:cx, y:cy}, a.r, {x:x1, y:y1}, {x:x2, y:y2}, a.fA===0?'clock':'antiClock'));
+        return createArc(arc2PC2SVG({x:cx, y:cy}, a.r, {x:x1, y:y1}, {x:x2, y:y2}, a.fA===1?'clock':'antiClock'));
     }
 export function arcRotate(a, x, y, alfa){
         const [tcx, tcy] = rotateZ(a.cx - x, a.cy - y, alfa);
         const [t1x, t1y] = rotateZ(a.x1 - x, a.y1 - y, alfa);
         const [t2x, t2y] = rotateZ(a.x2 - x, a.y2 - y, alfa);
-        return createArc(arc2PC2SVG({x: tcx + x, y: tcy + y}, a.r, {x: t1x + x, y: t1y + y}, {x: t2x + x, y: t2y + y},a.fA===0?'clock':'antiClock'));
+        return createArc(arc2PC2SVG({x: tcx + x, y: tcy + y}, a.r, {x: t1x + x, y: t1y + y}, {x: t2x + x, y: t2y + y},a.fA===1?'clock':'antiClock'));
 }
     //en los simetría doy vuelta a los puntos pi pf
 export function arcSymmetryX(a, y) {

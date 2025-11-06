@@ -41,9 +41,11 @@ export function lineNormalToLine(l, p) { //si no se define p, línea con el mism
 //meto matrices y rotaciones, etc... aquí en lugar de en la clase, así será más fácil de portar
 //
 export function rotateZ(x, y, alfa){
-
+    const c = Math.cos(alfa), s = Math.sin(alfa);
+    return [x*c - y*s, x*s + y*c]
 }
 export function translate(x,y, dx, dy){
+
     
 }
 //Otra función genérica para calcular corte de dos rectas que vienen con su punto inicial y final....
