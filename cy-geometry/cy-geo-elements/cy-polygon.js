@@ -33,7 +33,7 @@ export function polygonTranslate(p, dx, dy){
     }
 export function polygonRotate(p, x, y, alfa){
         const [tcx, tcy] = rotateZ(p.cx - x, p.cy - y, alfa);
-        return createPolygon({cx: tcx + x, cy: tcy +  y, r:p.r, edges:p.edges, delta:p.delta, alfai:p.alfai});
+        return createPolygon({cx: tcx + x, cy: tcy +  y, r:p.r, edges:p.edges, delta:p.delta, alfai:p.alfai + alfa});
 }
     function polygonClone(p) { 
         return JSON.parse(JSON.stringify(p));
