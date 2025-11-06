@@ -1,5 +1,5 @@
 "use strict";
-import {geometryPrecision, _2PI, normalize_radians, translatePoint, rotateZ, arc2PC2SVG, pointSymmetricSegment} from '../cy-geometry-library.js'
+import {geometryPrecision, _2PI, normalize_radians, translatePoint, rotateZ, scale0, arc2PC2SVG, pointSymmetricSegment} from '../cy-geometry-library.js'
 
 //args centro(cx, cy), radio, pi(x1,y1), pf(x2,y2), ai, da, fS, fA En realidad son redundantes, pero se calcularían en el createDraw
 //Falta tratamiento de errores
@@ -78,6 +78,12 @@ export function arcRotate(a, x, y, alfa){
         const [t1x, t1y] = rotateZ(a.x1 - x, a.y1 - y, alfa);
         const [t2x, t2y] = rotateZ(a.x2 - x, a.y2 - y, alfa);
         return createArc(arc2PC2SVG({x: tcx + x, y: tcy + y}, a.r, {x: t1x + x, y: t1y + y}, {x: t2x + x, y: t2y + y},a.fA===1?'clock':'antiClock'));
+}
+export function arcScale(a, x, y, scale){
+        const [scx, scy] = scale0(a.cx - x, a.cy - y, scale);
+        const [s1x, s1y] = scale0(a.x1 - x, a.y1 - y, scale);
+        const [s2x, s2y] = scale0(a.x2 - x, a.y2 - y, scale);
+        return createArc(arc2PC2SVG({x: scx + x, y: scy + y}, a.r*scale, {x: s1x + x, y: s1y + y}, {x: s2x + x, y: s2y + y},a.fA===1?'clock':'antiClock'));
 }
     //en los simetría doy vuelta a los puntos pi pf
 export function arcSymmetryX(a, y) {

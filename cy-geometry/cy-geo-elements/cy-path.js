@@ -1,5 +1,5 @@
 "use strict";
-import {geometryPrecision, distancePointToPoint, checkBbox, blockTranslate, blockRotate,blockSymmetryX, blockSymmetryY, blockSymmetryL } from '../cy-geometry-library.js'
+import {geometryPrecision, distancePointToPoint, checkBbox, blockTranslate, blockRotate, blockScale, blockSymmetryX, blockSymmetryY, blockSymmetryL } from '../cy-geometry-library.js'
 
 //los create deben garantizar que aquí llegan bien los parámetros
 
@@ -28,6 +28,10 @@ export function pathTranslate(p, dx, dy){
 export function pathRotate(p, x, y, alfa){
         return createPath( {elements:p.elements.map(el => blockRotate(el, x, y, alfa))})
 }
+export function pathScale(p, x, y, scale){
+        return createPath( {elements:p.elements.map(el => blockScale(el, x, y, scale))})
+}
+
 export function pathClone(p) {
         return JSON.parse(JSON.stringify(p));
     }    

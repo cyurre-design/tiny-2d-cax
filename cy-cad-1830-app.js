@@ -2,7 +2,7 @@ import "./cy-elements/cy-file-loader.js"
 import './cy-canvas-layers/cy-canvas-viewer.js';
 import "./cy-layer-list.js"
 import './cy-input-data.js';
-import {findAllCuts, blockTranslate, blockRotate, blockSymmetryX, blockSymmetryY, blockSymmetryL} from './cy-geometry/cy-geometry-library.js'
+import {findAllCuts, blockTranslate, blockRotate, blockScale, blockSymmetryX, blockSymmetryY, blockSymmetryL} from './cy-geometry/cy-geometry-library.js'
 import {createCommandManager, commandLayerCreate, commandLayerDelete, commandLayerSetStyle, 
       commandBlockCreate, commandBlockDelete, commandBlockTransform, commandCreateCutPoints,
       commandChangeOrigin} from './cy-commands/cy-command-definitions.js';
@@ -10,6 +10,7 @@ import {createDrawElement} from './cy-geometry/cy-geometry-basic-elements.js';
 import { loadProject, saveProject } from "./cy-file-save-load.js";
 import DrawTranslate from "./cy-draw-interactive/cy-draw-translate.js"
 import DrawRotate from "./cy-draw-interactive/cy-draw-rotate.js"
+import DrawScale from "./cy-draw-interactive/cy-draw-scale.js"
 import DrawSymmetry from "./cy-draw-interactive/cy-draw-symmetry.js"
 import DrawSelection from "./cy-draw-interactive/cy-draw-selection.js"
 import DrawOrigin from "./cy-draw-interactive/cy-draw-origin.js"
@@ -94,6 +95,7 @@ const templateMainMenu =`
         <md-menu-item id="translate"><div slot="headline">TRANSLATE</div></md-menu-item>    
         <md-menu-item id="origin"><div slot="headline" >SET ORIGIN</div></md-menu-item>
         <md-menu-item id="rotate"><div slot="headline" >ROTATE</div></md-menu-item>
+        <md-menu-item id="scale"><div slot="headline">SCALE</div></md-menu-item>
         <md-sub-menu>
           <md-menu-item slot="item"><div slot="headline">SYMMETRY</div></md-menu-item>
           <md-menu slot="menu" has-overflow positioning="popover" id="simmetry-menu">
@@ -102,22 +104,6 @@ const templateMainMenu =`
             <md-menu-item id="symmetry-L"><div slot="headline">SIM-L</div></md-menu-item>
           </md-menu>
         </md-sub-menu>
-        </md-menu-item>
-        <md-menu-item>
-        <md-sub-menu>
-          <md-menu-item slot="item"><div slot="headline">SCALE</div></md-menu-item>
-          <md-menu slot="menu" has-overflow positioning="popover" id="scale-menu">
-            <md-outlined-text-field type="number" min="0" value=0></md-outlined-text-field>
-            <md-menu-item ><div slot="headline">0.25</div></md-menu-item>
-            <md-menu-item ><div slot="headline">0.33</div></md-menu-item>
-            <md-menu-item ><div slot="headline">0.5</div></md-menu-item>
-            <md-menu-item ><div slot="headline">0.75</div></md-menu-item>
-            <md-menu-item ><div slot="headline">1.25</div></md-menu-item>
-            <md-menu-item ><div slot="headline">1.33</div></md-menu-item>
-            <md-menu-item ><div slot="headline">1.5</div></md-menu-item>
-            <md-menu-item ><div slot="headline">2</div></md-menu-item>
-          </md-menu>
-        </md-sub-menu>        
     </md-menu>
 </span>
 `
@@ -297,6 +283,9 @@ class cyCad1830App extends HTMLElement {
       },
       rotate:{
         "data-a" : 45
+      },
+      scale:{
+        "data-s" : 0.5
       }
     }
 
@@ -381,6 +370,7 @@ class cyCad1830App extends HTMLElement {
         case 'symmetryL':  opData = {op: blockSymmetryL, arg : [data]};     break;
         case 'translate':  opData = {op: blockTranslate, arg: [data.dx, data.dy]}; break;
         case 'rotate'   :  opData = {op: blockRotate, arg: [data.x, data.y, data.a]}; break;
+        case 'scale'    :  opData = {op: blockScale, arg: [data.x, data.y, data.s]}; break;
         default:          break;
       }
       const blocks = this.viewer.layerDraw.getSelectedBlocks();
@@ -537,7 +527,14 @@ class cyCad1830App extends HTMLElement {
           const cutPoints = findAllCuts(selectedBlocks);
           commandCreateCutPoints(cutPoints); //ye un comando con undo
           break;
-        case 'scale':
+        case 'scale':{
+            this.drawingApp = new DrawScale(this.viewer.layerDraw, sub1);
+            this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
+            this.mData.setAttribute('type','scale');
+            this.drawingApp.updateData(this.dataStore.scale);
+            this.mData.updateData(this.dataStore.scale) 
+          }
+          break;
         case 'translate': {
             this.drawingApp = new DrawTranslate(this.viewer.layerDraw, sub1);
             this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
@@ -550,6 +547,7 @@ class cyCad1830App extends HTMLElement {
             this.mData.setAttribute('type','rotate');
             this.drawingApp.updateData(this.dataStore.rotate);
             this.mData.updateData(this.dataStore.rotate)  //inicializo, debería ser un setting y luego memorizarse TODO              break;
+            break;
         case 'draw':{
             switch( sub1) {
                 case 'start':
