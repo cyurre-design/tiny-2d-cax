@@ -1,5 +1,5 @@
 "use strict";
-import { translatePoint, transformPoint, pointSymmetricSegment } from '../cy-geometry-library.js'
+import { translatePoint, transformPoint, pointSymmetricSegment, rotateZ } from '../cy-geometry-library.js'
 
 
 //Por motivos operativos se mantiene una formulación interna optimizada con el vector director y la distancia al origen.
@@ -86,11 +86,13 @@ export function segmentSymmetryL(segment, s) {
         [newSegment.x1, newSegment.y1] = pointSymmetricSegment(s, segment.x1, segment.y1);
         return newSegment;
     }
-export function segmentRotate(segment, x, y, M) {
-        return segmentTranslate(segmentRotate0(segmentTranslate(segmentClone(segment), x, y), alfa), -x, -y);
+export function segmentRotate(s, x, y, alfa) {
+    const [t0x, t0y] = rotateZ(s.x0 - x, s.y0 -y, alfa);
+    const [t1x, t1y] = rotateZ(s.x1 - x, s.y1 -y, alfa);
+    return createSegment({x0: t0x + x, y0: t0y + y, x1: t1x + x, y1 : t1y + y})
     }
 export function segmentScale(x, y, M) {
-        return segmentTranslate(segmentScale0(segmentTranslate(segmentClone(segment), x, y), alfa), -x, -y);
+        return segmentTranslate(segmentScale0(segmentTranslate(segment, x, y), alfa), -x, -y);
     }
 export function segmentReverse() {
         const newSegment = segmentClone(segment);
@@ -99,3 +101,7 @@ export function segmentReverse() {
         calculate(newSegment);
         return newSegment;
     }
+//Función que no exporta ni clona, modifica en el sitio
+function _segmentRotate0(x, y, alfa){
+
+}

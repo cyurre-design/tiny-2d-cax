@@ -1,6 +1,6 @@
 "use strict";
 //import {geometryPrecision, circleFrom3Points, arc3P2SVG, arc2PR2SVG, arcCPA, arcWay} from './cy-geometry-library.js'
-import { translatePoint, pointSymmetricSegment } from '../cy-geometry-library.js'
+import { translatePoint, pointSymmetricSegment, rotateZ } from '../cy-geometry-library.js'
 
 //Datos: centro y punto. El centro tiene como alias a x0,y0, igualamos nomenclatura con arco
 
@@ -26,6 +26,12 @@ export function circleClone(circle){ return JSON.parse(JSON.stringify(circle))}
 export function circleTranslate(circle, dx, dy) {
     return createCircle({cx:circle.cx+dx, cy:circle.cy+dy, x0:circle.x0+dx, y0:circle.y0+dy, x1:circle.x1+dx, y1:circle.y1+dy})
     }
+export function circleRotate(c, x, y, alfa) {
+    const [tcx, tcy] = rotateZ(c.cx - x, c.cy - y, alfa);
+    const [t1x, t1y] = rotateZ(c.x1 - x, c.y1 - y, alfa);
+    return createCircle({cx: tcx + x, cy: tcy + y, x1: t1x + x, y1 : t1y + y})
+    }
+
     //y0p = y - (y0 -y) = 2*y - y0
 export function circleSymmetryX(circle, y){
     return createCircle({cx:circle.cx, cy:2*y - circle.cy, x0:circle.x0, y0:2*y - circle.y0, x1:circle.x1, y1:2*y - circle.y1 })

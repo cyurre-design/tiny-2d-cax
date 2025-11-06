@@ -2,13 +2,14 @@ import "./cy-elements/cy-file-loader.js"
 import './cy-canvas-layers/cy-canvas-viewer.js';
 import "./cy-layer-list.js"
 import './cy-input-data.js';
-import {findAllCuts, blockTranslate, blockSymmetryX, blockSymmetryY, blockSymmetryL} from './cy-geometry/cy-geometry-library.js'
+import {findAllCuts, blockTranslate, blockRotate, blockSymmetryX, blockSymmetryY, blockSymmetryL} from './cy-geometry/cy-geometry-library.js'
 import {createCommandManager, commandLayerCreate, commandLayerDelete, commandLayerSetStyle, 
       commandBlockCreate, commandBlockDelete, commandBlockTransform, commandCreateCutPoints,
       commandChangeOrigin} from './cy-commands/cy-command-definitions.js';
 import {createDrawElement} from './cy-geometry/cy-geometry-basic-elements.js';
 import { loadProject, saveProject } from "./cy-file-save-load.js";
 import DrawTranslate from "./cy-draw-interactive/cy-draw-translate.js"
+import DrawRotate from "./cy-draw-interactive/cy-draw-rotate.js"
 import DrawSymmetry from "./cy-draw-interactive/cy-draw-symmetry.js"
 import DrawSelection from "./cy-draw-interactive/cy-draw-selection.js"
 import DrawOrigin from "./cy-draw-interactive/cy-draw-origin.js"
@@ -293,6 +294,9 @@ class cyCad1830App extends HTMLElement {
       },
       symmetry:{
         "data-a" : 45
+      },
+      rotate:{
+        "data-a" : 45
       }
     }
 
@@ -375,7 +379,8 @@ class cyCad1830App extends HTMLElement {
         case 'symmetryX':  opData = {op: blockSymmetryX, arg : [data.y0]};  break;
         case 'symmetryY':  opData = {op: blockSymmetryY, arg : [data.x0]};  break;
         case 'symmetryL':  opData = {op: blockSymmetryL, arg : [data]};     break;
-        case 'translate':  opData = {op: blockTranslate, arg: [data.dx, data.dy]}
+        case 'translate':  opData = {op: blockTranslate, arg: [data.dx, data.dy]}; break;
+        case 'rotate'   :  opData = {op: blockRotate, arg: [data.x, data.y, data.a]}; break;
         default:          break;
       }
       const blocks = this.viewer.layerDraw.getSelectedBlocks();
@@ -540,9 +545,11 @@ class cyCad1830App extends HTMLElement {
             }
             break;
         case 'rotate':
-                this.mData.setAttribute('type','rotate');
-                this.viewer.interactiveDrawing.drawRotate(this.viewer.layerDraw, sub1);
-              break;
+            this.drawingApp = new DrawRotate(this.viewer.layerDraw, sub1);
+            this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
+            this.mData.setAttribute('type','rotate');
+            this.drawingApp.updateData(this.dataStore.rotate);
+            this.mData.updateData(this.dataStore.rotate)  //inicializo, debería ser un setting y luego memorizarse TODO              break;
         case 'draw':{
             switch( sub1) {
                 case 'start':

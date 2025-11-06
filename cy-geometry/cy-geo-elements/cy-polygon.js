@@ -1,6 +1,6 @@
 
 "use strict";
-import { translatePoint, pointSymmetricSegment } from '../cy-geometry-library.js'
+import { translatePoint, rotateZ,  pointSymmetricSegment } from '../cy-geometry-library.js'
 
 //args: centro(x0,y0), radio, edges, delta, alfa inicial
 
@@ -31,6 +31,10 @@ export function polygonTranslate(p, dx, dy){
         const [cx, cy] = translatePoint(p.cx, p.cy, dx, dy);
         return createPolygon({cx:cx, cy:cy, r:p.r, edges:p.edges, delta:p.delta, alfai:p.alfai});
     }
+export function polygonRotate(p, x, y, alfa){
+        const [tcx, tcy] = rotateZ(p.cx - x, p.cy - y, alfa);
+        return createPolygon({cx: tcx + x, cy: tcy +  y, r:p.r, edges:p.edges, delta:p.delta, alfai:p.alfai});
+}
     function polygonClone(p) { 
         return JSON.parse(JSON.stringify(p));
     }

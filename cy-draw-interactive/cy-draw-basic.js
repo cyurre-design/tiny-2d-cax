@@ -22,13 +22,13 @@ export default class DrawBasic {
         //Al final las operaciones básicas son visualizar el punto, almacenar el punto, actualizar el status, importar data...
     //Y luego hay funciones que serán específicas, como el bloque y modo de dibujo, borrado, etc...
     highLight = (x,y,blocks) => {
-        let w = scalePixels2mm( this.layerDraw.pathWidth);             //O selected??
-        const point = this.layerDraw.getNearestPoint(x, y, 10*w);        //El 5 a settings TODO
+        let w = this.layerDraw.getSelectionWidthInMm();             //O selected??
+        const point = this.layerDraw.getNearestPoint(x, y, w);        //El 5 a settings TODO
         this.draft.drawBlocks(point, blocks);
         return( {x : point.x0, y : point.y0});
     }
     
-    p0 =        (pi)     => {this.data.x0 = pi.x; this.data.y0 = pi.y; this.status = 1;};
+    p0 =        (pi)    => {this.data.x0 = pi.x; this.data.y0 = pi.y; this.status = 1;};
     getBlocks = ()      => {this.blocksToMove = this.layerDraw.getSelectedBlocks()};
     h  =        (pi)    => {this.hit = this.highLight(pi.x, pi.y, undefined);};
     m0 =        (pi)    => {this.data.x0 = pi.x, this.data.y0 = pi.y;};
@@ -55,7 +55,7 @@ export default class DrawBasic {
             const [t,idn,action] = k.split('-');
             newData.push({idn:idn,v:data[k]});
             if(this.dataReceived.includes(idn))
-                this.data[idn] = data[k];
+                this.data[idn] = +data[k];
             })
         return newData;
         }

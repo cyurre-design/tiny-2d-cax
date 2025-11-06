@@ -24,7 +24,7 @@ export class CyCanvasLayer extends HTMLElement {
         let style = `
             <style>
                 #${name} {
-                    --color: var(--${name}-color, #777777);
+                    --color: var(--${name}-color, #111111);
                     --width: var(--${name}-width, 2);
                 }
  

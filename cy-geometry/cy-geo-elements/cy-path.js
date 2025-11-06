@@ -1,7 +1,5 @@
 "use strict";
-import {geometryPrecision, distancePointToPoint, checkBbox } from '../cy-geometry-library.js'
-//import { translatePoint, transformPoint } from './cy-geometry-library.js'
-import {segmentTranslate, segmentSymmetryX, segmentSymmetryY, segmentSymmetryL} from './cy-segment.js'
+import {geometryPrecision, distancePointToPoint, checkBbox, blockTranslate, blockRotate,blockSymmetryX, blockSymmetryY, blockSymmetryL } from '../cy-geometry-library.js'
 
 //los create deben garantizar que aquí llegan bien los parámetros
 
@@ -25,8 +23,11 @@ function calculateBbox(p){
  * @returns 
  */
 export function pathTranslate(p, dx, dy){
-        return createPath( {elements:p.elements.map(el => el.type==='segment'?segmentTranslate(el, dx, dy):arcTranslate(el, dx, dy))})
+        return createPath( {elements:p.elements.map(el => blockTranslate( el, x, y, alfa))});
     }
+export function pathRotate(p, x, y, alfa){
+        return createPath( {elements:p.elements.map(el => blockRotate(el, x, y, alfa))})
+}
 export function pathClone(p) {
         return JSON.parse(JSON.stringify(p));
     }    
@@ -44,13 +45,13 @@ export function pathClone(p) {
     // return pi.every((el, ix) => (distancePointToPoint(el.x, el.y, pf[ix].x, pf[ix].y)) <= geometryPrecision);
     // }
 export function pathSymmetryX(p, y) {
-    return createPath( {elements: p.elements.map(el => el.type === 'segment'? segmentSymmetryX(el, y): arcSymetryX(el, y))})
+    return createPath( {elements: p.elements.map(el => blockSymmetryX(el, y))});
     }
-export function pathSymmetryY(p, y) {
-    return createPath( {elements: p.elements.map(el => el.type === 'segment'? segmentSymmetryY(el, x): arcSymetryY(el, x))})
+export function pathSymmetryY(p, x) {
+    return createPath( {elements: p.elements.map(el => blockSymmetryY(el, x))});
     }
 export function pathSymmetryL(p, s) {
-    return createPath( {elements: p.elements.map(el => el.type === 'segment'? segmentSymmetryL(el, s): arcSymetryL(el, s))})
+    return createPath( {elements: p.elements.map(el => blockSymmetryL(el, s))});
     }
 
     // reverse() {

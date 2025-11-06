@@ -1,5 +1,5 @@
 "use strict";
-import {geometryPrecision, _2PI, normalize_radians, translatePoint, arc2PC2SVG, pointSymmetricSegment} from '../cy-geometry-library.js'
+import {geometryPrecision, _2PI, normalize_radians, translatePoint, rotateZ, arc2PC2SVG, pointSymmetricSegment} from '../cy-geometry-library.js'
 
 //args centro(cx, cy), radio, pi(x1,y1), pf(x2,y2), ai, da, fS, fA En realidad son redundantes, pero se calcularían en el createDraw
 //Falta tratamiento de errores
@@ -69,11 +69,16 @@ function arcClone(a) {   //un solo nivel de atributos, copio todo
 export function arcTranslate(a, dx, dy) {
         const [cx, cy] = translatePoint(a.cx, a.cy, dx, dy);
         const [x1, y1] = translatePoint(a.x1, a.y1, dx, dy);
-        const [x2, y2] = translatePoint(a.x1, a.y1, dx, dy);
+        const [x2, y2] = translatePoint(a.x2, a.y2, dx, dy);
 
-        return createArc(arc2PC2SVG({cx:cx, cy:cy, r:a.r, x1:x1, y1:y1, x2:x2, y2:y2,
-                                             ai:a.ai, da:a.da, fS: a.fS, way:a.fA===0?'clock':'antiClock'}));
+        return createArc(arc2PC2SVG({x:cx, y:cy}, a.r, {x:x1, y:y1}, {x:x2, y:y2}, a.fA===0?'clock':'antiClock'));
     }
+export function arcRotate(a, x, y, alfa){
+        const [tcx, tcy] = rotateZ(a.cx - x, a.cy - y, alfa);
+        const [t1x, t1y] = rotateZ(a.x1 - x, a.y1 - y, alfa);
+        const [t2x, t2y] = rotateZ(a.x2 - x, a.y2 - y, alfa);
+        return createArc(arc2PC2SVG({x: tcx + x, y: tcy + y}, a.r, {x: t1x + x, y: t1y + y}, {x: t2x + x, y: t2y + y},a.fA===0?'clock':'antiClock'));
+}
     //en los simetría doy vuelta a los puntos pi pf
 export function arcSymmetryX(a, y) {
         return createArc(arc2PC2SVG({x:a.cx, y:2*y - a.cy}, a.r, {x:a.x1, y:2*y - a.y1}, {x:a.x2, y:2*y - a.y2}, (a.fA===1?'clock':'antiClock')));

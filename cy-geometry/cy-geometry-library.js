@@ -5,11 +5,11 @@ import {circle_circle_intr, arc_arc_intr, circle_arc_intr} from './cy-cuts-circl
 import {segment_arc_intr} from './cy-cuts-segment-circle.js'
 import {line_line_intr} from './cy-cuts-segment-segment.js'
 
-import {segmentTranslate, segmentSymmetryX, segmentSymmetryY, segmentSymmetryL } from './cy-geo-elements/cy-segment.js'
-import {arcTranslate, arcSymmetryX, arcSymmetryY,  arcSymmetryL} from './cy-geo-elements/cy-arc.js'
-import {circleTranslate, circleSymmetryX, circleSymmetryY, circleSymmetryL} from './cy-geo-elements/cy-circle.js'
-import {polygonTranslate, polygonSymmetryX, polygonSymmetryY, polygonSymmetryL} from './cy-geo-elements/cy-polygon.js'
-import {pathTranslate, pathSymmetryX, pathSymmetryY, pathSymmetryL} from './cy-geo-elements/cy-path.js'
+import {segmentTranslate, segmentRotate, segmentSymmetryX, segmentSymmetryY, segmentSymmetryL } from './cy-geo-elements/cy-segment.js'
+import {arcTranslate, arcRotate, arcSymmetryX, arcSymmetryY,  arcSymmetryL} from './cy-geo-elements/cy-arc.js'
+import {circleTranslate, circleRotate, circleSymmetryX, circleSymmetryY, circleSymmetryL} from './cy-geo-elements/cy-circle.js'
+import {polygonTranslate, polygonRotate, polygonSymmetryX, polygonSymmetryY, polygonSymmetryL} from './cy-geo-elements/cy-polygon.js'
+import {pathTranslate, pathRotate, pathSymmetryX, pathSymmetryY, pathSymmetryL} from './cy-geo-elements/cy-path.js'
 
 
 export const geometryPrecision = 0.0001;
@@ -53,6 +53,10 @@ export function areClose(x1, y1, x2, y2, tol) {
 }
 export function translatePoint(x,y,dx,dy){
     return([x+dx, y+dy]);
+}
+export function rotateZ(x, y, alfa){
+    const c = Math.cos(alfa), s = Math.sin(alfa);
+    return [x*c - y*s, x*s + y*c]
 }
 export function transformPoint(x,y,M){
     return([ M.a * x + M.c * y + M.e, M.b * x + M.d * y + M.f]);
@@ -298,7 +302,16 @@ export function blockTranslate( block, dx, dy){
         default: console.log('no contemplado');
     }
 }
-
+export function blockRotate( block, x, y, alfa){
+    switch(block.type){
+        case 'segment': return segmentRotate(block, x, y, alfa);
+        case 'circle': return circleRotate(block, x, y, alfa);
+        case 'arc': return arcRotate(block, x, y, alfa);
+        case 'polygon': return polygonRotate(block, x, y, alfa);
+        case 'path': return pathRotate(block, x, y, alfa);
+        default: console.log('no contemplado');
+    }
+}
 export function blockSymmetryX(block, y){
     switch(block.type){
         case 'segment': return segmentSymmetryX(block, y);
