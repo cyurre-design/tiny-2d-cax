@@ -1,4 +1,4 @@
-import "./cy-elements/cy-file-loader.js"
+//import "./cy-elements/cy-file-loader.js"
 import './cy-canvas-layers/cy-canvas-viewer.js';
 import "./cy-layer-list.js"
 import './cy-input-data.js';
@@ -21,9 +21,11 @@ import DrawCircle from "./cy-draw-interactive/cy-draw-circle.js"
 import DrawArc from "./cy-draw-interactive/cy-draw-arc.js"
 import DrawPath from "./cy-draw-interactive/cy-draw-path.js"
 
+import {convertDxfToGeometry} from "./parsers/cy-parser-dxf-geometry-objects.js"
+
 const templateMainMenu =`
   <div  id="hidden-row" >
-    <cy-file-loader id="cy-hidden-file"></cy-file-loader>
+    <!--cy-file-loader id="cy-hidden-file"></cy-file-loader-->
   </div>
   <span >
     <md-filled-button id="file-menu-anchor">FILE</md-filled-button>
@@ -143,9 +145,9 @@ const templateUndo = `
 const template = `
   <div id="full-screen" tabindex='1' class='column'>
     <div id="main-menu" class="row">${templateMainMenu}</div>
-    <div  id="hidden-row" class="row" >
+    <!--div  id="hidden-row" class="row" >
         <cy-file-loader id="cy-hidden-file"></cy-file-loader>
-    </div>
+    </div-->
     <div id="left" class="column" >
     <cy-layer-list id="layer-view"></cy-layer-list>
     ${templateUndo}
@@ -301,15 +303,15 @@ class cyCad1830App extends HTMLElement {
     
 
 //-----------------LOAD, FILE
-    this.dom.querySelector('#cy-hidden-file').addEventListener('file-loaded', (evt)=>{
-        //evt.detail.file;
-        evt.detail.data.geometry.layers.forEach((ly,ix)=>{
-            const newLayer = this.viewer.layerDraw.addLayer(evt.detail.name.split('.')[0] +'_'+ ix);
-            newLayer.addBlocks(ly.paths)
-        });
-        this.viewer.fit(); //se podría hacer solo con las visibles o así...
-        //this.viewer.redraw();
-    });
+    // this.dom.querySelector('#cy-hidden-file').addEventListener('file-loaded', (evt)=>{
+    //     //evt.detail.file;
+    //     evt.detail.data.geometry.layers.forEach((ly,ix)=>{
+    //         const newLayer = this.viewer.layerDraw.addLayer(evt.detail.name.split('.')[0] +'_'+ ix);
+    //         newLayer.addBlocks(ly.paths)
+    //     });
+    //     this.viewer.fit(); //se podría hacer solo con las visibles o así...
+    //     //this.viewer.redraw();
+    // });
    
    
 //    this.dom.addEventListener('keyup',this.handleKeys,true);
@@ -443,44 +445,31 @@ class cyCad1830App extends HTMLElement {
       console.log(main, sub1, sub2);
       switch(main){
         case 'file':{
-          // function replacer(key, value) {
-          //   if (value instanceof Map) 
-          //     return { __type: "Map", value: Array.from(value.entries()) };
-          //   if (value instanceof Set)
-          //     return { __type: "Set", value: Array.from(value.values()) };
-          //   return value;
-          // }
-
-
-          // function reviver(key, value) {
-          //   if (value && value.__type === "Map") return new Map(value.value);
-          //   if (value && value.__type === "Set") return new Set(value.value);
-          //   return value;
-          // }
-
           switch(sub1){
             case 'open': //this.dom.querySelector("#cy-hidden-file").click();break;
             {
-              loadProject().then(text => {
-                const data = JSON.parse(text );
+              loadProject().then(file => {
+                console.log(file.name);
+                const type = file.name.split('.').pop();
+                if(type === 'json'){
+                  const data = JSON.parse(file.text );
                 // Restaurar modelo
-                this.viewer.layerDraw.deserialize( data.model);//.model;
+                  this.viewer.layerDraw.deserialize( data.model);//.model;
+                }
+                else if((type === 'nc') || (type === 'pxy')){
 
+                } else if(type === 'svg'){
 
-    //             // Restaurar comandos registrados
-    //             commandRegistry.clear();
-    //             for (const c of data.commands) {
-    //               try {
-    //                 const fn = eval(`(${c.source})`);
-    //                 commandRegistry.set(c.name, fn);
-    //               } catch (err) {
-    //                 console.warn(`⚠️ No se pudo restaurar comando '${c.name}'`, err);
-    //               }
-    //             }
+                } else if(type === 'dxf'){
+                  const layers = convertDxfToGeometry(file.text); //devuelve array de layers y cada una con sus bloques...
+                  layers.forEach(ly => {
+                    this.viewer.layerDraw.addLayer(ly.name, {pathColor:`#${ly.color.toString(16)}`}); //debe poner el activeLayer
 
-    // app?.redraw?.();
-    // console.log("📂 Proyecto cargado correctamente");
-
+                    this.viewer.layerDraw.addBlocks(undefined, ly.blocks);
+                  })
+                  this.viewer.fit();
+                  this.viewer.layerDraw.draw();
+                }
               })
             };break;
             case 'save': {

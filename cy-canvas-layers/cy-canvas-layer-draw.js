@@ -160,7 +160,8 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         const theId = this.nextLayerId++;
         const lyId = id !== undefined? id : `L${theId}`;
         const lname = name !== undefined ? name : `Layer${theId}`;
-        const layer = createLayer(lyId, lname, layerStyle, true);
+        const styles = Object.assign(canvasCSS, layerStyle);
+        const layer = createLayer(lyId, lname, styles, true);
         this.layers.set(lyId, layer);
         this._activeLayerId = lyId;
         return lyId;

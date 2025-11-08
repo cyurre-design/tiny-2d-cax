@@ -9,7 +9,7 @@ export function createArc(data = {}) {
     const a = Object.assign(p, data);       
     //a.x0 = data.x0; a.y0 = data.y0;
     a.bbox = _boundingBox(a);
-    console.log(a.bbox);
+    //console.log(a.bbox);
     //Object.defineProperty(a, "pi", {  get() { return {x:a.x1, y:a.y1}},    configurable: true, enumerable: true});
     //Object.defineProperty(a, "pf", {  get() { return {x:a.x2, y:a.y2}},    configurable: true, enumerable: true});
     return a;
@@ -93,24 +93,12 @@ export function arcSymmetryY(a, x) {
         return createArc(arc2PC2SVG({x:2*x - a.cx, y:a.cy}, a.r, {x:2*x - a.x1, y:a.y1}, {x:2*x - a.x2, y:a.y2}, (a.fA===1?'clock':'antiClock')));
     }
 export function arcSymmetryL(a, s) {
-        const [cx, cy] = pointSymmetricSegment(s, a.cx, a.cy, s);
-        const [x1, y1] = pointSymmetricSegment(s, a.x1, a.y1, s);
-        const [x2, y2] = pointSymmetricSegment(s, a.x2, a.y2, s);
+        const [cx, cy] = pointSymmetricSegment(s, a.cx, a.cy);
+        const [x1, y1] = pointSymmetricSegment(s, a.x1, a.y1);
+        const [x2, y2] = pointSymmetricSegment(s, a.x2, a.y2);
         return createArc(arc2PC2SVG({cx:cx, cy:cy}, a.r, {x:x1, y:y1}, {x:x2, y:y2}, (a.fA===1?'clock':'antiClock')));
     }
-    // reverse() {
-    //     [this.pi, this.pf] = [this.pf, this.pi];
-
-    //     const pathway = (this.pathway === 0) ? 1 : 0; //por construcción?
-    //     this._calculateAngles();
-    //     //Si es un círculo completo calcula siempre lo mismo, así que tenemos que machacarlo
-    //     if (distancePointToPoint(this.pi.x, this.pi.y, this.pf.x, this.pf.y) <= geometryPrecision)
-    //         this.pathway = pathway;
-    // }
-    // points() {
-    //     return [this.pi, this.pf];
-    // }
-    // pathPoints() {
-    //     return [this.pf];
-    // }
-
+export function arcReverse(a){
+    return createArc(arc2PC2SVG({cx:cx, cy:cy}, a.r, {x:x2, y:y2}, {x:x1, y:y1}, (a.fA===1?'antiClock':'clock')));
+}
+ 

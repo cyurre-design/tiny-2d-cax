@@ -1,6 +1,6 @@
 
 "use strict";
-import {geometryPrecision, centerFrom2PR, circleFrom3Points, arc3P2SVG, arc2PR2SVG, arcCPA, arcWay} from './cy-geometry-library.js'
+import {geometryPrecision, centerFrom2PR, circleFrom3Points, arc3P2SVG, arc2PR2SVG, arcCPA, arcWay, arcDxf} from './cy-geometry-library.js'
 import { translatePoint } from './cy-geometry-library.js'
 
 import {createSegment} from './cy-geo-elements/cy-segment.js'
@@ -35,6 +35,7 @@ export function getRelevantPoints(b){
         case 'arc'      : return [{x0:b.cx, y0:b.cy}, {x0:b.x1, y0:b.y1}, {x0:b.x2, y0:b.y2}]
         case 'polygon'  : return [{x0:b.cx, y0:b.cy}].concat(b.segments.map(p=> ({x0:p.x0, y0:p.y0})));
         case 'path'     : return b.elements.map(p => getRelevantPoints(p)).flat();
+        default         : return [];
     }
 }
 
@@ -197,6 +198,11 @@ export function createDrawElement(type, data ) {
                     // element = new Arc(Object.assign(data, {cx: cx, cy:cy, ai:ai, da:da}))
                     }
                     break;
+                case 'DXF':{
+                    const newdata = arcDxf(data);
+                    element = createArc(newdata)
+                }
+                break;
                 default: element = Object.assign({},{error:true});
             }
             break;

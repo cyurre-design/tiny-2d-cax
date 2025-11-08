@@ -5,7 +5,7 @@ import {circle_circle_intr, arc_arc_intr, circle_arc_intr} from './cy-cuts-circl
 import {segment_arc_intr} from './cy-cuts-segment-circle.js'
 import {line_line_intr} from './cy-cuts-segment-segment.js'
 
-import {segmentTranslate, segmentRotate, segmentScale, segmentSymmetryX, segmentSymmetryY, segmentSymmetryL } from './cy-geo-elements/cy-segment.js'
+import {segmentTranslate, segmentRotate, segmentScale, segmentSymmetryX, segmentSymmetryY, segmentSymmetryL  } from './cy-geo-elements/cy-segment.js'
 import {arcTranslate, arcRotate, arcScale, arcSymmetryX, arcSymmetryY,  arcSymmetryL} from './cy-geo-elements/cy-arc.js'
 import {circleTranslate, circleRotate, circleScale, circleSymmetryX, circleSymmetryY, circleSymmetryL} from './cy-geo-elements/cy-circle.js'
 import {polygonTranslate, polygonRotate, polygonScale, polygonSymmetryX, polygonSymmetryY, polygonSymmetryL} from './cy-geo-elements/cy-polygon.js'
@@ -217,6 +217,20 @@ export function arcWay(data ){//https://www.w3.org/TR/SVG/implnote.html
     // newdata.fA = Math.abs(delta) > Math.PI ? 1 : 0;
     // newdata.fS = delta > 0? 1: 0;
     return newdata;
+}
+// dxf tiene centro, radio, ai, af y delta
+export function arcDxf(data){
+    const {cx, cy, r, ai, af} = data;
+    //const data = {cx:cx, cy:cy, r:r, way:'antiClock'};
+
+    const x1 = cx + r*Math.cos(ai), y1 =  cy + r*Math.sin(ai) ;
+    const x2 = cx + r*Math.cos(af), y2 =  cy + r*Math.sin(af) ;
+
+    let delta = normalize_radians(af - ai) ; 
+        //Por normalizar un poco lo de clock a lo que usa svg, sweep=0 es el "normal"
+    const fA = (Math.abs(delta) > Math.PI) ? 1 : 0;
+    
+    return {cx: cx, cy:cy, r:r, ai:ai, da: delta, fA:fA, fS:0, way:'antiCLock', x1:x1, y1:y1, x2:x2, y2:y2};
 }
 export function pointWithinArcSweep(arc, p, eps = geometryPrecision){
         //Habría que afinar con eps pero implica pasar a alfa = atan2(eps/r) o algo así... TODO
