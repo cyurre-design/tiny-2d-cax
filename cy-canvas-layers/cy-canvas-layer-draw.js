@@ -227,7 +227,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         points.forEach(p => this.pointsTree.insert({minX:p.x0, maxX:p.x0, minY:p.y0, maxY: p.y0, id:p.id}));
     }
 /**
- * 
+ * Hay casos degenerados como paths con 0 elementos...
  * @param {string} layerId el id de la capa en el Map  de capas
  * @param {array} paths 
  * @returns 
@@ -235,6 +235,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     addBlocks(layerId = this._activeLayerId, paths){  //pueden ser circles o polygons también...
         if(paths === undefined) {console.log('tipo de bloque no visualizzable'); return;}
         let ps = Array.isArray(paths)?paths:[paths];
+        ps = ps.filter(p=> (p.type !== 'path') || (p.elements.length > 0));
         const ids = [];
         //Primero pongo la info de pintar y un id, importante. La parte del tree es de alguna manera opcional
         ps.forEach(b=>{

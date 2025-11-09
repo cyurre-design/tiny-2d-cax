@@ -208,6 +208,7 @@ export function convertDxfToGeometry(data /*, tol*/) {
     const layerInfo = dxf.tables.layer.layers; //Ye un objeto
     geo.forEach(layer => {
         layer.color = layerInfo[layer.name].color;
+        layer.name = parseInt(layer.name)!==undefined?'dxf-'+layer.name:layer.name; //A veces la capa se denomina "0" y da problemas
     })
     //geo.layers = geo.layers.concat(geo.layers, );
     //geo.layers = Object.values(layersAux).filter(layer => layer.circles.length !== 0 || layer.paths.length !== 0); //QUito layers vacías si las hay

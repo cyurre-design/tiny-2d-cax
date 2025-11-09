@@ -1,22 +1,17 @@
 "use strict";
 
 
-//clase de apoyo, instrumental
-export default class Biarc{
-    constructor(a, b){  //se supone que le pasamos los do arcos tangentes, se puede pasar la rutina de cálculos
-        this.a = a;
-        this.b = b;
-        this.lengtha = Math.abs(this.a.r*(this.a.a3 - this.a.a1)); //revisar, a3 debe ser mayor que a1
-        this.lengthb = Math.abs(this.b.r*(this.b.a3 - this.b.a1)); //revisar, a3 debe ser mayor que a1
-        this.length = this.lengtha + this.lengthb;
-        this.s = this.lengtha / this.length;
+//se supone que le pasamos los do arcos tangentes, se puede pasar la rutina de cálculos
+export function createBiarc(a, b){
+    const lengtha = Math.abs( a.r * a.delta); //revisar, a3 debe ser mayor que a1
+    const lengthb = Math.abs( b.r * b.delta); //revisar, a3 debe ser mayor que a1
+    const s = lengtha / (lengtha + lengthb);
+    return {a: Object.assign({},a), b: Object.assign({}, b), s: s}
     }
-    intepolateArc(arc, t){
-        let alfa = arc.a1 + t*(arc.a3-arc.a1);
+function arcIntepolate(arc, t){
+        let alfa = arc.a1 + t*(arc.delta);
         return({x: arc.x + arc.r*Math.cos(alfa), y: arc.y + arc.r*Math.cos(alfa)});
     }
-    interpolate( t) {
-        return( t <= this.s? this.interpolateArc(this.a, t/ this.s): this.interpolateArc(this.b, (t - this.s) /(1 - this.s)));
+export function biarcInterpolate(bz, t) {
+        return( t <= bz.s? arcInterpolate(bz.a, t/ bz.s): arcIntepolate(bz.b, (t - bz.s) /(1 - bz.s)));
     }
-
-}

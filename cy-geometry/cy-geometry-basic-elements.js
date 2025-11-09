@@ -8,7 +8,7 @@ import {createCircle} from './cy-geo-elements/cy-circle.js'
 import {createArc} from './cy-geo-elements/cy-arc.js'
 import {createPolygon} from './cy-geo-elements/cy-polygon.js'
 import {createPath} from './cy-geo-elements/cy-path.js'
-//import './cy-geo-elements/bezier.js'
+import {createBezier} from './cy-geo-elements/cy-bezier.js'
 //import './cy-geo-elements/biarc.js'
 
 
@@ -138,7 +138,7 @@ export function createDrawElement(type, data ) {
             element = createPolygon(Object.assign(data));
             break;
         case 'bezier': 
-            element = new Bezier(Object.assign(data));
+            element = createBezier(Object.assign(data));
             break;
         case 'path':
             data.elements = data.elements || [];

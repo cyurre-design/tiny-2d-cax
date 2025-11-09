@@ -1,235 +1,296 @@
 "use strict";
-import {geometryPrecision, circleFrom3Points, arc3P2SVG, arc2PR2SVG, arcCPA, arcWay} from './cy-geometry-library.js'
-import { translatePoint, transformPoint } from './cy-geometry-library.js'
+import {geometryPrecision, rotateZ, scale0} from '../cy-geometry-library.js'
+import {createSegment} from "./cy-segment.js"
+import { translatePoint, distancePointToPoint, pointSymmetricSegment } from '../cy-geometry-library.js'
+import {createBiarc, biarcInterpolate} from "./cy-biarc.js"
 
+
+
+
+/* const maxTestPoints = 8;    //esto lo dejo fuera y calculado
+let testPoints = Array.from({length:maxTestPoints},(_,i)=>i/maxTestPoints);
+let coefs = {};
+testPoints.forEach(tp=>coefs[tp]= [(1-tp)*(1-tp)*(1-tp), (1-tp)*(1-tp)*tp, (1-tp)*tp*tp, tp*tp*tp])
+    interpolateq(tp){
+        let cf = coefs[tp];
+        return new Point(
+            cf[0]*this.x + cf[1]*this.cp1.x + cf[2]*this.cp2.x + cf[3]*this.pf.x,
+            cf[0]*this.y + cf[1]*this.cp1.y + cf[2]*this.cp2.y + cf[3]*this.pf.y,
+        )
+    } */
 //Debemos garantizar la continuidad por construcción y todo será más sencillo
+
 //es una polilínea
 //chequeos: length >= 2 para closed, length >= 1 open
+
+
+
+
 
 //elevación de grado, dada una c. de bezier de grado n con n+1 puntos  de control, se obtiene la misma, en grado n+1 por
 // Q(i) = (i / (n+1))P(i-1) + (1 - (i / (n+1)))P(i) para 1<= i <= n
 //Como la curva es de n=2 necesitamos dos nuevos puntos de control cp1 y cp2
 // cp1 = Q1 = (1/3)*P0 + (1-1/3)*P1 = 1/3(P0 + 2P1)
 // cp2 = Q2 = (1/3)*P1 + (1-1/3)*P2 = 1/3(P1 + 2P2)
-
-export default class Bezier{
-    constructor(data = {} ){ 
-//        super(data);    //debe consumir x0,x1,y0,y1 y generar ese segmento
-        this.type = 'bezier';
-        if(data.cp2.x !== undefined){
-            //this.p0 = new Point(ix, iy);  //cúbico en origen
-            this.cp1 = {x:data.cp1.x, y:data.cp1.y};
-            this.cp2 = {x:data.cp2.x, y:data.cp2.y};;
+/**
+ * @todo chequear con más detalle?
+ * @param {Object} data , debería venir x0,y0, cp1, cp2, x1,y1. Si no viene cp2 es cuadrática y la convertimos en cúbica
+ * @returns 
+ */
+export function createBezier(data = {} ){ 
+    //copio valores, NO referencias, por si acaso
+    const bz = {type : 'bezier', x0:data.x0, y0:data.y0, x1:data.x1, y1:data.y1};
+    if((data.cp2x === undefined) || (data.cp2y === undefined)){
+        //elevo grado, paso de cuadrática a cúbica
+        bz.cp1x = data.x0   + 2*data.cp1x/3; bz.cp1y = data.y0   + 2*data.cp1y/3;
+        bz.cp2x = data.cp1x + 2*data.x1/3;   bz.cp1y = data.cp1y + 2*data.y1/3;
+    }
+    else{
+        bz.cp1x = data.cp1x; bz.cp1y = data.cp1y;
+        bz.cp2x = data.cp2x, bz.cp2y = data.cp2y;
+    }
+    calculateConvexHull(bz);
+    //un apaño porque ye difícil, mejoraría separando si hay puntos de inflexión...
+    bz.bbox = {
+        x0: Math.min(bz.x0, bz.cp1x, bz.cp2x, bz.x1),
+        x1: Math.max(bz.x0, bz.cp1x, bz.cp2x, bz.x1),
+        y0: Math.min(bz.y0, bz.cp1y, bz.cp2y, bz.y1),
+        y1: Math.max(bz.y0, bz.cp1y, bz.cp2y, bz.y1),
         }
-        else{//elevo grado, paso de cuadrática a cúbica
-            this.cp1 = {x:data.x0 + 2*data.cp1.x/3, y: data.y0 + 2*data.cp1.y/3};
-            this.cp2 = {x:data.cp1.x + 2*data.cp2.x/3, y:data.cp1.y + 2*data.cp2.y/3};
-        }
-//        this.bbox = this.bbox(); //default to segment
+    return bz;
     }
     //interpola al punto t
-    interpolate(t){
-        let it = 1-t;
-        return new Point(
-            it*it*it*x  + 3*it*it*t*this.cp1.x + 3*it*t*t*this.cp2.x + t*t*t*this.pf.x ,
-            it*it*it*y  + 3*it*it*t*this.cp1.y + 3*it*t*t*this.cp2.y + t*t*t*this.pf.y); 
+function interpolate(bz, t){
+    let it = 1-t;
+    return {
+        x: it*it*it*x0  + 3*it*it*t*bz.cp1x + 3*it*t*t*bz.cp2x + t*t*t*bz.x1 ,
+        y: it*it*it*y0  + 3*it*it*t*bz.cp1y + 3*it*t*t*bz.cp2y + t*t*t*bz.y1
+        } 
     }
     //calcula el incentro del triángulo de un bezier (restringido en ángulo)
-    calculateIncenter(){
-        //const a = new Line(this.x, this.y, this.cp1x, this.cp1y); 
-        //const b = new Line(this.cp2.x, this.cp2.y, this.pf.x, this.pf.y); 
-        const v = _lineCutsToLine(new Line(this.x, this.y, this.cp1x, this.cp1y),new Line(this.cp2.x, this.cp2.y, this.pf.x, this.pf.y));
-        const a = distancePointToPoint(V.x, V.y, this.x, this.y);
-        const b = distancePointToPoint(V.x, V.y, this.pf.x, this.pf.y);
-        const c = distancePointToPoint(this.x, this.y, this.pf.x, this.pf.y);
-        const s = a + b + c; //perímetro
-        return(new Point((a*this.pf.x + b*this.x + c*v.x) / s , (a*this.pf.y + b*this.y + c*v.y) / s));
+function calculateIncenter(bz){
+    //const a = new Line(this.x, this.y, this.cp1x, this.cp1y); 
+    //const b = new Line(this.cp2.x, this.cp2.y, this.pf.x, this.pf.y); 
+    const v = _lineCutsToLine(createSegment(bz.x0, bz.y0, bz.cp1x, bz.cp1y), createSegment(bz.cp2x, bz.cp2y, bz.x1, bz.y1));
+    const a = distancePointToPoint( v.x, v.y, bz.x0, bz.y0);
+    const b = distancePointToPoint( v.x, v.y, bz.x1, bz.y1);
+    const c = distancePointToPoint( bz.x0, bz.y0, bz.x1, bz.y1);
+    const s = a + b + c; //perímetro
+    return {x: (a*bz.x1 + b*bz.x0 + c*v.x) / s , y: (a*bz.y1 + b*bz.y0 + c*v.y) / s};
     }
 
-    calculateConvexHull(){
-        this.A0 = new Point(this.cp1.x - this.pi.x, this.cp1.y - this.pi.y);
-        this.A1 = new Point(this.cp2.x - this.cp1.x, this.cp2.y - this.cp1.y);
-        this.A2 = new Point(this.pf.x - this.cp2.x, this.pf.y - this.cp2.y);
-        this.D0 = new Point(this.A1.x - this.A0.x, this.A1.y - this.A0.y);
-        this.D1 = new Point(this.A2.x - this.A1.x, this.A2.y - this.A1.y);
-        this.E0 = new Point(this.D1.x - this.D0.x, this.D1.y - this.D0.y);
+function calculateConvexHull(bz){
+    bz.A0 = {x: bz.cp1x - bz.x0,        y: bz.cp1y - bz.y0};
+    bz.A1 = {x: bz.cp2x - bz.cp1x,      y: bz.cp2y - bz.cp1y};
+    bz.A2 = {x: bz.x1   - bz.cp2x,      y: bz.y1   - bz.cp2y};
+    bz.D0 = {x: bz.A1.x - bz.A0.x,      y: bz.A1.y - bz.A0.y};
+    bz.D1 = {x: bz.A2.x - bz.A1.x,      y: bz.A2.y - bz.A1.y};
+    bz.E0 = {x: bz.D1.x - bz.D0.x,      y: bz.D1.y - bz.D0.y};
     }
-    calculateInflexionPoints(){
-        const a = {x: this.cp1.x - this.x, y:this.cp1.y - this.y};
-        const b = {x: this.cp2.x - this.cp1.x - a.x, y: this.cp2.y - this.cp1.y - a.y};
-        const c = {x: this.pf.x - this.cp2.x - a.x -2*b.x, y: this.pf.y - this.cp2.y - a.y -2*b.y};
-        const inflections = solveq(a,b,c);
-        return(inflections);
+function calculateInflexionPoints(bz){  
+    const a = {x: bz.cp1x - bz.x0,                 y: bz.cp1y - bz.y0};
+    const b = {x: bz.cp2x - bz.cp1x - a.x,         y: bz.cp2y - bz.cp1y - a.y};
+    const c = {x: bz.x1   - bz.cp2x - a.x -2*b.x,  y: bz.y1   - bz.cp2y - a.y -2*b.y};
+    const inflections = solveq(a,b,c);
+    return(inflections);
     }
-    isClockWise(){
+function isClockWise(bz){
         /// The orientation of the Bezier curve
         /// </summary>
         let sum = 0;
-        sum += (this.cp1.x - this.x) * (this.cp1.y + this.y);
-        sum += (this.cp2.x - this.cp1.x) * (this.cp2.y + this.cp1.y);
-        sum += (this.pf.x - this.cp2.x) * (this.pf.y + this.cp2.y);
-        sum += (this.x - this.pf.x) * (this.y + this.pf.y);
+        sum += (bz.cp1x - bz.x0)   * (bz.cp1y + bz.y0);
+        sum += (bz.cp2x - bz.cp1x) * (bz.cp2y + bz.cp1y);
+        sum += (bz.x1   - bz.cp2x) * (bz.y1   + bz.cp2y);
+        sum += (bz.x0   - bz.x1)   * (bz.y0   + bz.y1);
         return (sum < 0);
     }
-    clone(){
-        return new Bezier(this.x, this.y, this.cp1.x, this.cp1.y, this.cp2.x, this.cp2.y, this.pf.x, this.pf.y);
+// function clone(bz){
+//     return createBezier(bz.x, bz.y, bz.cp1.x, bz.cp1.y, bz.cp2.x, bz.cp2.y, bz.pf.x, bz.pf.y);
+//     }
+function isClosed(bz) {
+    return (sqDistancePointToPoint(bz.x0, bz.y0, bz.x1, bz.y1) <= geometryPrecision2);
     }
-    isClosed() {
-        return (sqDistancePointToPoint(this.pi.x, this.pi.y, this.pf.x, this.pf.y) <= geometryPrecision2);
+// function isEqual(bz, el) {
+//     if(el.type !== 'bezier') return false;
+//     return(bz.pi.isEqual(el.pi) && bz.pf.isEqual(el.pf) && bz.cp1.isEqual(el.cp1) && bz.cp2.isEqual(el.cp2)) 
+//     }
+/**
+ * 
+ * @param {Object bezier} bz 
+ * @param {Number} x 
+ * @param {Number} y 
+ * @returns {Object bezier}
+ */
+export function bezierTranslate(bz, x, y) {
+    const [x0, y0] = translatePoint(bz.x, bz.y0, dx, dy);
+    const [x1, y1] = translatePoint(bz.x1, bz.y1, dx, dy);
+    const [cp1x, cp1y] = translatePoint(bz.cp1x, bz.cp1y, dx, dy);
+    const [cp2x, cp2y] = translatePoint(bz.cp2x, bz.cp2y, dx, dy);
+    return createBezier({x0:x0, y0:y0, x1:x1, y1:y1, cp1x:cp1x, cp1y:cp1y, cp2x: cp2x, cp2y:cp2y});
+}
+export function bezierSymmetryX(bz, y) {
+    return createBezier({x0: bz.x0, y: 2*y - bz.y0, x1: bz.x1, y1: 2*y - bz.y1, cp1x: bz.cp1x, cp1y: 2*y - bz.cp1y, cp2x: bz.cp2x, cp2y: 2*y - bz.cp2y} )
     }
-    isEqual(el) {
-        if(el.type !== 'bezier') return false;
-        return(this.pi.isEqual(el.pi) && this.pf.isEqual(el.pf) && this.cp1.isEqual(el.cp1) && this.cp2.isEqual(el.cp2)) 
+export function bezierSymmetryY(bz, x) {
+    return createBezier({x0: 2*x - bz.x0, y0: bz.y0, x1: 2*x - bz.x1, y1: bz.y1, cp1x: 2*x - bz.cp1x, cp1y: bz.cp1y, cp2x: 2*x - bz.cp2x, cp2y: bz.cp2y} )
     }
-    translate(x, y) {
-        super.translate(x,y);
-        this.pf.translate(x,y);
-        this.cp1.translate(x,y);
-        this.cp2.translate(x,y);
-        return this;
-    }
-    transform(M) { //coordenadas homogéneas
-        super.transform(M);
-        this.pf.transform(M);
-        this.cp1.transform(M);
-        this.cp2.transform(M);
-        return this;
-    }
-    symmetryX(o) {
-        super.symmetryX(o);
-        this.pf.symmetryX(o);
-        this.cp1.symmetryX(o);
-        this.cp2.symmetryX(o);
-    }
-    symmetryY(o) {
-        super.symmetryY(o);
-        this.pf.symmetryY(o);
-        this.cp1.symmetryY(o);
-        this.cp2.symmetryY(o);
-    }
-    rotate(x, y, M) {
-        super.rotate(x, y, M);
-        this.pf.rotate(x, y, M);
-        this.cp1.rotate(x, y, M);
-        this.cp2.rotate(x, y, M);
-    }
-    scale(x, y, M) {
-        super.scale(x, y, M);
-        this.pf.scale(x, y, M);
-        this.cp1.scale(x, y, M);
-        this.cp2.scale(x, y, M);
-    }
-    reverse() {
-        [this.pi, this.cp1, this.cp2, this.pf] = [this.pf, this.cp2, this.cp1, this.pi];
-    }
-    isPointed(x, y, tol) {  //Este ye difícil
-        //return areClose(this.x, this.y, x, y, tol);
-    }
-    isInside(r) {
-      return (r.contains(this.pi) && r.contains(this.pf) && r.contains(this.cp1) && r.contains(this.cp2) );
-    }
-    points() {
-        return [this.pi, this.pf];
-    }
-    pathPoints() {
-        return [this.pf];
-    }
-    toJSON() {
-        return {type: this.type, args: {ix: this.x, iy: this.y, cp1x: this.cp1.x, cp1y: this.cp1.y, cp2x: this.cp2.x, cp2y: this.cp2.y, fx: this.pf.x, fy: this.pf.y}};
-    }
-    splitAt(t){
-        let s = t<0?0:t>1?1:t;
-        //de Casteljeau
-        let m0 = Object.assign({},{x: this.p0.x + this.A0.x * s, y: this.p0.y + this.A0.y * s })
-        let m1 = Object.assign({},{x: this.p1.x + this.A1.x * s, y: this.p1.y + this.A1.y * s })
-        let m2 = Object.assign({},{x: this.p2.x + this.A2.x * s, y: this.p2.y + this.A2.y * s })
-        //segundo orden
-        let q0 = Object.assign({},{x: m0.x + this.D0.x * s, y: this.m0.y + this.D0.y * s })
-        let q1 = Object.assign({},{x: m1.x + this.D1.x * s, y: this.m1.y + this.D1.y * s })
-        //tercer orden
-        let r = Object.assign({},{x: q0.x + this.E0.x * s, y: this.q0.y + this.E0.y * s })
+export function bezierSymmetryL(bz, s) {
+    const [x0, y0] = pointSymmetricSegment(s, bz.x0, bz.y0);
+    const [x1, y1] = pointSymmetricSegment(s, bz.x1, bz.y1);
+    const [cp1x, cp1y] = pointSymmetricSegment(s, bz.cp1x, bz.cp1y);
+    const [cp2x, cp2y] = pointSymmetricSegment(s, bz.cp2x, bz.cp2y);
+    return createBezier({x0:x0, y0:y0, x1:x1, y1:y1, cp1x:cp1x, cp1y:cp1y, cp2x: cp2x, cp2y:cp2y});
+}
 
-        let left = new cubicBezier(this.p0, m0, q0, r);
-        let right = new cubicBezier(r, q1, m2, this.p3);
+export function bezierRotate(bz, x, y, alfa) {
+    const [x0, y0] = rotateZ( bz.x0 - x, bz.y0 - y, alfa);
+    const [x1, y1] = rotateZ( bz.x1 - x, bz.y1 - y, alfa);
+    const [cp1x, cp1y] = rotateZ( bz.cp1x - x, bz.cp1y - y, alfa);
+    const [cp2x, cp2y] = rotateZ( bz.cp2x - x, bz.cp2y - y, alfa);
+    return createBezier({x0:x0 + x, y0:y0 + y, x1:x1 + x, y1:y1 + y, cp1x:cp1x + x, cp1y:cp1y + y, cp2x: cp2x + x, cp2y:cp2y + y});
+    }
+export function bezierScale(bz, x, y, scale) {
+    const [x0, y0] = scale0( bz.x0 - x, bz.y0 - y, scale);
+    const [x1, y1] = scale0( bz.x1 - x, bz.y1 - y, scale);
+    const [cp1x, cp1y] = scale0( bz.cp1x - x, bz.cp1y - y, scale);
+    const [cp2x, cp2y] = scale0( bz.cp2x - x, bz.cp2y - y, scale);
+    return createBezier({x0:x0 + x, y0:y0 + y, x1:x1 + x, y1:y1 + y, cp1x:cp1x + x, cp1y:cp1y + y, cp2x: cp2x + x, cp2y:cp2y + y});
+    }
+    // reverse() {
+    //     [this.pi, this.cp1, this.cp2, this.pf] = [this.pf, this.cp2, this.cp1, this.pi];
+    // }
+
+function splitAt(bz, t){
+        let s1 = t<0?0:t>1?1:t;
+        let s2 = 1 - s1;
+        //de Casteljeau
+        let m0x = s2*bz.x0 + s1*bz.cp1x,    m0y = s2*bz.y0 + s1*bz.cp1y   ;
+        let m1x = s2*bz.cp1x + s1*bz.cp2x,  m1y = s2*bz.cp1y + s1*bz.cp2y ;
+        let m2x = s2*bz.cp2x + s1*bz.x1,    m2y = s2*bz.cp2y + s1*bz.y1   ;
+        //segundo orden
+        let q0x = s2*m0x + s1*m1x, q0y= s2*m0y + s1*m1y;
+        let q1x = s2*m1x + s1*m2x, q1y= s2*m1y + s1*m2y;
+        //tercer orden
+        let px = s2*q0x + s1*q1x, py = s2*q0y + s1*q1y;
+
+        let left = createBezier({x0:bz.x0, y0:bz.y0, cp1x:m0.x, cp1y:m0.y, cp2x:q0.x, cp2y:q0.y, x1:px, y1:py});
+        let right = createBezier({x0:px, y0:py, cp1x:q1.x, cp1y:q1.y, cp2x:m2.x, cp2y:m2.y, x1:bz.x1, y1:bz.y1});
         return([left, right]);
     }
-    //condiciones de hermite + incenter (transition point)
+
+
+       //condiciones de hermite + incenter (transition point)
     //https://dlacko.org/blog/2016/10/19/approximating-bezier-curves-by-biarcs/
-    calculateBiarc(g ){
-        let cw = this.isClockWise();
-        function calculateCircle(p1, p2, g){
-            //let t1 = new Line(this.cp1.x, this.cp1.y, this.x, this.y, );
-            let t = new Line(p1.x, p1.y, p2.x, p2.y );
-            let tl = lineNormalToLine(t1, p1);
-            let p2g = new Line(p1.x, p1.y, g.x, g.y);
-            let m = new Point((p1.x + g.x )/2, (p1.y + g.y )/2)
-            let lm = lineNormalToLine(p2g, m);
-            let c = _lineCutsToLine(tl, lm);
-            let r = distancePointToPoint(c.x, c.y, p1.x, p1.y);
-            return(new Circle(c.x, c.y, r));
-            }
-        const c1 = calculateCircle(this, this.cp1, g);
-        const c2 = calculateCircle(this.pf, this.cp2, g);
-        //Atton. way
-        let a1 = new Arc(c1.x, c1.y, r1, new Point(this.x, this.y), g);
-        let a2 = new Arc(c2.x, c2.y, r2, g, this.pf);
-        return( new Biarc(a1, a2));
-    }
-    splitAtInflexionPoints(){
-        const tramos = [];
-        if(distancePointToPoint(x, y, this.pf.x, this.pf.y) < geometryPrecision){
-            tramos = tramos.concat(this.splitAt(0.5));
+function calculateBiarc(bz, g ){
+    //let cw = bz.isClockWise();
+    function calculateCircle(p1, p2, g){
+        //let t1 = new Line(this.cp1.x, this.cp1.y, this.x, this.y, );
+        let t1 = createSegment(p1.x, p1.y, p2.x, p2.y );
+        let tl = lineNormalToLine(t1, p1);
+        let p2g = createSegment(p1.x, p1.y, g.x, g.y);
+        let m = {x:(p1.x + g.x )/2, y:(p1.y + g.y )/2};
+        let lm = lineNormalToLine(p2g, m);
+        let c = _lineCutsToLine(tl, lm);
+        let r = distancePointToPoint(c.x, c.y, p1.x, p1.y);
+        return( createCircle(c.x, c.y, r));
         }
-        else if((distancePointToPoint(x, y, this.cp1.x, this.cp1.y) < geometryPrecision) ||
-        (distancePointToPoint(this.pf.x, this.pf.y, this.cp2.x, this.cp2.y) < geometryPrecision)){
-            tramos.push(this.clone()); //discutible
-        }
-        else{
-            let inxpoints = this.calculateInflectionPoints(); // 0, 1 o 2
-            if(inxpoints.length === 0)
-                tramos.push(this.clone());
-            else if(inxpoints.length === 1)
-                tramos = tramos.concat(this.splitAt(inxpoints[0]))
-            else{
-                // Make the first split and save the first new curve. The second one has to be splitted again
-                // at the recalculated t2 (it is on a new curve)
-                inxpoints.sort(); 
-                let splited = this.splitAt(inxpoints[0]);
-                tramos.push(splited.shift());
-                tramos = tramos.concat(splited.shift().splitAt((1-inxpoints[0])*inxpoints[1] )); //reparametrización
-                t2 = (1 - t1) * t2;
-            }
-        }
-        return(tramos);
-    }
-    approximate(){
-        const maxTestPoints = 8;
-        let testPoints = Array.from({length:maxTestPoints},(_,i)=>i/maxTestPoints);
-        let tramos = this.splitAtInflexionPoints(); //devuelve array de beziers, se supone
-        let biarcs = [];    //lo que voy a devolver
-        while(tramos.length > 0){
-            let bezier = tramos.shift();
-            while(tramos.length > 0){
-                bezier = tramos.shift();
-                const g = bezier.calculateIncenter(); //igual hay que tratar alguna excepción primero
-                    //caculate Biarc
-                let biarc = bezier.calculateBiarc(g);
-                    // Calculate the maximum error , vamos a dividir donde sea máximo
-                let err = testPoints.reduce((e, t)=>{
-                    const bz = bezier.interpolate(t);
-                    const ba = biarc.interpolate(t);
-                    let d = distancePointToPoint(bz.x, bz.y, ba.x, ba.y);
-                    if( d > e.error)
-                        e = {error:d, t:t} 
-                }, {error:-1, t:-1});
-                if(err.error < tolerance){ //ok
-                    biarcs.push(biarc);
-                }
-                else{
-                    tramos = bezier.splitAt(err.t).concat(tramos);
-                }
-            }
-        }
+    const c1 = calculateCircle(bz, bz.cp1, g);
+    const c2 = calculateCircle(bz.pf, bz.cp2, g);
+    //Atton. way
+    let a1 = createArc(c1.x, c1.y, r1, {x: bz.x, y: bz.y}, g);
+    let a2 = createArc(c2.x, c2.y, r2, g, this.pf);
+    return( createBiarc(a1, a2));
     }
 
+function splitAtInflexionPoints(bz, tolerance = 0.01){
+    let tramos = [];
+    if(distancePointToPoint(bz.x0, bz.y0, bz.x1, bz.y1) < geometryPrecision){ //curva cerrada, la divido en dos
+        tramos = tramos.concat(splitAt(bz, 0.5));
+    }
+    else if((distancePointToPoint(bz.x0, bz.y0, bz.cp1x, bz.cp1y) < geometryPrecision) ||
+    (distancePointToPoint(bz.x1, bz.y1, bz.cp2x, bz.cp2y) < geometryPrecision)){
+        tramos.push(clone(bz)); //discutible
+    }
+    else{
+        let inxpoints = calculateInflexionPoints(bz); // 0, 1 o 2
+        inxpoints = inxpoints.filter(t=>(t>tolerance && (1-t)>tolerance));
+        if(inxpoints.length === 0)
+            tramos.push(clone(bz));
+        else if(inxpoints.length === 1)
+            tramos = tramos.concat(splitAt(bz, inxpoints[0]))
+        else{
+            // Make the first split and save the first new curve. The second one has to be splitted again
+            // at the recalculated t2 (it is on a new curve)
+            inxpoints.sort(); 
+            let splited = splitAt(bz, inxpoints[0]);
+            tramos.push(splited.shift());
+            tramos = tramos.concat(splited.shift().splitAt((1-inxpoints[0])*inxpoints[1] )); //reparametrización
+            //t2 = (1 - t1) * t2;
+        }
+    }
+    return(tramos);
+    }
+
+//NO SE POR QUE HAY DOS APROX TAN DISTINTAS....
+// function approximate(bz){
+//     const maxTestPoints = 8;
+//     let testPoints = Array.from({length:maxTestPoints},(_,i)=>i/maxTestPoints);
+//     let tramos = bz.splitAtInflexionPoints(); //devuelve array de beziers, se supone
+//     let biarcs = [];    //lo que voy a devolver
+//     while(tramos.length > 0){
+//         let bezier = tramos.shift();
+//         while(tramos.length > 0){
+//             bezier = tramos.shift();
+//             const g = calculateIncenter(); //igual hay que tratar alguna excepción primero
+//                 //caculate Biarc
+//             let biarc = calculateBiarc(g);
+//                 // Calculate the maximum error , vamos a dividir donde sea máximo
+//             let err = testPoints.reduce((e, t)=>{
+//                 const bz = interpolate(t);
+//                 const ba = interpolate(t);
+//                 let d = distancePointToPoint(bz.x, bz.y, ba.x, ba.y);
+//                 if( d > e.error)
+//                     e = {error:d, t:t} 
+//             }, {error:-1, t:-1});
+//             if(err.error < tolerance){ //ok
+//                 biarcs.push(biarc);
+//             }
+//             else{
+//                 tramos = bezier.splitAt(err.t).concat(tramos);
+//             }
+//         }
+//     }
+//     }
+function approximate(bz, tolerance = 0.01){
+    let tramos = splitAtInflexionPoints(bz, tolerance); //devuelve array de beziers, se supone
+    let biarcs = [];    //lo que voy a devolver
+
+    while((tramos.length > 0) && (tramos.length < 6)){
+        let bezier = tramos.shift();
+        const g = calculateIncenter(bz); //pueden ser paralelos las líneas de control
+        if(!g){
+            tramos = splitAt(bz, 0.5).concat(tramos);
+            continue;
+        }
+            //caculate Biarc
+        let biarc = calculateBiarc(bz, g);
+//            biarcs.push(biarc);
+        //Calculate the maximum error , vamos a dividir donde sea máximo
+        let err = testPoints.map(t=> interpolate(bz, t));
+        err = err.map(p=>Math.min(Math.abs(distancePointToPoint(p.x, p.y, biarc.a.x, biarc.a.y) - biarc.a.r), Math.abs(distancePointToPoint(p.x, p.y, biarc.b.x, biarc.b.y) - biarc.b.r)));
+        let emax = Math.max(...err);
+        if(emax < tolerance){ //ok
+            biarcs.push(biarc);
+        }
+        else{
+            const t = testPoints[err.indexOf(emax)];
+            tramos = splitAt(bz, t).concat(tramos);                        
+        }
+    }
+    let arcs = [];
+    biarcs.forEach(b=>{arcs.push(b.a);arcs.push(b.b)})
+    return(arcs);
 }
+
+
+

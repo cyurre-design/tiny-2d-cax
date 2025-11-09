@@ -55,7 +55,7 @@ function pathsToGeometry(data){
                 while(cmd.length !== 0){ //esto sería polylínea
                     rx = +cmd.shift(); ry = +cmd.shift();   //el + es para forzar a número
                     if(inc) {rx += cpx; ry += cpy}
-                    elements.push(createDrawElement('segment', {x0:cpx, y0:cpy, x1:rx, y1:ry}));
+                    elements.push(createDrawElement('segment', {subType:'PP', x0:cpx, y0:cpy, x1:rx, y1:ry}));
                     [cpx, cpy] = [rx,ry];
                 }
                 break;
@@ -64,7 +64,7 @@ function pathsToGeometry(data){
             case 'h':
                 while(cmd.length !== 0){   //aunque no tiene sentido, se pueden poner varias cotas seguidas
                     rx = parseFloat(cmd.shift()) + (inc?cpx:0);
-                    elements.push(createDrawElement('segment', {x0:cpx, y0:cpy, x1:rx, y1:cpy}));
+                    elements.push(createDrawElement('segment', {subType:'PP', x0:cpx, y0:cpy, x1:rx, y1:cpy}));
                 }
                 cpx = rx;
             break;
@@ -72,7 +72,7 @@ function pathsToGeometry(data){
             case 'v':
                 while(cmd.length !== 0){   //aunque no tiene sentido, se pueden poner varias cotas seguidas
                     ry = parseFloat(cmd.shift()) + (inc?cpy:0);
-                    elements.push(createDrawElement('segment', {x0:cpx, y0:cpy, x1:cpx, y1:ry}));
+                    elements.push(createDrawElement('segment', {subType:'PP', x0:cpx, y0:cpy, x1:cpx, y1:ry}));
                 }
                 cpy = ry;
             break;
@@ -86,7 +86,7 @@ function pathsToGeometry(data){
                 ctrl[2] += cpx; ctrl[3] += cpy; //control point 2
                 ctrl[4] += cpx; ctrl[5] += cpy; //final point
                 }
-                elements.push(createDrawElement('bezier', {x0:cpx, y0:cpy, cp1:{x:ctrl[0], y: ctrl[1]} , cp2: {x:ctrl[2], y: ctrl[3]}, x1:ctrl[4], y1: ctrl[5]}));  //vienen x1,y1,x2,y2,x,y
+                elements.push(createDrawElement('bezier', {x0:cpx, y0:cpy, cp1x:ctrl[0], cp1y: ctrl[1] , cp2x:ctrl[2], cp2y: ctrl[3], x1:ctrl[4], y1: ctrl[5]}));  //vienen x1,y1,x2,y2,x,y
                 [cpx,cpy] = [ctrl[4], ctrl[5]];
             }
             break;
@@ -101,7 +101,7 @@ function pathsToGeometry(data){
                 ctrl[0] += cpx; ctrl[1] += cpy; //control point 2, el 1 se calcula con este y cpx,cpy
                 ctrl[2] += cpx; ctrl[3] += cpy; //final point
                 }
-                elements.push(createDrawElement('bezier', {x0:cpx, y0:cpy, cp1:{x:2*rx - ctrl[0], y:2*ry - ctrl[1]} , x1:ctrl[4] , y1:ctrl[5]}));
+                elements.push(createDrawElement('bezier', {x0:cpx, y0:cpy, cp1x:2*rx - ctrl[0], cp1y:2*ry - ctrl[1] , x1:ctrl[4] , y1:ctrl[5]}));
                 [cpx,cpy] = [ctrl[2], ctrl[3]];
             }
             break;
@@ -142,16 +142,16 @@ function pathsToGeometry(data){
                     ctrl[5] += cpx; ctrl[6] += cpy; //final point
                 }
                 if(Math.abs(ctrl[0] - ctrl[1]) < geometryPrecision) //rx===ry => angulo es 0, quedan fA, fS
-                    elements.push( createDrawElement('arc', {subtype:'SVG', x0:cpx, y0:cpy, x1:ctrl[5], y1:ctrl[6], r:ctrl[3]===0?ctrl[0]:-ctrl[0], fA:ctrl[3], fS:ctrl[4]}));
+                    elements.push( createDrawElement('arc', {subType:'2PR', x0:cpx, y0:cpy, x1:ctrl[5], y1:ctrl[6], r:ctrl[3]===0?ctrl[0]:-ctrl[0], fA:ctrl[3], fS:ctrl[4]}));
                 else
                 //    elements.push(new ellipticalArc(x,y,...ctrl)); TODO
-                    elements.push(createDrawElement('segment', {x0:cpx, y0:cpy, x1:ctrl[5],y1:ctrl[6]}));
+                    elements.push(createDrawElement('segment', {subType:'PP', x0:cpx, y0:cpy, x1:ctrl[5],y1:ctrl[6]}));
                 [cpx,cpy] = [ctrl[5], ctrl[6]];
             }          
             break;
             case 'Z':
             case 'z':
-                elements.push(createDrawElement ('segment', {x0:cpx, y0:cpy, x1:pathInitialX, y1:pathInitialY}));   //en teoría puede continuar con otro comando...
+                elements.push(createDrawElement ('segment', {subType:'PP', x0:cpx, y0:cpy, x1:pathInitialX, y1:pathInitialY}));   //en teoría puede continuar con otro comando...
                 cpx = pathInitialX, cpy = pathInitialY;
                 break;
         }
@@ -164,12 +164,12 @@ function pathsToGeometry(data){
 //los atributos son string, hay que pasar números
 function circlesToGeometry(data){
     const cirs = Array.isArray(data)?data:[data];
-    let x,y,r;
+    let cx,cy,r;
     cirs.forEach(el =>{
-        x = +el.getAttribute('cx');
-        y = +el.getAttribute('cy');
+        cx = +el.getAttribute('cx');
+        cy = +el.getAttribute('cy');
         r = +el.getAttribute('r');
-        circles.push(new Circle({x0:x + r, y0:y + r, x1:x + r, y1:y + r, r:r}));
+        circles.push(createDrawElement('circle', {subType:'CR', cx:cx, cy:cy , r: r}));
     });
 }
 function rectsToGeometry(data){
@@ -197,7 +197,7 @@ function polylinesToGeometry(data){
         let pi = pts.shift();
         while(pts.length){
             let pf = pts.shift();
-            els.push(new Segment({x0:pi.x, y0:pi.y, x1:pf.x, y1:pf.y}));
+            els.push(new Segment({subType:'PP', x0:pi.x, y0:pi.y, x1:pf.x, y1:pf.y}));
             pi = pf;
         }
         paths.push(new Path({elements:els}));
@@ -222,15 +222,15 @@ function polygonsToGeometry(data){
 }
 
 
-export default function  loadFile(file){
+export function  svgToGeometry(file){
     const node = document.createElement('div');
     node.innerHTML = file;
-    const theBox = node.querySelectorAll('svg')[0].viewBox.baseVal;
+    //const theBox = node.querySelectorAll('svg')[0].viewBox.baseVal;
     pathsToGeometry( Array.from(node.querySelectorAll('path')).map(p=>p.getAttribute('d')));
     circlesToGeometry(Array.from(node.querySelectorAll('circle')));
     const ellipses = Array.from(node.querySelectorAll('ellipse'));
     polygonsToGeometry(Array.from(node.querySelectorAll('polygon')));
     polylinesToGeometry(Array.from(node.querySelectorAll('polyline')));
     rectsToGeometry(Array.from(node.querySelectorAll('rect')));
-    return({errors:[],geometry:{box:{xmin: theBox.x, ymin:theBox.y, xmax: theBox.x + theBox.width, ymax: theBox.y + theBox.height}, errors: [], layers:[{circles:circles,paths:paths}]}});
+    return({layers:[{circles:circles,paths:paths}]});
 }

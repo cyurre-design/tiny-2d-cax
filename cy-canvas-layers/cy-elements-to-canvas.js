@@ -1,6 +1,22 @@
     
 import {scalePixels2mm, scaleMm2pixels, extents} from './cy-canvas-handler.js';
 
+/*
+       case 'bezier':
+          svgel = FgSvgLayerProfile.path.cloneNode(true);
+          svgel.setAttribute('d', `M ${el.pi.x} ${el.pi.y} C ${el.cp1.x} ${el.cp1.y} ${el.cp2.x} ${el.cp2.y} ${el.pf.x} ${el.pf.y}`);
+          svgel.setAttribute('class', clase);
+          break;          
+        case 'arcEllipse':
+          svgel = FgSvgLayerProfile.path.cloneNode(true);
+          svgel.setAttribute('d', `M ${el.pi.x} ${el.pi.y} A ${el.rx} ${el.ry} ${el.fi} ${el.flagLarge} ${el.flagSweep} ${el.pf.x} ${el.pf.y}`);
+          svgel.setAttribute('class', clase);
+          break;          
+
+*/
+
+
+
 //estas son funciones de librería, a la que hay que pasarles los puntos
 export function getPathFromBlocks(blocks, pointDimension = 5){
     let x = scalePixels2mm(pointDimension);
@@ -21,10 +37,11 @@ export function getPathFromBlocks(blocks, pointDimension = 5){
             case 'aac':     //https://www.w3.org/TR/SVG/implnote.html
                     //Parece que dar la vuelta al Y afecta al sentido de giro del círculo????
                             return `M ${b.x1} ${b.y1} A ${b.r} ${b.r}  0 ${b.fA} ${(b.fS===0)?1:0} ${b.x2} ${b.y2}` ;
-            case 'bezier':  return `M ${b.x0} ${b.y0} C ${b.cp1.x} ${b.cp1.y} ${b.cp2.x} ${b.cp2.y} ${b.x1} ${b.y1}`;
+            case 'bezier':  return `M ${b.x0} ${b.y0} C ${b.cp1x} ${b.cp1y} ${b.cp2x} ${b.cp2y} ${b.x1} ${b.y1}`;
             case 'bbox':    return `M ${b.x0} ${b.y0} H ${b.x1} V ${b.y1} H ${b.x0} V ${b.y0} `;
             case 'point':   return `M ${b.x0 - x} ${b.y0 - x} l ${2*x} ${2*x} m ${-2*x} 0 l ${2*x} ${-2*x}`; 
             case 'cut-point':return  `M ${b.x0 - x} ${b.y0} l ${2*x} 0 m ${-x} ${-x} l 0 ${2*x}`; 
+            case 'arc-ellipse' : return `M ${b.x0} ${b.y0} A ${b.rx} ${b.ry} ${b.fi} ${b.fL} ${b.fS} ${b.x1} ${b.y1}`
         }
     }
     let tehBlocks = Array.isArray(blocks)?blocks:[blocks];

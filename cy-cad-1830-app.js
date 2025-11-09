@@ -22,7 +22,8 @@ import DrawArc from "./cy-draw-interactive/cy-draw-arc.js"
 import DrawPath from "./cy-draw-interactive/cy-draw-path.js"
 
 import {convertDxfToGeometry} from "./parsers/cy-parser-dxf-geometry-objects.js"
-
+import {isoToGeometry} from "./parsers/cy-parser-iso-geometry.js"
+import {svgToGeometry} from "./parsers/cy-parser-svg.js"
 const templateMainMenu =`
   <div  id="hidden-row" >
     <!--cy-file-loader id="cy-hidden-file"></cy-file-loader-->
@@ -457,14 +458,29 @@ class cyCad1830App extends HTMLElement {
                   this.viewer.layerDraw.deserialize( data.model);//.model;
                 }
                 else if((type === 'nc') || (type === 'pxy')){
-
+                    const geo = isoToGeometry(file.text); //Hay que pasarle la configuración de máquina...por defecto fresadora
+                  geo.geometry.layers.forEach(ly => {
+                    const id = this.viewer.layerDraw.addLayer(ly.name); //debe poner el activeLayer
+                    this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.layers.get(id)));
+                    this.viewer.layerDraw.addBlocks(undefined, ly.paths);
+                  })
+                  this.viewer.fit();
+                  this.viewer.layerDraw.draw();
                 } else if(type === 'svg'){
+                  const geo = svgToGeometry(file.text);
+                  geo.layers.forEach(ly => {
+                    const id = this.viewer.layerDraw.addLayer(); //debe poner el activeLayer
+                    this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.layers.get(id)));
+                    this.viewer.layerDraw.addBlocks(undefined, ly.paths);
+                  })
+                  this.viewer.fit();
+                  this.viewer.layerDraw.draw();
 
                 } else if(type === 'dxf'){
                   const layers = convertDxfToGeometry(file.text); //devuelve array de layers y cada una con sus bloques...
                   layers.forEach(ly => {
-                    this.viewer.layerDraw.addLayer(ly.name, {pathColor:`#${ly.color.toString(16)}`}); //debe poner el activeLayer
-
+                    const id = this.viewer.layerDraw.addLayer(ly.name, {pathColor:`#${ly.color.toString(16)}`}); //debe poner el activeLayer
+                    this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.layers.get(id)));
                     this.viewer.layerDraw.addBlocks(undefined, ly.blocks);
                   })
                   this.viewer.fit();
