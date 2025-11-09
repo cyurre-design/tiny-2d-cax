@@ -103,8 +103,8 @@ class CyLayerList extends HTMLElement {
             }
         })
         this.dom.querySelector('#layer-list-show').addEventListener('change', (e) => {
-            const v = this.list.querySelector('#full-list');
-            v.layerStyle.display = e.target.selected ? "block" : "none";
+            //const v = this.list.querySelector('#full-list');
+            this.list.style.display = e.target.selected ? "block" : "none";
         })
         this.dom.querySelector('#layer-add').addEventListener('click',  (e) =>
             this.dispatchEvent(new CustomEvent('layer-handle', {bubbles:true, composed:true, detail: {layer:undefined, action: 'create'}} )))
