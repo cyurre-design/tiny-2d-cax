@@ -40,7 +40,7 @@ testPoints.forEach(tp=>coefs[tp]= [(1-tp)*(1-tp)*(1-tp), (1-tp)*(1-tp)*tp, (1-tp
 export function createBezier(data = {} ){ 
     //copio valores, NO referencias, por si acaso
     const bz = {type : 'bezier', x0:data.x0, y0:data.y0, x1:data.x1, y1:data.y1};
-    if((data.cp2x === undefined) || (data.cp2y === undefined)){
+    if(data.subType === 'Q'){
         //elevo grado, paso de cuadrática a cúbica
         bz.cp1x = data.x0   + 2*data.cp1x/3; bz.cp1y = data.y0   + 2*data.cp1y/3;
         bz.cp2x = data.cp1x + 2*data.x1/3;   bz.cp1y = data.cp1y + 2*data.y1/3;

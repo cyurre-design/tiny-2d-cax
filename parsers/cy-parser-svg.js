@@ -1,11 +1,7 @@
 'use strict'
 
-//YURRE CAMBIO A LIBRERIA NUEVA BASADA EN SEGMENT
 import { geometryPrecision} from '../cy-geometry/cy-geometry-library.js'
 import { createDrawElement} from '../cy-geometry/cy-geometry-basic-elements.js'
-//import {Path} from '/scripts/fg/lib/geometry/fg-geometry-grouped-elements.js'
-//import {Bezier} from '../geometry/fg-bezier.js'
-//import {createDrawElement} from '../geometry/cy-geometry-drawn-elements.js'
 
 const cmdRegEx = /([MLQTCSAZVHmlqtcsazvh])([^MLQTCSAZVHmlqtcsazvh]*)/gi
 
@@ -59,7 +55,6 @@ function pathsToGeometry(data){
                     [cpx, cpy] = [rx,ry];
                 }
                 break;
-            break;
             case 'H': 
             case 'h':
                 while(cmd.length !== 0){   //aunque no tiene sentido, se pueden poner varias cotas seguidas
@@ -101,7 +96,7 @@ function pathsToGeometry(data){
                 ctrl[0] += cpx; ctrl[1] += cpy; //control point 2, el 1 se calcula con este y cpx,cpy
                 ctrl[2] += cpx; ctrl[3] += cpy; //final point
                 }
-                elements.push(createDrawElement('bezier', {x0:cpx, y0:cpy, cp1x:2*rx - ctrl[0], cp1y:2*ry - ctrl[1] , x1:ctrl[4] , y1:ctrl[5]}));
+                elements.push(createDrawElement('bezier', {subType:'C', x0:cpx, y0:cpy, cp1x:2*rx - ctrl[0], cp1y:2*ry - ctrl[1] , x1:ctrl[4] , y1:ctrl[5]}));
                 [cpx,cpy] = [ctrl[2], ctrl[3]];
             }
             break;
@@ -114,7 +109,7 @@ function pathsToGeometry(data){
                     ctrl[0] += cpx; ctrl[1] += cpy; //control point
                     ctrl[2] += cpx; ctrl[3] += cpy; //final point
                 }
-                elements.push( createDrawElement('bezier', {x0:cpx, y0:cpy, cp1:{x:2*rx - ctrl[0], y:2*ry - ctrl[1]} , x1:ctrl[2] , y1:ctrl[3]}));  //a ver cómo lo distinguimos en el constructor por la longitud de lo pasado
+                elements.push( createDrawElement('bezier', {subType:'Q', x0:cpx, y0:cpy, cp1:{x:2*rx - ctrl[0], y:2*ry - ctrl[1]} , x1:ctrl[2] , y1:ctrl[3]}));  //a ver cómo lo distinguimos en el constructor por la longitud de lo pasado
                 [cpx,cpy] = [ctrl[2], ctrl[3]];
             }
             break;
@@ -181,10 +176,10 @@ function rectsToGeometry(data){
         w = +el.getAttribute('width');
         h = +el.getAttribute('height');
         paths.push(createDrawElement('path',{elements:[
-            // createDrawElement('segment', {x1:x, y1:y, x2:x+w, y2:y}),
-            // createDrawElement('segment', {x1:x+w, y1:y, x2:x+w, y2:y+h}),
-            // createDrawElement('segment', {x1:x+w, y1:y+h, x2:x, y2:y+h}),
-            // createDrawElement('segment', {x1:x, y1:y+h, x2:x, y2:y})
+            createDrawElement('segment', {subType:'PP', x0:x, y0:y, x1:x+w, y1:y}),
+            createDrawElement('segment', {subType:'PP', x0:x+w, y0:y, x1:x+w, y1:y+h}),
+            createDrawElement('segment', {subType:'PP', x0:x+w, y0:y+h, x1:x, y1:y+h}),
+            createDrawElement('segment', {subType:'PP', x0:x, y0:y+h, x1:x, y1:y})
         ]}));
     });
 }
@@ -197,10 +192,10 @@ function polylinesToGeometry(data){
         let pi = pts.shift();
         while(pts.length){
             let pf = pts.shift();
-            els.push(new Segment({subType:'PP', x0:pi.x, y0:pi.y, x1:pf.x, y1:pf.y}));
+            els.push(createDrawElement('segment', ({subType:'PP', x0:pi.x, y0:pi.y, x1:pf.x, y1:pf.y})));
             pi = pf;
         }
-        paths.push(new Path({elements:els}));
+        paths.push(createDrawElement('path', els));
     });
 }
 function polygonsToGeometry(data){
@@ -213,11 +208,11 @@ function polygonsToGeometry(data){
         let pi = pts.shift();
         while(pts.length){
             let pf = pts.shift();
-            els.push( new Segment({x1:pi.x, y1:pi.y, x2:pf.x, y2:pf.y}));
+            els.push(createDrawElement('segment',{subType:'PP', x0:pi.x, y0:pi.y, x1:pf.x, y1:pf.y}));
             pi = pf;
         }
-        els.push( new Segment({x1:pi.x, y1:pi.y, x2:pini.x, y2:pini.y}));
-        paths.push( new Path({elements:els}));
+        els.push( createDrawElement('segment',{subType:'PP', x0:pi.x, y0:pi.y, x1:pini.x, y1:pini.y}));
+        paths.push(createDrawElement('path', els));
     });
 }
 
@@ -228,7 +223,7 @@ export function  svgToGeometry(file){
     //const theBox = node.querySelectorAll('svg')[0].viewBox.baseVal;
     pathsToGeometry( Array.from(node.querySelectorAll('path')).map(p=>p.getAttribute('d')));
     circlesToGeometry(Array.from(node.querySelectorAll('circle')));
-    const ellipses = Array.from(node.querySelectorAll('ellipse'));
+    //const ellipses = Array.from(node.querySelectorAll('ellipse'));
     polygonsToGeometry(Array.from(node.querySelectorAll('polygon')));
     polylinesToGeometry(Array.from(node.querySelectorAll('polyline')));
     rectsToGeometry(Array.from(node.querySelectorAll('rect')));
