@@ -121,8 +121,8 @@ function isClosed(bz) {
  * @param {Number} y 
  * @returns {Object bezier}
  */
-export function bezierTranslate(bz, x, y) {
-    const [x0, y0] = translatePoint(bz.x, bz.y0, dx, dy);
+export function bezierTranslate(bz, dx, dy) {
+    const [x0, y0] = translatePoint(bz.x0, bz.y0, dx, dy);
     const [x1, y1] = translatePoint(bz.x1, bz.y1, dx, dy);
     const [cp1x, cp1y] = translatePoint(bz.cp1x, bz.cp1y, dx, dy);
     const [cp2x, cp2y] = translatePoint(bz.cp2x, bz.cp2y, dx, dy);

@@ -10,6 +10,7 @@ import {arcTranslate, arcRotate, arcScale, arcSymmetryX, arcSymmetryY,  arcSymme
 import {circleTranslate, circleRotate, circleScale, circleSymmetryX, circleSymmetryY, circleSymmetryL} from './cy-geo-elements/cy-circle.js'
 import {polygonTranslate, polygonRotate, polygonScale, polygonSymmetryX, polygonSymmetryY, polygonSymmetryL} from './cy-geo-elements/cy-polygon.js'
 import {pathTranslate, pathRotate, pathScale, pathSymmetryX, pathSymmetryY, pathSymmetryL} from './cy-geo-elements/cy-path.js'
+import {bezierTranslate, bezierRotate, bezierScale, bezierSymmetryX, bezierSymmetryY, bezierSymmetryL} from './cy-geo-elements/cy-bezier.js'
 
 
 export const geometryPrecision = 0.0001;
@@ -316,6 +317,7 @@ export function blockTranslate( block, dx, dy){
         case 'arc': return arcTranslate(block, dx, dy);
         case 'polygon': return polygonTranslate(block, dx, dy);
         case 'path': return pathTranslate(block, dx, dy);
+        case 'bezier': return bezierTranslate(block, dx, dy);
         default: console.log('no contemplado');
     }
 }
@@ -326,6 +328,7 @@ export function blockRotate( block, x, y, alfa){
         case 'arc': return arcRotate(block, x, y, alfa);
         case 'polygon': return polygonRotate(block, x, y, alfa);
         case 'path': return pathRotate(block, x, y, alfa);
+        case 'bezier': return bezierRotate(block, x, y, alfa);
         default: console.log('no contemplado');
     }
 }
@@ -336,6 +339,7 @@ export function blockScale( block, x, y, scale){
         case 'arc': return arcScale(block, x, y, scale);
         case 'polygon': return polygonScale(block, x, y, scale);
         case 'path': return pathScale(block, x, y, scale);
+        case 'bezier': return bezierScale(block, x, y, scale);
         default: console.log('no contemplado');
     }
 }
@@ -346,6 +350,7 @@ export function blockSymmetryX(block, y){
         case 'arc': return arcSymmetryX(block, y);
         case 'polygon': return polygonSymmetryX(block, y);
         case 'path': return pathSymmetryX(block, y);
+        case 'bezier': return bezierSymmetryX(block, y);
         default: console.log('no contemplado');
     }
 }
@@ -356,6 +361,7 @@ export function blockSymmetryY(block, x){
         case 'arc': return arcSymmetryY(block, x);
         case 'polygon': return polygonSymmetryY(block, x);
         case 'path': return pathSymmetryY(block, x);
+        case 'bezier': return bezierSymmetryY(block, x);
         default: console.log('no contemplado');
     }
 }
@@ -366,6 +372,7 @@ export function blockSymmetryL(block, s){
         case 'arc': return arcSymmetryL(block, s);
         case 'polygon': return polygonSymmetryL(block, s);
         case 'path': return pathSymmetryL(block, s);
+        case 'bezier': return bezierSymmetryL(block, s);
         default: console.log('no contemplado');
     }
 }

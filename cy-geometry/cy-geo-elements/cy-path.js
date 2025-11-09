@@ -23,7 +23,7 @@ function calculateBbox(p){
  * @returns 
  */
 export function pathTranslate(p, dx, dy){
-        return createPath( {elements:p.elements.map(el => blockTranslate( el, x, y, alfa))});
+        return createPath( {elements:p.elements.map(el => blockTranslate( el, dx, dy))});
     }
 export function pathRotate(p, x, y, alfa){
         return createPath( {elements:p.elements.map(el => blockRotate(el, x, y, alfa))})
