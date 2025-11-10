@@ -481,7 +481,9 @@ class cyCad1830App extends HTMLElement {
                   layers.forEach(ly => {
                     const id = this.viewer.layerDraw.addLayer(ly.name, {pathColor:`#${ly.color.toString(16)}`}); //debe poner el activeLayer
                     this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.layers.get(id)));
-                    this.viewer.layerDraw.addBlocks(undefined, ly.blocks);
+                    this.viewer.layerDraw.addBlocks(undefined, ly.blocks); //o concat... a elegir
+                    this.viewer.layerDraw.addBlocks(undefined, ly.paths);
+                    this.viewer.layerDraw.addBlocks(undefined, ly.circles);
                   })
                   this.viewer.fit();
                   this.viewer.layerDraw.draw();
