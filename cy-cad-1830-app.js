@@ -1,13 +1,24 @@
-//import "./cy-elements/cy-file-loader.js"
+
+//Layers
 import './cy-canvas-layers/cy-canvas-viewer.js';
+import {getSvgPathFromBlocks} from "./cy-canvas-layers/cy-elements-to-canvas.js"
+
+//Application
 import "./cy-layer-list.js"
 import './cy-input-data.js';
-import {findAllCuts, blockTranslate, blockRotate, blockScale, blockSymmetryX, blockSymmetryY, blockSymmetryL} from './cy-geometry/cy-geometry-library.js'
+import { loadProject, saveProject, saveSvg, saveCNC } from "./cy-file-save-load.js";
+
+//From geometry
+import {linkPaths} from './cy-geometry/cy-geometry-link-paths.js'
+import {findAllCuts, blockTranslate, blockRotate, blockScale, blockSymmetryX, blockSymmetryY, blockSymmetryL, fuzzy_eq, fuzzy_eq_point} from './cy-geometry/cy-geometry-library.js'
+import {createDrawElement } from './cy-geometry/cy-geometry-basic-elements.js';
+
+//Commands
 import {createCommandManager, commandLayerCreate, commandLayerDelete, commandLayerSetStyle, 
       commandBlockCreate, commandBlockDelete, commandBlockTransform, commandCreateCutPoints,
       commandChangeOrigin} from './cy-commands/cy-command-definitions.js';
-import {createDrawElement} from './cy-geometry/cy-geometry-basic-elements.js';
-import { loadProject, saveProject } from "./cy-file-save-load.js";
+
+//For Drawing Interactively
 import DrawTranslate from "./cy-draw-interactive/cy-draw-translate.js"
 import DrawRotate from "./cy-draw-interactive/cy-draw-rotate.js"
 import DrawScale from "./cy-draw-interactive/cy-draw-scale.js"
@@ -21,9 +32,12 @@ import DrawCircle from "./cy-draw-interactive/cy-draw-circle.js"
 import DrawArc from "./cy-draw-interactive/cy-draw-arc.js"
 import DrawPath from "./cy-draw-interactive/cy-draw-path.js"
 
+//Parsers
 import {convertDxfToGeometry} from "./parsers/cy-parser-dxf-geometry-objects.js"
-import {isoToGeometry} from "./parsers/cy-parser-iso-geometry.js"
+import {isoToGeometry } from "./parsers/cy-parser-iso-geometry.js"
 import {svgToGeometry} from "./parsers/cy-parser-svg.js"
+import {pathsToIso} from "./parsers/cy-parser-geometry-to-iso.js"
+
 const templateMainMenu =`
   <div  id="hidden-row" >
     <!--cy-file-loader id="cy-hidden-file"></cy-file-loader-->
@@ -32,9 +46,10 @@ const templateMainMenu =`
     <md-filled-button id="file-menu-anchor">FILE</md-filled-button>
   <!-- Note the has-overflow attribute -->
     <md-menu has-overflow positioning="popover" id="file-menu" anchor="file-menu-anchor">
-    <md-menu-item id="file-open"><div slot="headline">OPEN</div></md-menu-item>
-        <md-menu-item id="file-save"><div slot="headline">SAVE</div></md-menu-item>
-        <md-menu-item id="file-saveas"><div slot="headline">SAVEAS</div></md-menu-item>
+    <md-menu-item id="file-open"><div slot="headline">Open</div></md-menu-item>
+        <md-menu-item id="file-save-project"><div slot="headline">Save</div></md-menu-item>
+        <md-menu-item id="file-save-iso"><div slot="headline">Export GCode</div></md-menu-item>
+        <md-menu-item id="file-save-svg"><div slot="headline">Export Svg</div></md-menu-item>
         <md-menu-item id="file-print"><div slot="headline">PRINT</div></md-menu-item>
     </md-menu>
     <md-filled-button id="zoom-menu-anchor">ZOOM</md-filled-button>
@@ -95,6 +110,7 @@ const templateMainMenu =`
     <md-filled-button id="transform-menu-anchor">TRANSFORM</md-filled-button>
     <md-menu has-overflow positioning="popover" id="transform-menu" anchor="transform-menu-anchor">
         <md-menu-item id="cut"><div slot="headline">CUT</div></md-menu-item>        
+        <md-menu-item id="link"><div slot="headline">LINK</div></md-menu-item>        
         <md-menu-item id="translate"><div slot="headline">TRANSLATE</div></md-menu-item>    
         <md-menu-item id="origin"><div slot="headline" >SET ORIGIN</div></md-menu-item>
         <md-menu-item id="rotate"><div slot="headline" >ROTATE</div></md-menu-item>
@@ -108,6 +124,12 @@ const templateMainMenu =`
           </md-menu>
         </md-sub-menu>
     </md-menu>
+    <md-filled-button id="settings-menu-anchor">SETTINGS</md-filled-button>
+      <md-menu has-overflow positioning="popover" id="settings-menu" anchor="settings-menu-anchor">
+        <md-menu-item id="settings-layer-style"><div slot="headline">Layers</div></md-menu-item>        
+        <md-menu-item id="settings-geometry-defaults"><div slot="headline">Geometry</div></md-menu-item>        
+        <md-menu-item id="settings-GCode-defaults"><div slot="headline">G-Code</div></md-menu-item>        
+      </md-menu>
 </span>
 `
 //tools y settings fijos
@@ -232,6 +254,9 @@ const style = `
     stroke: green; /*valor por defecto*/
     background-position:center;*/
 }
+#settings-menu-anchor{
+     justify-content: flex-end;
+}
     </style>
 `
 
@@ -253,7 +278,7 @@ class cyCad1830App extends HTMLElement {
     this.manager =  createCommandManager( this.viewer.layerDraw, this ); // 
 
     //--------------MENUS
-    const menus = ['file', 'zoom', /*'select',*/ 'draw', 'support', 'transform' ]
+    const menus = ['file', 'zoom', /*'select',*/ 'draw', 'support', 'transform', 'settings' ]
     menus.forEach(m => this[m+'MenuEl'] = this.dom.querySelector(`#${m}-menu`));
     menus.forEach(m => {
         const el = this.dom.querySelector(`#${m}-menu-anchor`);
@@ -266,29 +291,37 @@ class cyCad1830App extends HTMLElement {
   //Pongo defaults (podrían ser de un JSON, TODO)
   //Uso la nomenclatura de variables de los componentes
     this.dataStore  = {
-      circle:{
-        "data-r" : 10
+      geometry:{
+        circle:{
+          "data-r" : 10
+        },
+        poly:{
+          "data-edges" : 4,
+          "data-subType" : 'R'
+        },
+        segment:{
+          "data-d": 500,
+          "data-a": 30
+        },
+        arc:{
+          "data-r" : 100,
+          "data-a" : 45
+        },
+        symmetry:{
+          "data-a" : 45
+        },
+        rotate:{
+          "data-a" : 45
+        },
+        scale:{
+          "data-s" : 0.5
+        }
       },
-      poly:{
-        "data-edges" : 4,
-        "data-subType" : 'R'
-      },
-      segment:{
-        "data-d": 500,
-        "data-a": 30
-      },
-      arc:{
-        "data-r" : 100,
-        "data-a" : 45
-      },
-      symmetry:{
-        "data-a" : 45
-      },
-      rotate:{
-        "data-a" : 45
-      },
-      scale:{
-        "data-s" : 0.5
+      layers:{
+        "path-color" : "green",
+        "path-width" : 2,
+        "selected-color" : "yellow",
+        "selected-width" : "2"
       }
     }
 
@@ -481,9 +514,9 @@ class cyCad1830App extends HTMLElement {
                   layers.forEach(ly => {
                     const id = this.viewer.layerDraw.addLayer(ly.name, {pathColor:`#${ly.color.toString(16)}`}); //debe poner el activeLayer
                     this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.layers.get(id)));
-                    this.viewer.layerDraw.addBlocks(undefined, ly.blocks); //o concat... a elegir
-                    this.viewer.layerDraw.addBlocks(undefined, ly.paths);
-                    this.viewer.layerDraw.addBlocks(undefined, ly.circles);
+                    this.viewer.layerDraw.addBlocks(undefined, ly.blocks.concat(ly.paths).concat(ly.circles));
+                    //this.viewer.layerDraw.addBlocks(undefined, ly.paths);
+                    //this.viewer.layerDraw.addBlocks(undefined, ly.circles);
                   })
                   this.viewer.fit();
                   this.viewer.layerDraw.draw();
@@ -491,16 +524,42 @@ class cyCad1830App extends HTMLElement {
               })
             };break;
             case 'save': {
-              const projectData = {
+              switch(sub2){
+                case 'project':{
+                  const projectData = {
                   project: { name: "unnamed", timestamp: Date.now()},
                   model: this.viewer.layerDraw,
                   //manager: this.manager
                   // serializamos los comandos registrados
                   //commands: Array.from(commandRegistry.entries()).map(([name, fn]) => ({ name, source: fn.toString(), })),
                 };
-              const json = JSON.stringify(projectData, null, 2);
-              //const json = JSON.stringify(this.viewer.layerDraw, null, 2);
-              saveProject(null, json);
+                //const json = JSON.stringify(projectData, null, 2);
+                const json = JSON.stringify(this.viewer.layerDraw, null, 2);
+                saveProject(null, json);
+              //saveProject(null, json);
+              //     const type = file.name.split('.').pop();
+                }  break;
+                case 'iso':{
+                  let data = this.viewer.layerDraw.getSelectedBlocks();
+                  data = data.filter( b => b.type === 'path');
+                  saveCNC(null, pathsToIso(data));
+                }
+                  break;
+                case 'svg':{
+                  
+                  let data = this.viewer.layerDraw.getSelectedBlocks().filter( b => b.type === 'path');;
+                  const ww = this.viewer.layerDraw.extents;
+                  const header = `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"
+                   fill="transparent" stroke="black" strokeWidth="2px" vector-effect="non-scaling-stroke"
+                    viewBox = "${ww.xi} ${ww.yi} ${ww.xf-ww.xi} ${ww.yf-ww.yi}"
+                    preserveAspectRatio = "MidYMid meet"
+                    transform="matrix(1 0 0 -1 0 0)" >\n` 
+                  const paths = data.reduce((d,path) =>  d + `<path d="${(getSvgPathFromBlocks(path))}"/>\n`, '')
+                  const file = `${header}${paths}</svg>`
+                  saveSvg(null, file);
+                }
+                  break;
+              }
             }
               break;
           }
@@ -529,11 +588,37 @@ class cyCad1830App extends HTMLElement {
             this.mData.setAttribute('type','symmetry'+sub1);            //El attribute es lo que cambia el html !!
         }
         break;
-        case 'cut':
+        case 'cut':{
           const selectedBlocks = this.viewer.layerDraw.getSelectedBlocks();
           const cutPoints = findAllCuts(selectedBlocks);
           commandCreateCutPoints(cutPoints); //ye un comando con undo
+        }
           break;
+        /**
+         * El link debe unir tanto tramos sueltos como paths. 
+         */
+        case 'link':{
+          const lyD = this.viewer.layerDraw;
+          //const selectedBlocks = lyD.getSelectedBlocks();
+
+          const tol = 0.1 ; //SETTINGS
+          //La idea es que si hay varios intento hacer el link entre ellos...
+          //Hacemos el general, eligiendo entre todos
+          //let head = sB.pi, tail = sB.pf;
+          const ly = lyD.layers.get(lyD._activeLayerId);
+          //rutina link de toda una capa
+          let paths = [];
+          const allBlocks =  Array.from(ly.blocks).map(bid=>lyD.blocks.get(bid)); //el layer tienen un set de ids de bloques
+          console.log(allBlocks.find(el => (el.type === 'segment' && (el.x0===undefined || el.y0===undefined || el.x1===undefined || el.y1===undefined))))
+          console.log(allBlocks.find(el => (el.type === 'arc' && (el.x1===undefined || el.y1===undefined|| el.x2===undefined || el.y2===undefined))))
+          //Pasamos los bloques. La rutina linkPaths No debe tocarla, en principio
+          //Pero lo cierto es que después hay que quitar los bloques de los trees y volverlos a hacer...
+          const finalPaths = linkPaths(allBlocks, tol);
+          console.log(finalPaths)
+        }
+    
+        break;
+
         case 'scale':{
             this.drawingApp = new DrawScale(this.viewer.layerDraw, sub1);
             this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
