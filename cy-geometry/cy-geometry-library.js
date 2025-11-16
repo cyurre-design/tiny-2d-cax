@@ -5,12 +5,12 @@ import {circle_circle_intr, arc_arc_intr, circle_arc_intr} from './cy-cuts-circl
 import {segment_arc_intr} from './cy-cuts-segment-circle.js'
 import {line_line_intr} from './cy-cuts-segment-segment.js'
 
-import {segmentTranslate, segmentRotate, segmentScale, segmentSymmetryX, segmentSymmetryY, segmentSymmetryL  } from './cy-geo-elements/cy-segment.js'
-import {arcTranslate, arcRotate, arcScale, arcSymmetryX, arcSymmetryY,  arcSymmetryL} from './cy-geo-elements/cy-arc.js'
-import {circleTranslate, circleRotate, circleScale, circleSymmetryX, circleSymmetryY, circleSymmetryL} from './cy-geo-elements/cy-circle.js'
+import {segmentTranslate, segmentRotate, segmentScale, segmentSymmetryX, segmentSymmetryY, segmentSymmetryL, segmentReverse  } from './cy-geo-elements/cy-segment.js'
+import {arcTranslate, arcRotate, arcScale, arcSymmetryX, arcSymmetryY,  arcSymmetryL, arcReverse} from './cy-geo-elements/cy-arc.js'
+import {circleTranslate, circleRotate, circleScale, circleSymmetryX, circleSymmetryY, circleSymmetryL } from './cy-geo-elements/cy-circle.js'
 import {polygonTranslate, polygonRotate, polygonScale, polygonSymmetryX, polygonSymmetryY, polygonSymmetryL} from './cy-geo-elements/cy-polygon.js'
-import {pathTranslate, pathRotate, pathScale, pathSymmetryX, pathSymmetryY, pathSymmetryL} from './cy-geo-elements/cy-path.js'
-import {bezierTranslate, bezierRotate, bezierScale, bezierSymmetryX, bezierSymmetryY, bezierSymmetryL} from './cy-geo-elements/cy-bezier.js'
+import {pathTranslate, pathRotate, pathScale, pathSymmetryX, pathSymmetryY, pathSymmetryL, pathReverse} from './cy-geo-elements/cy-path.js'
+import {bezierTranslate, bezierRotate, bezierScale, bezierSymmetryX, bezierSymmetryY, bezierSymmetryL, bezierReverse} from './cy-geo-elements/cy-bezier.js'
 
 
 export const geometryPrecision = 0.0001;
@@ -373,6 +373,17 @@ export function blockSymmetryL(block, s){
         case 'polygon': return polygonSymmetryL(block, s);
         case 'path': return pathSymmetryL(block, s);
         case 'bezier': return bezierSymmetryL(block, s);
+        default: console.log('no contemplado');
+    }
+}
+export function blockReverse( block){
+    switch(block.type){
+        case 'segment': return segmentReverse(block);
+        case 'circle': return ()=>{};
+        case 'arc': return arcReverse(block);
+        case 'polygon': return ()=>{};
+        case 'path': return pathReverse(block);
+        case 'bezier': return bezierReverse(block);
         default: console.log('no contemplado');
     }
 }

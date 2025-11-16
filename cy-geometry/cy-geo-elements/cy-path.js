@@ -1,11 +1,14 @@
 "use strict";
-import {geometryPrecision, distancePointToPoint, checkBbox, blockTranslate, blockRotate, blockScale, blockSymmetryX, blockSymmetryY, blockSymmetryL } from '../cy-geometry-library.js'
+import {geometryPrecision, distancePointToPoint, checkBbox, blockTranslate, blockRotate, blockScale, blockSymmetryX, blockSymmetryY, blockSymmetryL, blockReverse } from '../cy-geometry-library.js'
 
 //los create deben garantizar que aquí llegan bien los parámetros
 
 export function createPath( data = {elements:[]}){
-    const p = { type : 'path',
-        elements : data.elements,
+    const p = { 
+        type : 'path',
+        elements : data.elements, 
+        get pi(){ return p.elements[0].pi},
+        get pf(){ return p.elements[p.elements.length -1].pf}
         //No chequeo cruces intermedios, se puede tratar con otras librerías
         //closed : (distancePointToPoint(this.x0, this.y0, this.x1, this.y1) <= geometryPrecision)? true: false;
     }
@@ -58,11 +61,11 @@ export function pathSymmetryL(p, s) {
     return createPath( {elements: p.elements.map(el => blockSymmetryL(el, s))});
     }
 
-    // reverse() {
-    //     this.elements.forEach(e => e.reverse());
-    //     this.elements.reverse();
-    //     return this;
-    // }
+export function pathReverse(p) {
+    const els = p.elements.map(e => blockReverse(e));
+    els.reverse(); //Modifica els in place
+    return createPath({elements: els});
+    }
     //yurre: he pasado los isPointed a devolución de true/false, que es como se usaba, y además había casos no hoogéneos
     // isPointed(x, y, tol) { //devolvemos el primero que no sea undefined Habría que pasar desde aquí la tolerancia?
     //     return this.elements.find(el => (el.isPointed(x, y, tol)));

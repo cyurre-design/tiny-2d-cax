@@ -10,14 +10,9 @@ export function createArc(data = {}) {
     //a.x0 = data.x0; a.y0 = data.y0;
     a.bbox = _boundingBox(a);
     //console.log(a.bbox);
-    //Object.defineProperty(a, "pi", {  get() { return {x:a.x1, y:a.y1}},    configurable: true, enumerable: true});
-    //Object.defineProperty(a, "pf", {  get() { return {x:a.x2, y:a.y2}},    configurable: true, enumerable: true});
     return a;
     }
     
-    // get pi(){ return ({x:this.x1, y: this.y1})}
-    // get pf(){ return ({x:this.x2, y: this.y2})}
-
 function _boundingBox (a, eps = geometryPrecision){
         // if (fuzzy_eq_point(this.pi, this.pf.x, eps)) {
         //     return new {x0:this.x0, y0:this.y0, x1:this.x0, y1:this.y0}; //No creo que aoprta nada, la verdad
@@ -96,9 +91,9 @@ export function arcSymmetryL(a, s) {
         const [cx, cy] = pointSymmetricSegment(s, a.cx, a.cy);
         const [x1, y1] = pointSymmetricSegment(s, a.x1, a.y1);
         const [x2, y2] = pointSymmetricSegment(s, a.x2, a.y2);
-        return createArc(arc2PC2SVG({cx:cx, cy:cy}, a.r, {x:x1, y:y1}, {x:x2, y:y2}, (a.fA===1?'clock':'antiClock')));
+        return createArc(arc2PC2SVG({x:cx, y:cy}, a.r, {x:x1, y:y1}, {x:x2, y:y2}, (a.fA===1?'clock':'antiClock')));
     }
 export function arcReverse(a){
-    return createArc(arc2PC2SVG({cx:cx, cy:cy}, a.r, {x:x2, y:y2}, {x:x1, y:y1}, (a.fA===1?'antiClock':'clock')));
+    return createArc(arc2PC2SVG({x:a.cx, y:a.cy}, a.r, {x:a.x2, y:a.y2}, {x:a.x1, y:a.y1}, (a.fA===1?'antiClock':'clock')));
 }
  

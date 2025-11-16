@@ -39,7 +39,9 @@ testPoints.forEach(tp=>coefs[tp]= [(1-tp)*(1-tp)*(1-tp), (1-tp)*(1-tp)*tp, (1-tp
  */
 export function createBezier(data = {} ){ 
     //copio valores, NO referencias, por si acaso
-    const bz = {type : 'bezier', x0:data.x0, y0:data.y0, x1:data.x1, y1:data.y1};
+    const bz = {type : 'bezier', x0:data.x0, y0:data.y0, x1:data.x1, y1:data.y1,
+        get pi(){ return ({x:this.x0,y:this.y0})} , get pf(){ return ({x:this.x1,y:this.y1})}
+    };
     if(data.subType === 'Q'){
         //elevo grado, paso de cuadrática a cúbica
         bz.cp1x = data.x0   + 2*data.cp1x/3; bz.cp1y = data.y0   + 2*data.cp1y/3;
@@ -57,6 +59,8 @@ export function createBezier(data = {} ){
         y0: Math.min(bz.y0, bz.cp1y, bz.cp2y, bz.y1),
         y1: Math.max(bz.y0, bz.cp1y, bz.cp2y, bz.y1),
         }
+    Object.defineProperty(a, "pi", {  get() { return {x:a.x0, y:a.y0}},    configurable: true, enumerable: true});
+    Object.defineProperty(a, "pf", {  get() { return {x:a.x1, y:a.y1}},    configurable: true, enumerable: true});
     return bz;
     }
     //interpola al punto t
@@ -156,6 +160,9 @@ export function bezierScale(bz, x, y, scale) {
     const [cp2x, cp2y] = scale0( bz.cp2x - x, bz.cp2y - y, scale);
     return createBezier({x0:x0 + x, y0:y0 + y, x1:x1 + x, y1:y1 + y, cp1x:cp1x + x, cp1y:cp1y + y, cp2x: cp2x + x, cp2y:cp2y + y});
     }
+export function bezierReverse(bz){
+    return createBezier({x0:bz.x1 , y0:bz.y1, x1:bz.x0, y1:bz.y0, cp1x:bz.cp2.x, cp1y:bz.cp2.y, cp2x: bz.cp1.x, cp2y:bz.cp1.y});
+}
     // reverse() {
     //     [this.pi, this.cp1, this.cp2, this.pf] = [this.pf, this.cp2, this.cp1, this.pi];
     // }

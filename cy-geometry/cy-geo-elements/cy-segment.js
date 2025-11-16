@@ -58,14 +58,6 @@ export function segmentTranslate(segment, dx, dy) {
         [newSegment.x1, newSegment.y1] = translatePoint(segment.x1, segment.y1, dx, dy);
         return newSegment;
     }
-//     transform(M) {
-//         //super.transform(M); //transformo punto
-//  //coordenadas homogéneas
-//         //usamos la misma filosofía de svg, 6 elementos: a,b,c,d,e,f , en un objeto
-//         [this.x0, this.y0] = transformPoint(this.x0, this.y0, M);
-//         [this.x1, this.y1] = transformPoint(this.x1, this.y1, M);
-//         this._calculate();
-//     }
 export function segmentSymmetryX(segment, y) {
         const newSegment = segmentClone(segment);
         newSegment.y0 = 2*y - segment.y0;
@@ -97,12 +89,8 @@ export function segmentScale(s, x, y, scale) {
     return createSegment({x0: t0x + x, y0: t0y + y, x1: t1x + x, y1 : t1y + y})
     }
 
-export function segmentReverse() {
-        const newSegment = segmentClone(segment);
-        [newSegment.x0, newSegment.x1] = [newSegment.x1, newSegment.x0];
-        [newSegment.y0, newSegment.y1] = [newSegment.y1, newSegment.y0];
-        calculate(newSegment);
-        return newSegment;
+export function segmentReverse(s) {
+    return createSegment({x0:s.x1, y0:s.y1, x1:s.x0, y1:s.y0})
     }
 //Función que no exporta ni clona, modifica en el sitio
 function _segmentRotate0(x, y, alfa){
