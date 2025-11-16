@@ -2,11 +2,7 @@
 import {scalePixels2mm, scaleMm2pixels, extents} from './cy-canvas-handler.js';
 
 /*
-       case 'bezier':
-          svgel = FgSvgLayerProfile.path.cloneNode(true);
-          svgel.setAttribute('d', `M ${el.pi.x} ${el.pi.y} C ${el.cp1.x} ${el.cp1.y} ${el.cp2.x} ${el.cp2.y} ${el.pf.x} ${el.pf.y}`);
-          svgel.setAttribute('class', clase);
-          break;          
+     
         case 'arcEllipse':
           svgel = FgSvgLayerProfile.path.cloneNode(true);
           svgel.setAttribute('d', `M ${el.pi.x} ${el.pi.y} A ${el.rx} ${el.ry} ${el.fi} ${el.flagLarge} ${el.flagSweep} ${el.pf.x} ${el.pf.y}`);
@@ -19,10 +15,12 @@ import {scalePixels2mm, scaleMm2pixels, extents} from './cy-canvas-handler.js';
 
 //estas son funciones de librería, a la que hay que pasarles los puntos
 export function getPathFromBlocks(blocks, pointDimension = 5){
+    return( new Path2D(getSvgPathFromBlocks(blocks, pointDimension)))
+}
+export function getSvgPathFromBlocks(blocks, pointDimension = 5){
     let x = scalePixels2mm(pointDimension);
 
     function getPathFromElement(b){
-        //No vigilo mucho porque es local
         switch(b.type){
             case 'segment': return `M ${b.x0} ${b.y0} L ${b.x1} ${b.y1} `;
             case 'circle' : return  `M ${b.cx + b.r} ${b.cy} A ${b.r}  ${b.r} 0 0 0  ${b.cx - b.r} ${b.cy} A ${b.r}  ${b.r} 0 0 0 ${b.cx + b.r} ${b.cy}`;
@@ -44,16 +42,16 @@ export function getPathFromBlocks(blocks, pointDimension = 5){
             case 'arc-ellipse' : return `M ${b.x0} ${b.y0} A ${b.rx} ${b.ry} ${b.fi} ${b.fL} ${b.fS} ${b.x1} ${b.y1}`
         }
     }
-    let tehBlocks = Array.isArray(blocks)?blocks:[blocks];
+    let theBlocks = Array.isArray(blocks)?blocks:[blocks];
     //let x = scalePixels2mm(this.pointDimension);
     let d ='';
-    tehBlocks.forEach(b=>{
+    theBlocks.forEach(b=>{
         if(b.type === 'path'){
             d = b.elements.reduce((acc, el) => acc+getPathFromElement(el),d);
         }
         else d += getPathFromElement(b);
         });        
-        return(new Path2D(d));
+        return d;
 }
 // export function getPathFromPoints(points, pointDimension = 5){
 //     const blocks = Array.isArray(points)?points:[points];
