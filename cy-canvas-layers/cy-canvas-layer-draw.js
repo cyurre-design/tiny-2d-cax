@@ -313,6 +313,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
             this._activeLayerId = lyId;
         return this._activeLayerId;
     }
+    getActiveLayerId(){ return this._activeLayerId}
 
     /**@todo Los cuts podrían ser intercapas, así que no llevan layerId */
     //Y por otra parte pertenecen a 2 bloques, ... igual son eternos 

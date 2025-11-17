@@ -4,7 +4,7 @@
 const templateSingleLayer = (name, id, flag=true) => {
     const delButton = flag===true? ` <md-filled-button id="layer-del-${id}">Del</md-filled-button>` : '';
   return `
-  <md-list-item id="${name.toLowerCase()}">
+  <md-list-item id="layer-id-${id}">
     ${name}${delButton}
     <md-filled-button id="layer-edit-${id}">St</md-filled-button>
     <md-switch slot="end" selected id="layer-view-${id}"></md-switch>
@@ -29,6 +29,8 @@ class CyLayerList extends HTMLElement {
                 #layer-name{
                 width:100%;
                 }
+                .active{
+                background-color:#ffcc00}
                 </style>
         `;
         return style;
@@ -73,17 +75,22 @@ class CyLayerList extends HTMLElement {
         this.dialog = this.dom.querySelector('#edit-style');
         this.list.addEventListener('change', (e)=>this.handleLayers(e)); 
         this.list.addEventListener(`click`, (evt => {
-            const data = evt.target.id.split('-');
-            this.editedLayer = this.layers.find((l)=>l.id === data[2]);
+            const [d, command, id] = evt.target.id.split('-');
+            this.editedLayer = this.layers.find((l)=>l.id === id);
             
-            if(data[1] === 'edit'){
+            if(command === 'edit'){
                 this.dialog.innerHTML = this.createDialog(this.editedLayer);
                 this.dialog.showModal();
-            } else if (data[1] === 'del'){
+            } else if (command === 'del'){
                 /**
                  * @todo hay que sacar un dialogo si la capa no está vacía ??!
                  */
                 this.dispatchEvent(new CustomEvent('layer-handle', {bubbles:true, composed:true, detail: {layerId:this.editedLayer.id, action: 'delete'}}))
+            } else if(command === 'id') {
+                if(this.editedLayer.erasable){
+                    this.setActiveLayerClass(id);
+                    this.dispatchEvent(new CustomEvent('layer-handle', {bubbles:true, composed:true, detail: {layerId:id, action: 'active'}}))
+                }
             }
         }))
         this.dom.querySelector('#edit-style').addEventListener('click', (e)=> {
@@ -109,12 +116,18 @@ class CyLayerList extends HTMLElement {
         this.dom.querySelector('#layer-add').addEventListener('click',  (e) =>
             this.dispatchEvent(new CustomEvent('layer-handle', {bubbles:true, composed:true, detail: {layer:undefined, action: 'create'}} )))
     }
+    setActiveLayerClass(id){
+        Array.from(this.dom.querySelectorAll('md-list-item')).forEach( el => el.classList.remove('active'));
+        this.dom.querySelector(`#layer-id-${id}`).classList.add('active');
+    }
     //Decido que venga en json, para forzar copia
     addLayer(strLayer){
         const layer = JSON.parse(strLayer);
         this.layers.push(layer);
         this.layers = [...new Set(this.layers)]; //Quito repes just in case
         this.list.innerHTML = this.createNewList();
+        if(layer.erasable)
+            this.setActiveLayerClass(layer.id);
     }
     /**
      * 

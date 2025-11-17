@@ -39,9 +39,6 @@ import {svgToGeometry} from "./parsers/cy-parser-svg.js"
 import {pathsToIso} from "./parsers/cy-parser-geometry-to-iso.js"
 
 const templateMainMenu =`
-  <div  id="hidden-row" >
-    <!--cy-file-loader id="cy-hidden-file"></cy-file-loader-->
-  </div>
   <span >
     <md-filled-button id="file-menu-anchor">FILE</md-filled-button>
   <!-- Note the has-overflow attribute -->
@@ -365,8 +362,12 @@ class cyCad1830App extends HTMLElement {
         const layer = commandLayerCreate(e.layer);    //de momento es siempre undefined por el modo de trabajo
       } else if(e.action === 'delete'){
         commandLayerDelete(e.layerId);    //de momento es siempre undefined por el modo de trabajo
-      } else if(e.action === 'set-style')
+      } else if(e.action === 'set-style'){
         commandLayerSetStyle(e.layerId, e.value);
+      } else if(e.action === 'active'){
+        this.viewer.layerDraw.setActiveLayerId(e.layerId);
+      }
+
     })
 //--------------------- CREACION DE BLOQUES ------------------
   /**@listens new-block Aquí es donde se recibe la petición de insertar geometría
@@ -491,7 +492,7 @@ class cyCad1830App extends HTMLElement {
                   this.viewer.layerDraw.deserialize( data.model);//.model;
                 }
                 else if((type === 'nc') || (type === 'pxy')){
-                    const geo = isoToGeometry(file.text); //Hay que pasarle la configuración de máquina...por defecto fresadora
+                  const geo = isoToGeometry(file.text); //Hay que pasarle la configuración de máquina...por defecto fresadora
                   geo.geometry.layers.forEach(ly => {
                     const id = this.viewer.layerDraw.addLayer(ly.name); //debe poner el activeLayer
                     this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.layers.get(id)));
@@ -521,7 +522,10 @@ class cyCad1830App extends HTMLElement {
                   this.viewer.fit();
                   this.viewer.layerDraw.draw();
                 }
-              })
+                const lyId = this.viewer.layerDraw.getActiveLayerId();
+                
+              }
+            )
             };break;
             case 'save': {
               switch(sub2){
