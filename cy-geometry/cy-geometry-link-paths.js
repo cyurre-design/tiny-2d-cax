@@ -36,8 +36,10 @@ export function linkPaths(allPaths, tol = 0.1){
             } else { //Uno que no empalma...el primero será uno vacío
                 paths.push(linked); //solo guardo de momento los elementos
                 linked = [b];
+                head = b.pi, tail = b.pf;
                 }
             }
+        if(linked.length > 0) paths.push(linked);
         paths.shift(); //el morrallero inicial
         paths = paths.map(p => createDrawElement('path', {elements : p}));
         //le pegamos los que ya eran paths en origen , si los hubiera
