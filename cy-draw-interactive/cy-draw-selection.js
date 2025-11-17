@@ -19,7 +19,7 @@ export default class DrawSelection extends DrawBasic{
     }
     //Mientras hacemos el box se va poniendo hover de forma interactiva
     //Evitamos usar el layerDraft que no es conocido
-    move = (pi) => {this.hit = this.highLight(pi.x, pi.y, undefined)};
+    move = (pi) => {this.hit = pi/*this.highLight(pi.x, pi.y, undefined)*/};
     draw = (pi) => {  
         this.hit = this.highLight(pi.x, pi.y, createDrawElement('bbox', this.data))
         //this.layerDraw.hover(pi.x, pi.y, bbox, false);
@@ -33,7 +33,7 @@ export default class DrawSelection extends DrawBasic{
 
     //Y lo que se manda a input-data de posicines del cursor igual
     //dataSent = [['data-x0','data-y0'],['data-x1','data-y1']];
-    clickFn = [[this.m0, this.select], [this.m1, this.selectBlocks, this.deleteData]];
+    clickFn = [[this.m0, this.select], [this.m1, this.selectBlocks, this.deleteData, this.clear]];
     moveFn = [[this.m0, this.move, this.hover], [this.m1, this.draw]];
 
     updateData(data)  {

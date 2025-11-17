@@ -28,26 +28,4 @@ export default class DrawCircle extends DrawBasic{
     draw= (pi) => {this.hit = this.highLight(pi.x, pi.y, createDrawElement('circle', this.data ))}
         //Y lo que se manda a input-data de posicines del cursor igual
     dataSent = [['data-x0','data-y0'],['data-x1','data-y1'],['data-x1','data-y1']];
-
-        // this.leftClick = (pi, evt) => {
-        //     let p = this.hit || pi;
-        //     this.click[this.status].forEach(f=>f(p)); //secuencia de acciones
-        // };
-        // this.mouseMove = (pi) => {
-        //     this.move[this.status].forEach(f => f(pi));
-        //     this.layerDraw.dispatchEvent(new CustomEvent('pos', {bubbles: true, composed:true, detail:{pos:this.hit, type:'circle', subType:this.subMode,
-        //         idn:dataSent[this.status]}}));
-        // };
-
-        //Esta es la función de modificación o creación de un circle a partir de inputs, equivale a mouse move o click, según
-        //Generalizo y me paso el objeto completo porque vienen datos de 0 que estarían indefinidos si no...
-        //Por no cambiar de kebab a camel y tal hago el split este
-        // this.updateData= (data)=>{
-        //     Object.keys(data).forEach(k =>{
-        //         const idn = k.split('-')[1];
-        //         if(['x0','x1','x2','y0','y1','y2','r'].includes(idn))
-        //             this.data[idn] = +data[k];
-        //         });
-        // }
-
     }

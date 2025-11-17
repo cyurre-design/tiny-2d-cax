@@ -34,6 +34,7 @@ export default class DrawBasic {
         this.draft.drawBlocks(point, w, this.draft.pathColor );
         return( {x : point.x0, y : point.y0});
     }
+    clear = () => this.draft.clear();
     
     p0 =        (pi)    => {this.data.x0 = pi.x; this.data.y0 = pi.y; this.status = 1;};
     getBlocks = ()      => {this.blocksToMove = this.layerDraw.getSelectedBlocks()};
