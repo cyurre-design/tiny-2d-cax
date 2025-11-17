@@ -5,8 +5,6 @@ import { checkBbox, insideBbox, blockTranslate }  from '../cy-geometry/cy-geomet
 import { getRelevantPoints }  from '../cy-geometry/cy-geometry-basic-elements.js';
 import {getPathFromBlocks} from './cy-elements-to-canvas.js'
 
-
-const selectionWithInPixels = 25;
 // ------------------------
 // Modelo Layer
 // ------------------------
@@ -187,12 +185,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         ly.layerStyle = newLayer.layerStyle;
         return old;
     }
-    //Esta la hacemos general, no metemos uno por cada layer
-    getSelectionWidthInMm(){
-        const w = scalePixels2mm(selectionWithInPixels);
-        return w;
 
-    }
 /**
  * 
  * @param {string} name nombre de la capa
