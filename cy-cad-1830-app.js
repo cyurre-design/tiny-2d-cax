@@ -137,10 +137,12 @@ const templateSelectInputData =`
 <div>
     <md-filled-text-field id="data-penWidth" all" label="Select Tolerance" type="number" value="1" max="5" min="0.5" step="0.5"></md-filled-text-field>
     <div id="menu-select">
+        <md-filled-button class="submenu _25" id="select-sel">SEL</md-filled-button>
         <md-filled-button class="submenu _25" id="select-all">ALL</md-filled-button>
         <md-filled-button class="submenu _25" id="select-invert">INV</md-filled-button>
-        <md-filled-button class="submenu _25" id="select-del">DEL</md-filled-button>
-        <md-filled-button class="submenu _25" id="select-sel">SEL</md-filled-button-->
+        <md-filled-button class="submenu _25" id="select-del">CUT</md-filled-button>
+        <md-filled-button class="submenu _25" id="select-copy">COPY</md-filled-button>
+        <md-filled-button class="submenu _25" id="select-paste">PASTE</md-filled-button>
     </div>
 </div>
 `
@@ -433,17 +435,29 @@ class cyCad1830App extends HTMLElement {
     this.dom.querySelector('#menu-select').addEventListener('click',(evt)=>{
       const cmd = evt.target.id.split('-')[1];
       switch(cmd){
-        case 'all'    : this.viewer.layerDraw.deselectAll(); break;
+        case 'all'    : {
+                          this.viewer.layerDraw.deselectAll();
+                          this.selectedBlocks = [];
+                        }
+                        break;
         case 'invert' : this.viewer.layerDraw.invertSelection(); break;
         case 'del'    : {
-                          const blocks = this.viewer.layerDraw.getSelectedBlocks();
-                          commandBlockDelete(blocks);
+                          this.selectedBlocks = this.viewer.layerDraw.getSelectedBlocks();
+                          commandBlockDelete(this.selectedBlocks);
                         }
               break;
         case 'sel'    : {
                           this.drawingApp = new DrawSelection(this.viewer.layerDraw, '');
                           this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
                             this.mData.setAttribute('type','select');
+                        }
+                        break;
+        case 'copy'   : {
+                          this.selectedBlocks = this.viewer.layerDraw.getSelectedBlocks();
+                        }
+                        break;
+        case 'paste'  : {
+
                         }
                         break;
       }

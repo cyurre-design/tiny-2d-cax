@@ -14,7 +14,7 @@ export default class CyCanvasLayerAxes extends CyCanvasLayer {
             id: 'AXES',
             name: 'axes',
             layerStyle: {
-                pathColor: '#005500',
+                pathColor: '#aaaaaa',
                 pathWidth: 2,
                 tickLength: 8,
                 tickWidth: 2,

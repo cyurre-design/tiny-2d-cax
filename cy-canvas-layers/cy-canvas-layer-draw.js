@@ -211,14 +211,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
 
 // ------------------------ Gestión de bloques , árbol y puntos, etc...
 
-/**
- * 
- * @param {array} points array de objetos con propiedades x0,y0,id
- * Se inseran en un RBush para mejorar búsqueedas de puntos cercanos, etc...
- */
-    _addPointsToTree(points){
-        points.forEach(p => this.pointsTree.insert({minX:p.x0, maxX:p.x0, minY:p.y0, maxY: p.y0, id:p.id}));
-    }
+
 /**
  * Hay casos degenerados como paths con 0 elementos...
  * @param {string} layerId el id de la capa en el Map  de capas
@@ -226,36 +219,37 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
  * @returns 
  */
     addBlocks(layerId = this._activeLayerId, paths){  //pueden ser circles o polygons también...
-        if(paths === undefined) {console.log('tipo de bloque no visualizzable'); return;}
+        if(paths === undefined) {console.log('tipo de bloque no visualizable'); return;}
         let ps = Array.isArray(paths)?paths:[paths];
+        //quito los paths vacíos
         ps = ps.filter(p=> (p.type !== 'path') || (p.elements.length > 0));
         const ids = [];
+        const layer = this.layers.get(layerId); //se supone única porque es un dato que se pasa como argumento
         //Primero pongo la info de pintar y un id, importante. La parte del tree es de alguna manera opcional
         ps.forEach(b=>{
             if((b.type !== 'point') && (b.type!=='cut-point')){
                 b.id = `B${this.nextBlockId++}`;                  //id de bloque
                 b.layerId = layerId;
                 b.canvasPath = getPathFromBlocks(b);
-                //No merece la pena, mejor cada layer un color (varios según estado, etc...)
-                //b.style = Object.assign({}, layer.style);     //copia, para poder tocarlos de forma independiente
                 this.blocks.set(b.id, b);                   //La mete en el map de bloques
                 ids.push(b.id)
-
-                this.layers.get(b.layerId).blocks.add(b.id);    //la mete en el map de la capa que sea
+                layer.blocks.add(b.id);    //la mete en el map de la capa pasada como argumento
                 this.blocksTree.insert({minX:b.bbox.x0,minY:b.bbox.y0,maxX:b.bbox.x1,maxY:b.bbox.y1, id:b.id})
                 //gestión de sus puntos
                 const points = getRelevantPoints(b);
                 points.forEach(p=>{ 
                     p.bid = b.id;   //para saber a qué bloque pertenece el punto 
-                    p.id = `P${this.nextBlockId++}`; //el id que estamos poniendo es el del bloque, en getRelevantPoints
+                    p.id = `P${this.nextBlockId++}`; //el id que estamos poniendo es el del bloque
                     p.type = 'point';
                     p.canvasPath = getPathFromBlocks([p], this.pointDimension);
-                    p.layerStyle = this.layerStyle;       //TODO no sé si hace falta por cómo se gestionan luego...
+//                    p.layerStyle = this.layerStyle;       //TODO no sé si hace falta por cómo se gestionan luego...
                     this.points.set(p.id, p);    //Al map 
                     this.pointsTree.insert({minX:p.x0, maxX:p.x0, minY:p.y0, maxY: p.y0, id:p.id});    //Al tree para buscar rápido
                 })
             }
         })
+        const points = Array.from(this.points.values());
+        //this.pruebaPathPoints = getPathFromBlocks(points);
         return ids;
     }
     /**
@@ -342,6 +336,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
      * @param {Number} w  precisión con la que buscamos el punto, en las mismas coordenadas
      */
     getNearestPoint(x,y,w){
+
         //Miro si estamos cerca de un punto destacado (un centro, etc...), cojo solo el primero, dejo la gestión al usuario y el ratón
         const ps = this.pointsTree.search({minX:x -w, maxX: x+w, minY: y -w, maxY: y+w});
         //Si estamos cerca nos ponemos en él
@@ -369,6 +364,15 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
                 return [block];
             } 
         }
+
+// //PRUEBA
+//         if(this.pruebaPathPoints !== undefined){
+//             if(this.ctx.isPointInStroke(this.pruebaPathPoints, p.x, p.y)){
+//                 console.log(1)
+//             } else console.log(0);
+//         }
+
+
         return undefined;
     }
     /**@function getBBox
