@@ -509,6 +509,7 @@ export default class CyInputData extends HTMLElement {
         //console.log(data.pos);
     }
     updateData= (data)=>{
+        if(!data) return;
         Object.keys(data).forEach(k =>{
             if(this.keys.includes(k))
                 this.inputs[k].value = data[k];

@@ -9,7 +9,7 @@ import './cy-input-data.js';
 import { loadProject, saveProject, saveSvg, saveCNC } from "./cy-file-save-load.js";
 
 //From geometry
-import {linkPaths} from './cy-geometry/cy-geometry-link-paths.js'
+
 import {findAllCuts, blockTranslate, blockRotate, blockScale, blockSymmetryX, blockSymmetryY, blockSymmetryL, fuzzy_eq, fuzzy_eq_point} from './cy-geometry/cy-geometry-library.js'
 import {createDrawElement } from './cy-geometry/cy-geometry-basic-elements.js';
 
@@ -509,7 +509,7 @@ class cyCad1830App extends HTMLElement {
                   const geo = isoToGeometry(file.text); //Hay que pasarle la configuración de máquina...por defecto fresadora
                   geo.geometry.layers.forEach(ly => {
                     const id = this.viewer.layerDraw.addLayer(ly.name); //debe poner el activeLayer
-                    this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.layers.get(id)));
+                    this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.getLayer(id)));
                     this.viewer.layerDraw.addBlocks(undefined, ly.paths);
                   })
                   this.viewer.fit();
@@ -518,7 +518,7 @@ class cyCad1830App extends HTMLElement {
                   const geo = svgToGeometry(file.text);
                   geo.layers.forEach(ly => {
                     const id = this.viewer.layerDraw.addLayer(); //debe poner el activeLayer
-                    this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.layers.get(id)));
+                    this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.getLayer(id)));
                     this.viewer.layerDraw.addBlocks(undefined, ly.paths);
                   })
                   this.viewer.fit();
@@ -528,7 +528,7 @@ class cyCad1830App extends HTMLElement {
                   const layers = convertDxfToGeometry(file.text); //devuelve array de layers y cada una con sus bloques...
                   layers.forEach(ly => {
                     const id = this.viewer.layerDraw.addLayer(ly.name, {pathColor:`#${ly.color.toString(16)}`}); //debe poner el activeLayer
-                    this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.layers.get(id)));
+                    this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.getLayer(id)));
                     this.viewer.layerDraw.addBlocks(undefined, ly.blocks.concat(ly.paths).concat(ly.circles));
                     //this.viewer.layerDraw.addBlocks(undefined, ly.paths);
                     //this.viewer.layerDraw.addBlocks(undefined, ly.circles);
@@ -536,7 +536,7 @@ class cyCad1830App extends HTMLElement {
                   this.viewer.fit();
                   this.viewer.layerDraw.draw();
                 }
-                const lyId = this.viewer.layerDraw.getActiveLayerId();
+                //const lyId = this.viewer.layerDraw.getActiveLayerId();
                 
               }
             )
@@ -613,26 +613,11 @@ class cyCad1830App extends HTMLElement {
         }
           break;
         /**
-         * El link debe unir tanto tramos sueltos como paths. 
+         * El link debe unir tanto tramos sueltos como paths.
+         * Lo paso junto al setOrigin que se parecen mucho 
          */
         case 'link':{
-          const lyD = this.viewer.layerDraw;
-          //const selectedBlocks = lyD.getSelectedBlocks();
-
-          const tol = 0.1 ; //SETTINGS
-          //La idea es que si hay varios intento hacer el link entre ellos...
-          //Hacemos el general, eligiendo entre todos
-          //let head = sB.pi, tail = sB.pf;
-          const ly = lyD.layers.get(lyD._activeLayerId);
-          //rutina link de toda una capa
-          let paths = [];
-          const allBlocks =  Array.from(ly.blocks).map(bid=>lyD.blocks.get(bid)); //el layer tienen un set de ids de bloques
-          console.log(allBlocks.find(el => (el.type === 'segment' && (el.x0===undefined || el.y0===undefined || el.x1===undefined || el.y1===undefined))))
-          console.log(allBlocks.find(el => (el.type === 'arc' && (el.x1===undefined || el.y1===undefined|| el.x2===undefined || el.y2===undefined))))
-          //Pasamos los bloques. La rutina linkPaths No debe tocarla, en principio
-          //Pero lo cierto es que después hay que quitar los bloques de los trees y volverlos a hacer...
-          const finalPaths = linkPaths(allBlocks, tol);
-          console.log(finalPaths)
+          this.viewer.layerDraw.link();
         }
     
         break;

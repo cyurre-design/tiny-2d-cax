@@ -318,6 +318,7 @@ export function blockTranslate( block, dx, dy){
         case 'polygon': return polygonTranslate(block, dx, dy);
         case 'path': return pathTranslate(block, dx, dy);
         case 'bezier': return bezierTranslate(block, dx, dy);
+        case 'point' : return translatePoint(block.x0, block.y0, dx, dy);
         default: console.log('no contemplado');
     }
 }

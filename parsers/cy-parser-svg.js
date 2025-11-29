@@ -2,6 +2,7 @@
 
 import { geometryPrecision} from '../cy-geometry/cy-geometry-library.js'
 import { createDrawElement} from '../cy-geometry/cy-geometry-basic-elements.js'
+import {getPathFromBlocks} from '../cy-canvas-layers/cy-elements-to-canvas.js'
 
 const cmdRegEx = /([MLQTCSAZVHmlqtcsazvh])([^MLQTCSAZVHmlqtcsazvh]*)/gi
 
@@ -229,3 +230,11 @@ export function  svgToGeometry(file){
     rectsToGeometry(Array.from(node.querySelectorAll('rect')));
     return({layers:[{circles:circles,paths:paths}]});
 }
+
+// export async function geometryToSvg(geometry){
+//     const svgPaths = geometry.map(path => `<path d=${getPathFromBlocks(path)}/>`)
+//     return `
+//     <svg width="190" height="160" xmlns="http://www.w3.org/2000/svg>
+//     ${svgPaths}
+//     </svg>`
+// }

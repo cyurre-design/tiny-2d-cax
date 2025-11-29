@@ -58,7 +58,7 @@ class CyLayerList extends HTMLElement {
 `}
 
     createNewList() {
-        const list = this.layers.reduce((out,ly) => (out + templateSingleLayer(ly.name, ly.id, ly.erasable)), '<md-list id="full-list">') + '</md-list>';
+        const list = this.layers.reduce((out,ly) => (out + templateSingleLayer(ly.name, ly.lyId, ly.erasable)), '<md-list id="full-list">') + '</md-list>';
         return list; 
     }
     //Aquí recibimos el evento de que se quiere visualizar o tapar una capa, por ejemplo
@@ -76,7 +76,7 @@ class CyLayerList extends HTMLElement {
         this.list.addEventListener('change', (e)=>this.handleLayers(e)); 
         this.list.addEventListener(`click`, (evt => {
             const [d, command, id] = evt.target.id.split('-');
-            this.editedLayer = this.layers.find((l)=>l.id === id);
+            this.editedLayer = this.layers.find((l)=>l.lyId === id);
             
             if(command === 'edit'){
                 this.dialog.innerHTML = this.createDialog(this.editedLayer);
@@ -85,7 +85,7 @@ class CyLayerList extends HTMLElement {
                 /**
                  * @todo hay que sacar un dialogo si la capa no está vacía ??!
                  */
-                this.dispatchEvent(new CustomEvent('layer-handle', {bubbles:true, composed:true, detail: {layerId:this.editedLayer.id, action: 'delete'}}))
+                this.dispatchEvent(new CustomEvent('layer-handle', {bubbles:true, composed:true, detail: {layerId:this.editedLayer.lyId, action: 'delete'}}))
             } else if(command === 'id') {
                 if(this.editedLayer.erasable){
                     this.setActiveLayerClass(id);
@@ -103,7 +103,7 @@ class CyLayerList extends HTMLElement {
                 }
                 this.editedLayer.name = this.dialog.querySelector('#layer-name').value,
                 this.dialog.close();
-                let detail = {layerId:this.editedLayer.id, action: 'set-style', value:this.editedLayer}
+                let detail = {layerId:this.editedLayer.lyId, action: 'set-style', value:this.editedLayer}
                 this.dispatchEvent(new CustomEvent('layer-handle', {bubbles:true, composed:true, detail: detail}))
             } else if(e.target.id === 'style-escape'){
                 this.dialog.close();
@@ -127,14 +127,14 @@ class CyLayerList extends HTMLElement {
         this.layers = [...new Set(this.layers)]; //Quito repes just in case
         this.list.innerHTML = this.createNewList();
         if(layer.erasable)
-            this.setActiveLayerClass(layer.id);
+            this.setActiveLayerClass(layer.lyId);
     }
     /**
      * 
      * @param {@todo} name 
      */
     deleteLayer(id){
-        const ix = this.layers.findIndex( v => v.id === id);
+        const ix = this.layers.findIndex( v => v.lyId === id);
         this.layers.splice(ix,1);
         this.list.innerHTML = this.createNewList();
     }
@@ -145,7 +145,7 @@ class CyLayerList extends HTMLElement {
      * Refresco en caso de edición
      */
     setStyle(id, data){
-        const layer = this.layers.find( ly => ly.id === id);
+        const layer = this.layers.find( ly => ly.lyId === id);
         layer.name = data.name;
         layer.layerStyle = data.layerStyle;
     }

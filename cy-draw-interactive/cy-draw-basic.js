@@ -58,6 +58,7 @@ export default class DrawBasic {
     };
     //Habría que chequear tipos numéricos y tal, formatos...
     updateData(data) {
+        if(!data) return;
         let newData = [];
         Object.keys(data).forEach(k =>{
             const [t,idn,action] = k.split('-');

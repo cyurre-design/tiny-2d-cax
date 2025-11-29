@@ -11,7 +11,7 @@ export default class CyCanvasLayerAxes extends CyCanvasLayer {
     constructor() {
         super('axes');
         this.axesLayer =  {
-            id: 'AXES',
+            lyId: 'AXES',
             name: 'axes',
             layerStyle: {
                 pathColor: '#aaaaaa',
@@ -25,7 +25,7 @@ export default class CyCanvasLayerAxes extends CyCanvasLayer {
             erasable: false
         };
         this.gridLayer = {
-            id: 'GRID',
+            lyId: 'GRID',
             name: 'grid',
             layerStyle: {
                 pathColor: '#005500',

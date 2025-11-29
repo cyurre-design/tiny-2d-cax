@@ -55,43 +55,51 @@ export function linkPaths(allPaths, tol = 0.1){
         let dummy = 0;
         while(1){
             console.log(dummy++);
-            let p = paths.find(p=>!p.visited); //La primera vez será el primero
+            let p = paths.find(p=>!p.linked); //La primera vez será el primero
             if(p === undefined) break;         //No quedan slices sin visitar
             linked = p.elements;
             head = p.pi, tail = p.pf;
-            p.visited = true;
+            p.linked = true;
             for(let ix=0; ix < paths.length; ix++){
                 const b= paths[ix]
-                if(b.visited) continue;
+                if(b.linked) continue;
                 if(fuzzy_eq_point(tail, b.pi, tol)){ //por la "derecha"
                     linked = linked.concat(b.elements);
-                    b.visited = true;
+                    b.linked = true;
                 } else if(fuzzy_eq_point(tail, b.pf, tol)){            //por la "derecha" invertido
-                    linked = linked.concat( blockReverse(b));
-                    b.visited = true;
+                    linked = linked.concat( blockReverse(b).elements);
+                    b.linked = true;
                 } else if(fuzzy_eq_point(head, b.pf, tol)){ //por la "izquierda"
                     linked = b.elements.concat(linked);
-                    b.visited = true;
+                    b.linked = true;
                 } else if(fuzzy_eq_point(head, b.pi, tol)){ //por la izquierda invirtiendo
                     linked = blockReverse(b).elements.concat(linked);
-                    b.visited = true;
+                    b.linked = true;
                 }
                 head = linked[0].pi; tail = linked[linked.length-1].pf;
             }
-            linkedPaths.push(createDrawElement('path',{elements:linked})); //entra con visited a false
+            linkedPaths.push(createDrawElement('path',{elements:linked})); //entra con linked a false
         }
         return linkedPaths;
     }
        //YURRE: Esto ye una conjetura, que la parte de intersección tiene menos trozos que las propias...
     //La alterntiva es un bucle único con todos los slices juntos
     let slices = blocksToPaths(allPaths, tol);
+
+    //test1
+    //if(slices.find(p=>p.elements.find(b=>b.type==='path')))
+    //    console.log('error')
     let nPaths = slices.length+1; //por inicializar y que pase. Cuando ya no mejora, se sale
     while((nPaths > slices.length) && (slices.length > 1)  ){
         nPaths = slices.length;
         console.log(nPaths);
-        slices.forEach(s => s.visited = false);
+        slices.forEach(s => s.linked = false);
         slices = stitch(slices, tol);
+
     }
+    //test2
+    if(slices.find(p=>p.elements.find(b=>b.type==='path')))
+       console.log('error')
     //Aquí en slices quedan los trozos que no se dejan juntar
     return slices;
 }

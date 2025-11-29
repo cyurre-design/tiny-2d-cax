@@ -24,7 +24,7 @@ export function commandLayerCreate (name = undefined, data = undefined) {
     const theCommand = commandManager.makeCommand({
         execute(p, a) {
             this.id = p.addLayer(name || this.name);
-            const layer = p.layers.get(this.id);
+            const layer = p.getLayer(this.id);
             this.name = layer.name;
             a.viewer._redrawLayers();
             a.layerView.addLayer(JSON.stringify(layer));
@@ -42,7 +42,7 @@ export function commandLayerDelete (id){
     const theCommand = commandManager.makeCommand({
         execute(p, a) {
             this.id = id;
-            this.layer = p.layers.get(this.id);
+            this.layer = p.getLayer(this.id);
             p.deleteLayer(this.id);
             a.viewer._redrawLayers();
             a.layerView.deleteLayer(this.id);
@@ -77,12 +77,12 @@ export function commandLayerSetStyle( layerId, data) {
 export function commandBlockCreate(blocks){
     const theCommand = commandManager.makeCommand({
       execute(p, a) {
-          this.blocks = blocks;
-          this.ids = p.addBlocks(undefined, this.blocks); //array...?
+          this.blocks = Array.isArray(blocks)?blocks:[blocks];
+          /*this.ids = */p.addBlocks(undefined, this.blocks); //array...?
           p.draw();
       },
       undo(p, a) {
-          if (this.ids) this.ids.forEach(id=>p.deleteBlock(id));
+          this.blocks.forEach( b => p.deleteBlock(b))
           p.draw();
       },
       });
@@ -92,7 +92,7 @@ export function commandBlockDelete(blocks) {
     const theCommand = commandManager.makeCommand({
       execute(p, a) {
           this.blocks = blocks;
-          this.blocks.forEach( b => p.deleteBlock(b.id))
+          this.blocks.forEach( b => p.deleteBlock(b))
           p.draw();
       },
       undo(p, a) {
@@ -116,7 +116,7 @@ export function commandBlockDelete(blocks) {
     },
     undo(p, a) {
         if (this.newBlocks) 
-          this.newBlocks.forEach(b=>p.deleteBlock(b.id));
+          this.newBlocks.forEach(b=>p.deleteBlock(b));
         p.draw();
     }
     });
@@ -147,6 +147,7 @@ export function commandCreateCutPoints(cutPoints){
     commandManager.execute(theCommand);    
     }
     //------------------ ORIGIN ----------------
+    //Guardo todo aunque solo afecta a la capa activa, todo?
 export function commandChangeOrigin( dx, dy){
     const theCommand = commandManager.makeCommand({
         execute(p, a) {
