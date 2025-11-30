@@ -59,8 +59,6 @@ export function createBezier(data = {} ){
         y0: Math.min(bz.y0, bz.cp1y, bz.cp2y, bz.y1),
         y1: Math.max(bz.y0, bz.cp1y, bz.cp2y, bz.y1),
         }
-    Object.defineProperty(a, "pi", {  get() { return {x:a.x0, y:a.y0}},    configurable: true, enumerable: true});
-    Object.defineProperty(a, "pf", {  get() { return {x:a.x1, y:a.y1}},    configurable: true, enumerable: true});
     return bz;
     }
     //interpola al punto t
