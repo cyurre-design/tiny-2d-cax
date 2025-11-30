@@ -54,7 +54,7 @@ export function linkPaths(allPaths, tol = 0.1){
         let linked = [], head, tail;
         let dummy = 0;
         while(1){
-            console.log(dummy++);
+            //console.log(dummy++);
             let p = paths.find(p=>!p.linked); //La primera vez será el primero
             if(p === undefined) break;         //No quedan slices sin visitar
             linked = p.elements;
@@ -92,7 +92,7 @@ export function linkPaths(allPaths, tol = 0.1){
     let nPaths = slices.length+1; //por inicializar y que pase. Cuando ya no mejora, se sale
     while((nPaths > slices.length) && (slices.length > 1)  ){
         nPaths = slices.length;
-        console.log(nPaths);
+        //console.log(nPaths);
         slices.forEach(s => s.linked = false);
         slices = stitch(slices, tol);
 

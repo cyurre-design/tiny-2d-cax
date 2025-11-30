@@ -74,7 +74,7 @@ export class CyCanvasLayer extends HTMLElement {
         const offset = position2pixels({x:0, y:0});
         this.ctx.setTransform(scale, 0, 0, -scale, offset.x, offset.y);
     }
-    draw(){console.log('draw sin definir')}    //esta se debe sobrecargar
+    draw(){/*console.log('draw sin definir')*/}    //esta se debe sobrecargar
     clear(){
         const old = this.ctx.getTransform();
         this.ctx.setTransform();

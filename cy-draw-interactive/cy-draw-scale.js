@@ -26,6 +26,7 @@ export default class DrawScale extends DrawBasic{
     moveFn = [[this.h], [this.move]];
 
     updateData(data){
+        if(!data) return;
         const newData = super.updateData(data);
         newData.forEach(d => {  //no esperamos más que una pulsación...pero si viene la s se atiende aquí
         switch(d.idn){

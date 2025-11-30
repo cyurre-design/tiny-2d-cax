@@ -48,7 +48,7 @@ export function getSvgPathFromBlocks(blocks, pointDimension = 5){
     theBlocks.forEach(b=>{
         if(b.type === 'path'){
             d = b.elements.reduce((acc, el) => acc+getPathFromElement(el),d);
-            console.log(d)     
+            //console.log(d)     
             }
         else d += getPathFromElement(b);
         });   
