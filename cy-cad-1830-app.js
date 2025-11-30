@@ -503,7 +503,7 @@ class cyCad1830App extends HTMLElement {
                 if(type === 'json'){
                   const data = JSON.parse(file.text );
                 // Restaurar modelo
-                  this.viewer.layerDraw.deserialize( data.model);//.model;
+                  this.viewer.layerDraw.deserialize( data.model); //Falta restaurar historia
                 }
                 else if((type === 'nc') || (type === 'pxy')){
                   const geo = isoToGeometry(file.text); //Hay que pasarle la configuración de máquina...por defecto fresadora
@@ -546,13 +546,12 @@ class cyCad1830App extends HTMLElement {
                 case 'project':{
                   const projectData = {
                   project: { name: "unnamed", timestamp: Date.now()},
-                  model: this.viewer.layerDraw,
+                  model: this.viewer.layerDraw
                   //manager: this.manager
                   // serializamos los comandos registrados
                   //commands: Array.from(commandRegistry.entries()).map(([name, fn]) => ({ name, source: fn.toString(), })),
                 };
-                //const json = JSON.stringify(projectData, null, 2);
-                const json = JSON.stringify(this.viewer.layerDraw, null, 2);
+                const json = JSON.stringify(projectData, null, 2);
                 saveProject(null, json);
               //saveProject(null, json);
               //     const type = file.name.split('.').pop();
