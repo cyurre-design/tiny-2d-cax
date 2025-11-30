@@ -569,7 +569,7 @@ class cyCad1830App extends HTMLElement {
                   const header = `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"
                    fill="transparent" stroke="black" strokeWidth="2px" vector-effect="non-scaling-stroke"
                     viewBox = "${ww.xi} ${ww.yi} ${ww.xf-ww.xi} ${ww.yf-ww.yi}"
-                    preserveAspectRatio = "MidYMid meet"
+                    preserveAspectRatio = xMidYMid meet"
                     transform="matrix(1 0 0 -1 0 0)" >\n` 
                   const paths = data.reduce((d,path) =>  d + `<path d="${(getSvgPathFromBlocks(path))}"/>\n`, '')
                   const file = `${header}${paths}</svg>`
