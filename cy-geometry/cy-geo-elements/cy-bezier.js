@@ -73,8 +73,6 @@ function interpolate(bz, t){
     }
     //calcula el incentro del triángulo de un bezier (restringido en ángulo)
 function calculateIncenter(bz){
-    //const a = new Line(this.x, this.y, this.cp1x, this.cp1y); 
-    //const b = new Line(this.cp2.x, this.cp2.y, this.pf.x, this.pf.y); 
     const v = _lineCutsToLine(createSegment(bz.x0, bz.y0, bz.cp1x, bz.cp1y), createSegment(bz.cp2x, bz.cp2y, bz.x1, bz.y1));
     const a = distancePointToPoint( v.x, v.y, bz.x0, bz.y0);
     const b = distancePointToPoint( v.x, v.y, bz.x1, bz.y1);
@@ -108,16 +106,9 @@ function isClockWise(bz){
         sum += (bz.x0   - bz.x1)   * (bz.y0   + bz.y1);
         return (sum < 0);
     }
-// function clone(bz){
-//     return createBezier(bz.x, bz.y, bz.cp1.x, bz.cp1.y, bz.cp2.x, bz.cp2.y, bz.pf.x, bz.pf.y);
-//     }
 function isClosed(bz) {
     return (sqDistancePointToPoint(bz.x0, bz.y0, bz.x1, bz.y1) <= geometryPrecision2);
     }
-// function isEqual(bz, el) {
-//     if(el.type !== 'bezier') return false;
-//     return(bz.pi.isEqual(el.pi) && bz.pf.isEqual(el.pf) && bz.cp1.isEqual(el.cp1) && bz.cp2.isEqual(el.cp2)) 
-//     }
 /**
  * 
  * @param {Object bezier} bz 
@@ -163,9 +154,6 @@ export function bezierScale(bz, x, y, scale) {
 export function bezierReverse(bz){
     return createBezier({x0:bz.x1 , y0:bz.y1, x1:bz.x0, y1:bz.y0, cp1x:bz.cp2.x, cp1y:bz.cp2.y, cp2x: bz.cp1.x, cp2y:bz.cp1.y});
 }
-    // reverse() {
-    //     [this.pi, this.cp1, this.cp2, this.pf] = [this.pf, this.cp2, this.cp1, this.pi];
-    // }
 
 function splitAt(bz, t){
         let s1 = t<0?0:t>1?1:t;

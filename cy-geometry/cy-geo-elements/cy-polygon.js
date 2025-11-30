@@ -18,15 +18,16 @@ export function createPolygon(data = {}) {
     // get p0() {  return {x:this.x0, y: this.y0};    }
     // get c() {  return {x:this.x0, y: this.y0};    }
     //NO genero todos los segmentos, porque de momento no hacen falta como clases independientes
-    function _calculateSegments(p){
-        const segments = [];
-        for(let i = 0; i < p.edges; i++){
-            segments.push({x0:p.cx + p.r*Math.cos(p.alfai + i * p.delta), y0:p.cy + p.r*Math.sin(p.alfai + i * p.delta)});
-        }
-        return segments;
+function _calculateSegments(p){
+    const segments = [];
+    for(let i = 0; i < p.edges; i++){
+        segments.push({x0:p.cx + p.r*Math.cos(p.alfai + i * p.delta), y0:p.cy + p.r*Math.sin(p.alfai + i * p.delta)});
     }
+    return segments;
+}
     //esta no es exacta....TODO
-    function _bbox(p){ return({x0: p.cx - p.r, y0: p.cy - p.r, x1: p.cx + p.r, y1: p.cy + p.r})}
+function _bbox(p){ return({x0: p.cx - p.r, y0: p.cy - p.r, x1: p.cx + p.r, y1: p.cy + p.r})}
+
 export function polygonTranslate(p, dx, dy){
         const [cx, cy] = translatePoint(p.cx, p.cy, dx, dy);
         return createPolygon({cx:cx, cy:cy, r:p.r, edges:p.edges, delta:p.delta, alfai:p.alfai});
@@ -39,9 +40,6 @@ export function polygonScale(p, x, y, scale){
         const [scx, scy] = scale0(p.cx - x, p.cy - y, scale);
         return createPolygon({cx: scx + x, cy: scy +  y, r:p.r*scale, edges:p.edges, delta:p.delta, alfai:p.alfai});
 }
-    function polygonClone(p) { 
-        return JSON.parse(JSON.stringify(p));
-    }
 export function polygonSymmetryX(p, y){
         return createPolygon({cx:p.cx, cy:2*y - p.cy, r:p.r, edges:p.edges, delta:-p.delta, alfai:-p.alfai});
     }

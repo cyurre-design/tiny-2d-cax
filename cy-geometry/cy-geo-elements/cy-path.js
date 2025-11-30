@@ -1,5 +1,5 @@
 "use strict";
-import {geometryPrecision, distancePointToPoint, checkBbox, blockTranslate, blockRotate, blockScale, blockSymmetryX, blockSymmetryY, blockSymmetryL, blockReverse } from '../cy-geometry-library.js'
+import {checkBbox, blockTranslate, blockRotate, blockScale, blockSymmetryX, blockSymmetryY, blockSymmetryL, blockReverse } from '../cy-geometry-library.js'
 
 //los create deben garantizar que aquí llegan bien los parámetros
 
@@ -60,7 +60,6 @@ export function pathSymmetryY(p, x) {
 export function pathSymmetryL(p, s) {
     return createPath( {elements: p.elements.map(el => blockSymmetryL(el, s))});
     }
-
 export function pathReverse(p) {
     const els = p.elements.map(e => blockReverse(e));
     els.reverse(); //Modifica els in place
@@ -83,19 +82,17 @@ export function pathReverse(p) {
     // }
 
     //métodos exclusivos de path
-export function pathConcat(p1, p2) { //de fin de this a comienzo de path
-        return p1.elements.concat(p2.elements);
-    }
-export function pathAddElements(p, elements){
-        p.elements = p.elements.concat(elements);
-    }
-export function pathClosestEnd(p, point) {
-        if (p.elements[0].type === 'circle') {
-            return Infinity; //estos no forman parte de otros paths
-        }
-
-        let delta1 = sqDistancePointToPoint(point.x, point.y, p.elements[0].pi.x, p.elements[0].pi.y);
-        let delta2 = sqDistancePointToPoint(point.x, point.y, p.elements[p.elements.length - 1].pf.x, p.elements[p.elements.length - 1].pf.y);
-
-        return (delta1 <= delta2) ? {d: delta1, end: 0}: {d: delta2, end: 1};
-    }
+// export function pathConcat(p1, p2) { //de fin de this a comienzo de path
+//         return p1.elements.concat(p2.elements);
+//     }
+// export function pathAddElements(p, elements){
+//         p.elements = p.elements.concat(elements);
+//     }
+// export function pathClosestEnd(p, point) {
+//         if (p.elements[0].type === 'circle') {
+//             return Infinity; //estos no forman parte de otros paths
+//         }
+//         let delta1 = sqDistancePointToPoint(point.x, point.y, p.elements[0].pi.x, p.elements[0].pi.y);
+//         let delta2 = sqDistancePointToPoint(point.x, point.y, p.elements[p.elements.length - 1].pf.x, p.elements[p.elements.length - 1].pf.y);
+//         return (delta1 <= delta2) ? {d: delta1, end: 0}: {d: delta2, end: 1};
+//     }

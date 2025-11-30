@@ -1,5 +1,5 @@
 "use strict";
-import { translatePoint, transformPoint, pointSymmetricSegment, rotateZ , scale0} from '../cy-geometry-library.js'
+import { translatePoint, pointSymmetricSegment, rotateZ , scale0} from '../cy-geometry-library.js'
 
 
 //Por motivos operativos se mantiene una formulación interna optimizada con el vector director y la distancia al origen.
@@ -31,24 +31,6 @@ function segmentCalculate(segment){
 function calculateBbox(segment){
         return({x0: Math.min(segment.x0, segment.x1), y0:Math.min(segment.y0, segment.y1), x1:Math.max(segment.x0, segment.x1), y1:Math.max(segment.y0, segment.y1)})
     }
-    //Para poder tener acceso en modo punto
-    // get pi(){ return ({x:this.x0,y:this.y0})} 
-    // get pf(){ return ({x:this.x1,y:this.y1})} 
-
-    // toJSON(){ //Lo necesario para el constructos, para no llamar a createDraw,
-    //     return {type:"segment", data:{x0:this.x0, y0:this.y0, x1:this.x1, y1: this.y1}};
-    // }
-    // static fromJSON(data){
-    //     return new Segment(data);
-    // }
-
-    //TODO
-    // isEqual(el) {
-    //     return (Math.abs(el.x - this.x) < geometryPrecision && Math.abs(el.y - this.y) < geometryPrecision);
-    // }
-// export function segmentClone(segment) {
-//         return JSON.parse(JSON.stringify(segment));
-//     }
 export function segmentMidpoint(segment){
         return({x: 0.5*(segment.x0 + segment.x1), y: 0.5*(segment.y0 + segment.y1)})
     }
@@ -56,7 +38,6 @@ export function segmentTranslate(segment, dx, dy) {
         let [nx0, ny0] = translatePoint(segment.x0, segment.y0, dx, dy);
         let [nx1, ny1] = translatePoint(segment.x1, segment.y1, dx, dy);
         return createSegment({x0:nx0, y0:ny0, x1:nx1, y1:ny1});
-
     }
 export function segmentSymmetryX(segment, y) {
         return createSegment({x0:segment.x0, y0: 2*y - segment.y0, x1:segment.x1, y1: 2*y - segment.y1});
@@ -64,7 +45,6 @@ export function segmentSymmetryX(segment, y) {
 export function segmentSymmetryY(segment, x) {
         return createSegment({x0: 2*x - segment.x0, y0:segment.y0, x1: 2*x - segment.x1, y1:segment.y1});
     }
-
     //Simetría respecto a un segmento, me deben pasar una clase segmento
 export function segmentSymmetryL(segment, s) {
         let [nx0, ny0] = pointSymmetricSegment(s, segment.x0, segment.y0);

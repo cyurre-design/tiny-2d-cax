@@ -57,10 +57,6 @@ function arcClone(a) {   //un solo nivel de atributos, copio todo
         return createArc(a);
     }
 
-    // isClosed() {
-    //     return(distancePointToPoint(this.x1, this.y1, this.x2, this.y2) < geometryPrecision);
-    // }
-
 export function arcTranslate(a, dx, dy) {
         const [cx, cy] = translatePoint(a.cx, a.cy, dx, dy);
         const [x1, y1] = translatePoint(a.x1, a.y1, dx, dy);
