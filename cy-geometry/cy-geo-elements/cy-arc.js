@@ -66,34 +66,33 @@ export function arcTranslate(a, dx, dy) {
         const [x1, y1] = translatePoint(a.x1, a.y1, dx, dy);
         const [x2, y2] = translatePoint(a.x2, a.y2, dx, dy);
 
-        return createArc(arc2PC2SVG({x:cx, y:cy}, a.r, {x:x1, y:y1}, {x:x2, y:y2}, a.fA===0?'clock':'antiClock'));
+        return createArc(arc2PC2SVG({x:cx, y:cy}, a.r, {x:x1, y:y1}, {x:x2, y:y2}, a.way));
     }
 export function arcRotate(a, x, y, alfa){
         const [tcx, tcy] = rotateZ(a.cx - x, a.cy - y, alfa);
         const [t1x, t1y] = rotateZ(a.x1 - x, a.y1 - y, alfa);
         const [t2x, t2y] = rotateZ(a.x2 - x, a.y2 - y, alfa);
-        return createArc(arc2PC2SVG({x: tcx + x, y: tcy + y}, a.r, {x: t1x + x, y: t1y + y}, {x: t2x + x, y: t2y + y},a.fA===1?'clock':'antiClock'));
+        return createArc(arc2PC2SVG({x: tcx + x, y: tcy + y}, a.r, {x: t1x + x, y: t1y + y}, {x: t2x + x, y: t2y + y}, a.way));
 }
 export function arcScale(a, x, y, scale){
         const [scx, scy] = scale0(a.cx - x, a.cy - y, scale);
         const [s1x, s1y] = scale0(a.x1 - x, a.y1 - y, scale);
         const [s2x, s2y] = scale0(a.x2 - x, a.y2 - y, scale);
-        return createArc(arc2PC2SVG({x: scx + x, y: scy + y}, a.r*scale, {x: s1x + x, y: s1y + y}, {x: s2x + x, y: s2y + y},a.fA===1?'clock':'antiClock'));
+        return createArc(arc2PC2SVG({x: scx + x, y: scy + y}, a.r*scale, {x: s1x + x, y: s1y + y}, {x: s2x + x, y: s2y + y}, a.way));
 }
     //en los simetría doy vuelta a los puntos pi pf
 export function arcSymmetryX(a, y) {
-        return createArc(arc2PC2SVG({x:a.cx, y:2*y - a.cy}, a.r, {x:a.x1, y:2*y - a.y1}, {x:a.x2, y:2*y - a.y2}, (a.fA===1?'clock':'antiClock')));
+        return createArc(arc2PC2SVG({x:a.cx, y:2*y - a.cy}, a.r, {x:a.x1, y:2*y - a.y1}, {x:a.x2, y:2*y - a.y2}, (a.way==='clock'?'antiClock':'clock')));
     }
 export function arcSymmetryY(a, x) {
-        return createArc(arc2PC2SVG({x:2*x - a.cx, y:a.cy}, a.r, {x:2*x - a.x1, y:a.y1}, {x:2*x - a.x2, y:a.y2}, (a.fA===1?'clock':'antiClock')));
+        return createArc(arc2PC2SVG({x:2*x - a.cx, y:a.cy}, a.r, {x:2*x - a.x1, y:a.y1}, {x:2*x - a.x2, y:a.y2}, (a.way==='clock'?'antiClock':'clock')));
     }
 export function arcSymmetryL(a, s) {
         const [cx, cy] = pointSymmetricSegment(s, a.cx, a.cy);
         const [x1, y1] = pointSymmetricSegment(s, a.x1, a.y1);
         const [x2, y2] = pointSymmetricSegment(s, a.x2, a.y2);
-        return createArc(arc2PC2SVG({x:cx, y:cy}, a.r, {x:x1, y:y1}, {x:x2, y:y2}, (a.fA===1?'clock':'antiClock')));
+        return createArc(arc2PC2SVG({x:cx, y:cy}, a.r, {x:x1, y:y1}, {x:x2, y:y2}, (a.way==='clock'?'antiClock':'clock')));
     }
 export function arcReverse(a){
-    return createArc(arc2PC2SVG({x:a.cx, y:a.cy}, a.r, {x:a.x2, y:a.y2}, {x:a.x1, y:a.y1}, (a.fA===1?'antiClock':'clock')));
+    return createArc(arc2PC2SVG({x:a.cx, y:a.cy}, a.r, {x:a.x2, y:a.y2}, {x:a.x1, y:a.y1}, (a.way==='clock'?'antiClock':'clock')));
 }
- 

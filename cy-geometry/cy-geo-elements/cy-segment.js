@@ -46,37 +46,30 @@ function calculateBbox(segment){
     // isEqual(el) {
     //     return (Math.abs(el.x - this.x) < geometryPrecision && Math.abs(el.y - this.y) < geometryPrecision);
     // }
-export function segmentClone(segment) {
-        return JSON.parse(JSON.stringify(segment));
-    }
+// export function segmentClone(segment) {
+//         return JSON.parse(JSON.stringify(segment));
+//     }
 export function segmentMidpoint(segment){
         return({x: 0.5*(segment.x0 + segment.x1), y: 0.5*(segment.y0 + segment.y1)})
     }
 export function segmentTranslate(segment, dx, dy) {
-        const newSegment = segmentClone(segment);
-        [newSegment.x0, newSegment.y0] = translatePoint(segment.x0, segment.y0, dx, dy);
-        [newSegment.x1, newSegment.y1] = translatePoint(segment.x1, segment.y1, dx, dy);
-        return newSegment;
+        let [nx0, ny0] = translatePoint(segment.x0, segment.y0, dx, dy);
+        let [nx1, ny1] = translatePoint(segment.x1, segment.y1, dx, dy);
+        return createSegment({x0:nx0, y0:ny0, x1:nx1, y1:ny1});
+
     }
 export function segmentSymmetryX(segment, y) {
-        const newSegment = segmentClone(segment);
-        newSegment.y0 = 2*y - segment.y0;
-        newSegment.y1 = 2*y - segment.y1;
-        return newSegment;
+        return createSegment({x0:segment.x0, y0: 2*y - segment.y0, x1:segment.x1, y1: 2*y - segment.y1});
     }
 export function segmentSymmetryY(segment, x) {
-        const newSegment = segmentClone(segment);
-        newSegment.x0 = 2*x - segment.x0;
-        newSegment.x1 = 2*x - segment.x1;
-        return newSegment;
+        return createSegment({x0: 2*x - segment.x0, y0:segment.y0, x1: 2*x - segment.x1, y1:segment.y1});
     }
 
     //Simetría respecto a un segmento, me deben pasar una clase segmento
 export function segmentSymmetryL(segment, s) {
-        const newSegment = segmentClone(segment);
-        [newSegment.x0, newSegment.y0] = pointSymmetricSegment(s, segment.x0, segment.y0);
-        [newSegment.x1, newSegment.y1] = pointSymmetricSegment(s, segment.x1, segment.y1);
-        return newSegment;
+        let [nx0, ny0] = pointSymmetricSegment(s, segment.x0, segment.y0);
+        let [nx1, ny1] = pointSymmetricSegment(s, segment.x1, segment.y1);
+        return createSegment({x0:nx0, y0:ny0, x1:nx1, y1:ny1});
     }
 export function segmentRotate(s, x, y, alfa) {
     const [t0x, t0y] = rotateZ(s.x0 - x, s.y0 -y, alfa);
@@ -92,7 +85,3 @@ export function segmentScale(s, x, y, scale) {
 export function segmentReverse(s) {
     return createSegment({x0:s.x1, y0:s.y1, x1:s.x0, y1:s.y0})
     }
-//Función que no exporta ni clona, modifica en el sitio
-function _segmentRotate0(x, y, alfa){
-
-}

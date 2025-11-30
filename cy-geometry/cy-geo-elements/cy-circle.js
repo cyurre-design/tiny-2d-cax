@@ -44,8 +44,9 @@ export function circleSymmetryY(circle, x){
     return createCircle({cx:2*x - circle.cx, cy:circle.cy, x0:2*x - circle.x0, y0:circle.y0, x1:2*x - circle.x1, y1:circle.y1 })
     }
 export function circleSymmetryL(circle, s){
-    const newCircle = circleClone(circle);
-    [newCircle.cx, newCircle.cy] = pointSymmetricSegment(s, circle.cx, circle.cy);
-    [newCircle.x0, newCircle.y0] = [newCircle.cx, newCircle.cy];
-    [newCircle.x1, newCircle.y1] = pointSymmetricSegment(s, circle.x1, circle.y1);
+    //const newCircle = circleClone(circle);
+    let [ncx, ncy] = pointSymmetricSegment(s, circle.cx, circle.cy);
+    let [nx0, ny0] = [ncx, ncy];
+    let [nx1, ny1] = pointSymmetricSegment(s, circle.x1, circle.y1);
+    return createCircle({cx:ncx, cy:ncy, x0:nx0, y0:ny0, x1:nx1, y1:ny1})
     }
