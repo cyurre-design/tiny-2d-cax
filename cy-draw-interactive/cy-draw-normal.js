@@ -1,6 +1,6 @@
 import DrawBasic from './cy-draw-basic.js'
 import { createDrawElement } from '../cy-geometry/cy-geometry-basic-elements.js';
-import {pointProyectedToSegment} from '../cy-geometry/cy-geometry-library.js';
+import {pointProyectedToSegment, cutSegmentToCircle, distancePointToPoint} from '../cy-geometry/cy-geometry-library.js';
 
 export default class DrawNormal extends DrawBasic {
     constructor(layerDraw, submode){
@@ -16,11 +16,16 @@ export default class DrawNormal extends DrawBasic {
     };
     normal = (pi) => {
         if(this.block.type === 'segment'){
-            this.data = Object.assign(this.data,  pointProyectedToSegment(this.block, pi.x, pi.y));
-        } else if(this.block.type === 'arc'){
-        
-        } else if(this.block.type === 'circle'){
-        
+            this.data = Object.assign(this.data,  pointProyectedToSegment(this.block, pi.x, pi.y));        
+        } else if((this.block.type === 'circle') || (this.block.type === 'arc')){
+            const s = createDrawElement('segment',{subType:'PP', x0:this.block.cx, y0:this.block.cy, x1: pi.x, y1:pi.y})
+            const sols = cutSegmentToCircle(s, this.block);
+            let sol;
+            if(distancePointToPoint(sols[0].x, sols[0].y, pi.x, pi.y) > distancePointToPoint(sols[1].x, sols[1].y, pi.x, pi.y))
+                sol = sols[1];
+            else 
+                sol = sols[0]
+            this.data = Object.assign(this.data,  {x0:sol.x, y0:sol.y});
         }
         //el x1,y1 lo pone this.m1
     }

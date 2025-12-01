@@ -16,6 +16,19 @@ import {bezierTranslate, bezierRotate, bezierScale, bezierSymmetryX, bezierSymme
 export const geometryPrecision = 0.0001;
 export const geometryPrecision2 = 0.00000001;
 export const _2PI = 2*Math.PI;
+
+//Es la resolución de ecuaciones cuadráticas, que hay mejor que la del cole
+function _solveq(a, b, c) {
+    let discriminante = (b * b - 4 * a * c);
+    if (fuzzy_eq_zero(discriminante))  return [-b / (2 * a)];
+    if (discriminante < 0) return []; //La sqrt da Nan si es disc < 0
+    discriminante = Math.sqrt(discriminante);
+    let x1 = (b < 0) ? (-b + discriminante) / (2 * a) : (-b - discriminante) / (2 * a);
+    return [x1, c / (a * x1)]; //copiado de libro, es para mejorar los errores de cálculo 
+}
+
+
+
 export function distancePointToPoint(x1, y1, x2, y2) {
     return Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
 }
@@ -29,11 +42,35 @@ export function sqDistancePointToPoint(x1, y1, x2, y2) {
 export function distancePointToSegment(x, y, s) {
     return Math.abs(x * s.uy - y * s.ux + s.c);
 }
-//específica para hacer un punto simétrico respecto a un segmento
-export function pointSymmetricSegment(s, x, y) { //si no se define p, línea con el mismo p0 que la original
+
+//Otra función genérica para calcular corte de dos segmentos que vienen con su punto inicial y final....
+//Lo hacemos en formato ux*x+ux*y+c=0, para líneas infinitas aunque no chequeamos aquí que lo sean.
+export function cutSegmentToSegment(s1, s2) {
+    let discriminante =  s1.uy * s2.ux - s2.uy * s1.ux;
+    if (fuzzy_eq_zero( discriminante )) return []; //EPSILON?
+    return [{x: (-s2.ux * s1.c + s1.ux * s2.c) / discriminante, y: (s1.uy * s2.c - s1.c * s2.uy) / discriminante}];
+}
+
+// Lo hacemos en formato ax+by+c=0 con a*a + b*b = 1
+export function cutSegmentToCircle(s, c) {  // a revisar si es suficiente, me paso en formato infinito, b = -ux y a = uy
+    if (Math.abs(s.uy) >= Math.abs(s.ux)) { //x = my + x0
+        //calculo x despejando y:  x^2*(1+m^2) + 2x*(m*y0-cx-m*cy) + y0^2 - 2*y0*cy + rest
+        let m = s.ux / s.uy;
+        let x0 = -s.c / s.uy;
+        let solutions = _solveq(1 + m * m, 2 * (m * (x0 - c.cx) - c.cy), c.cy * c.cy + (x0 - c.cx) * (x0 - c.cx) - c.r * c.r);
+        return solutions.map(s => ({y: s, x: x0 + m * s}));
+    } else { //y = mx + y0
+        let m = s.uy / s.ux;
+        let y0 = s.c / s.ux;
+        let solutions = _solveq(1 + m * m, 2 * (m * (y0 - c.cy) - c.cx), (y0 - c.cy) * (y0 - c.cy) + c.cx * c.cx - c.r * c.r);
+        return solutions.map(s => ({y: y0 + m * s, x: s}));
+    }
+}
+
+export function pointProyectedToSegment(s, x1, y1) { //si no se define p, línea con el mismo p0 que la original
     //Si s se define mediante uy*x - ux*y + c = 0. 
     //La perpendicular sería ux*x + uy*y + cp = 0 y calculamos cp con el punto que nos dan
-    const cp = - ( s.ux*x +s.uy*y); 
+    const cp = - ( s.ux*x1 +s.uy*y1); 
     //Despejando el punto de corte entre las dos líneas  obtenemos x0,y0 (que puede que no esté en el segmento...)
     //gestiono posibles divisiones por números pequeños
     let x0,y0;
@@ -44,8 +81,27 @@ export function pointSymmetricSegment(s, x, y) { //si no se define p, línea con
         y0 = (s.c*s.ux - cp*s.uy);
         x0 = (s.ux*y0 - s.c)/s.uy;
     }
+    return {x0:x0, y0:y0}
+}
+
+//específica para hacer un punto simétrico respecto a un segmento
+export function pointSymmetricSegment(s, x, y) { //si no se define p, línea con el mismo p0 que la original
+    const proyected = this.pointProyectedToSegment(s, x, y);
+    // //Si s se define mediante uy*x - ux*y + c = 0. 
+    // //La perpendicular sería ux*x + uy*y + cp = 0 y calculamos cp con el punto que nos dan
+    // const cp = - ( s.ux*x +s.uy*y); 
+    // //Despejando el punto de corte entre las dos líneas  obtenemos x0,y0 (que puede que no esté en el segmento...)
+    // //gestiono posibles divisiones por números pequeños
+    // let x0,y0;
+    // if(Math.abs(s.ux) > Math.abs(s.uy) ){
+    //     x0 = -(s.c*s.uy + cp*s.ux);
+    //     y0 = (s.uy*x0 + s.c)/s.ux;
+    // } else {
+    //     y0 = (s.c*s.ux - cp*s.uy);
+    //     x0 = (s.ux*y0 - s.c)/s.uy;
+    // }
     //Y el punto simétrico estará en
-    const xs = 2*x0 - x, ys = 2*y0 - y;
+    const xs = 2*proyected.x0 - x, ys = 2*proyected.y0 - y;
     return ([xs, ys]);
 }
 
