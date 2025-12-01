@@ -1,4 +1,3 @@
-
 //Layers
 import './cy-canvas-layers/cy-canvas-viewer.js';
 import {getSvgPathFromBlocks} from "./cy-canvas-layers/cy-elements-to-canvas.js"
@@ -26,6 +25,7 @@ import DrawSymmetry from "./cy-draw-interactive/cy-draw-symmetry.js"
 import DrawSelection from "./cy-draw-interactive/cy-draw-selection.js"
 import DrawOrigin from "./cy-draw-interactive/cy-draw-origin.js"
 
+import DrawNormal from "./cy-draw-interactive/cy-draw-normal.js"
 import DrawSegment from "./cy-draw-interactive/cy-draw-segment.js"
 import DrawPolygon from "./cy-draw-interactive/cy-draw-polygon.js"
 import DrawCircle from "./cy-draw-interactive/cy-draw-circle.js"
@@ -37,6 +37,7 @@ import {convertDxfToGeometry} from "./parsers/cy-parser-dxf-geometry-objects.js"
 import {isoToGeometry } from "./parsers/cy-parser-iso-geometry.js"
 import {svgToGeometry} from "./parsers/cy-parser-svg.js"
 import {pathsToIso} from "./parsers/cy-parser-geometry-to-iso.js"
+//import "./parsers/image-tracer.js";
 
 const templateMainMenu =`
   <span >
@@ -259,8 +260,6 @@ const style = `
     </style>
 `
 
-
-
 class cyCad1830App extends HTMLElement {
 
   constructor() {
@@ -270,13 +269,11 @@ class cyCad1830App extends HTMLElement {
       this.dom.innerHTML = template + style;
     }
 
-
-
   connectedCallback(){
     this.viewer = this.dom.querySelector("#viewer");
     this.manager =  createCommandManager( this.viewer.layerDraw, this ); // 
 
-    //--------------MENUS
+       //--------------MENUS
     const menus = ['file', 'zoom', /*'select',*/ 'draw', 'support', 'transform', 'settings' ]
     menus.forEach(m => this[m+'MenuEl'] = this.dom.querySelector(`#${m}-menu`));
     menus.forEach(m => {
@@ -363,7 +360,13 @@ class cyCad1830App extends HTMLElement {
       else if(e.action === 'create'){
         const layer = commandLayerCreate(e.layer);    //de momento es siempre undefined por el modo de trabajo
       } else if(e.action === 'delete'){
-        commandLayerDelete(e.layerId);    //de momento es siempre undefined por el modo de trabajo
+        const id = e.layerId;
+        let del = true;
+        if(!this.viewer.layerDraw.layerIsEmpty(id)){
+          del = confirm('the layer is not empty, are you sure ?');
+        }
+        if(del) 
+          commandLayerDelete(id);    //de momento es siempre undefined por el modo de trabajo
       } else if(e.action === 'set-style'){
         commandLayerSetStyle(e.layerId, e.value);
       } else if(e.action === 'active'){
@@ -536,6 +539,11 @@ class cyCad1830App extends HTMLElement {
                   this.viewer.fit();
                   this.viewer.layerDraw.draw();
                 }
+                else if((type === 'png') || (type === 'jpg')){
+                    ImageTracer.imageToSVG("input.png", (svg) => {
+                      console.log(svg);
+                    });
+                  }
                 //const lyId = this.viewer.layerDraw.getActiveLayerId();
                 
               }
@@ -677,7 +685,15 @@ class cyCad1830App extends HTMLElement {
                   // }
                   break;
                 case 'tang':
-                case 'perp': break;
+                case 'perp':
+                  this.drawingApp = new DrawNormal(this.viewer.layerDraw, sub1);
+                  this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
+                  //El attribute es lo que cambia el html !!
+                  this.mData.setAttribute('type','segment'+sub1);
+
+                  this.mData.updateData(this.dataStore.segment);
+                  this.drawingApp.updateData(this.dataStore.segment);
+                  break;
 
             }
         }

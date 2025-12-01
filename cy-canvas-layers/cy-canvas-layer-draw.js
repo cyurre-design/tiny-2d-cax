@@ -290,7 +290,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
 
     getLayer(layerId){ return this.layers.find(ly => ly.lyId === layerId)}
     getActiveLayer(){ return this.layers.find(ly => ly.lyId === this._activeLayerId)}
-
+    layerIsEmpty(layerId){ return (this.getLayer(layerId).blocks.length === 0)}
     /**@todo Los cuts los hago intercapas, así que no llevan layerId */
     //Y por otra parte pertenecen a 2 bloques, ... igual son eternos 
     
