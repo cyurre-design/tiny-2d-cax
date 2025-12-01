@@ -409,6 +409,7 @@ const templates = {
     segmentPXA: templateSegmentPXAInputData,
     segmentPYA: templateSegmentPYAInputData,
     segmentPDA: templateSegmentPDAInputData,
+    segmentNP:  templateSegmentPPInputData,
     arc3P:      templateArc3PInputData,
     arc2PR:     templateArc2PRInputData,
     arcCPA:     templateArcCPAInputData,
