@@ -104,7 +104,24 @@ export function pointSymmetricSegment(s, x, y) { //si no se define p, línea con
     const xs = 2*proyected.x0 - x, ys = 2*proyected.y0 - y;
     return ([xs, ys]);
 }
-
+//línea que pasa por un punto y es tangente a una circunferencia (hay dos)
+//Si el punto está dentro de la circunferencia va a ser que no
+//En realidad no voy a devolver el segmento sino el punto de tangencia
+export function segmentTangentToArc(c, x, y) {
+    if(Math.hypot((x - c.cx), (y - c.cy)) < c.r) return [];
+    let rest = x * c.cx + y * c.cy - c.cx * c.cx - c.cy * c.cy + c.r * c.r;
+    if (Math.abs(c.cx - x) >= Math.abs(c.cy - y)) { //x=my+x0
+        let m = -(c.cy - y) / (c.cx - x);
+        let x0 = -rest / (c.cx - x);
+        let solutions = _solveq(1 + m * m, 2 * (m * (x0 - c.cx) - c.cy), (x0 - c.cx) * (x0 - c.cx) + c.cy * c.cy - c.r * c.r);
+        return solutions.map(s => ({x: x0 + m * s, y: s}));
+    } else { //y = mx+y0
+        let m = -(c.cx - x) / (c.cy - y);
+        let y0 = -rest / (c.cy - y);
+        let solutions = _solveq(1 + m * m, 2 * (m * (y0 - c.cy) - c.cx), c.cx * c.cx + (y0 - c.cy) * (y0 - c.cy) - c.r * c.r);
+        return solutions.map(s => ({x: s, y: y0 + m * s}));
+    }    
+}
 export function areClose(x1, y1, x2, y2, tol) {
     return (((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1) ) < tol * tol);
 }

@@ -27,18 +27,24 @@ export default class DrawNormal extends DrawBasic {
             this.block = b[0];
     };
     //para evitar pasar de status si no hay bloque elegido
-    checkBlockFound = (pi) => { if(this.block) this.status = 1 }
+    checkBlockFound = (pi) => {
+        if(this.block){
+         this.status = 1;
+         this.xa = this.data.x0, this.ya = this.data.y0;    //el sitio donde maomeno ha pinchado
+        }
+    }
     //El mecanismo y pulsaciones para normal y tangentes serían similares, por eso agrupo
     //Las funciones, obviamente, no
     //No hay tangente a un segmento porque es él mismo, para hacer paralelas se usa el translate
     tangent = (pi) => {               
         if((this.block.type === 'circle') || (this.block.type === 'arc')){
             let sol = segmentTangentToArc(this.block, pi.x, pi.y);
-            const x = this.data.x0, y = this.data.y0 ; //el más cercano a donde pinchamos la primera vez...
-            if(distancePointToPoint(sol[0].x, sol[0].y, x, y) > distancePointToPoint(sol[1].x, sol[1].y, x, y))
-                sol = sol[1];
+            if(sol.length < 2) return;
+            console.log(this.xa, this.ya)
+            if(distancePointToPoint(sol[0].x, sol[0].y, this.xa, this.ya) > distancePointToPoint(sol[1].x, sol[1].y, this.xa, this.ya))
+                sol = sol[0];
             else 
-                sol = sol[0]
+                sol = sol[1]
             this.data = Object.assign(this.data,  {x0:sol.x, y0:sol.y}, {x1:pi.x, y1:pi.y});
         }
     }
