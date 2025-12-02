@@ -8,35 +8,40 @@ export default class DrawNormal extends DrawBasic {
         this.block = undefined;
         this.data.subType = 'PP';
         //Secuencias en función del tipo de dibujp
+        //el this.h del final implica borrado, solo se ejecutará una vez porque se pone status a 0 en deleteData
         switch(this.subMode){
-            case 'NP':
+            case 'NP':{
                 this.moveFn = [[this.h, this.hover], [this.m1, this.normal, this.draw]];
-
-            break;
-            case 'TBP':
-            case 'TBB':
-                this.moveFn = [[this.h, this.hover], [this.m1, this.tangent, this.draw]];
-            break;
+                this.clickFn = [[this.m0, this.checkBl], [this.m1, this.newBlock, this.deleteData, this.h]];
+            }break;
+            case 'TPB':{
+                this.moveFn = [[this.h], [this.m1, this.draw, this.hover]];
+                this.clickFn = [[this.p0], [this.tangent, this.newBlock, this.deleteData, this.h]];
+            }break;
+            case 'TBB':{
+                this.moveFn = [[this.h, this.hover], [this.hover, this.tangent2, this.draw]];
+                this.clickFn = [[this.p0], [this.m1, this.tangent, this.newBlock, this.deleteData, this.h]];
+            }break;
         }
     }        
     //mientras mueve sin click, estado 0, miramos si pincha en bloque
-    //y el del click es el bueno
+    //en el click el pi está normalizado a rejilla, así que podría no encontrara el bloque incluso estando encima
+    // del punto del move!!! por eso no se debe usar en esas condiciones
     hover = (pi) => {
-        const b = this.layerDraw.hover(pi.x, pi.y, undefined, false);
-        if(b) 
-            this.block = b[0];
+        const b= this.layerDraw.hover(pi.x, pi.y, undefined, false);
+        console.log(pi, b)
+        this.block = b?b[0]:b;
     };
     //para evitar pasar de status si no hay bloque elegido
-    checkBlockFound = (pi) => {
+    checkBl = (pi) => {
         if(this.block){
          this.status = 1;
-         this.xa = this.data.x0, this.ya = this.data.y0;    //el sitio donde maomeno ha pinchado
         }
     }
     //El mecanismo y pulsaciones para normal y tangentes serían similares, por eso agrupo
     //Las funciones, obviamente, no
     //No hay tangente a un segmento porque es él mismo, para hacer paralelas se usa el translate
-    tangent = (pi) => {               
+    tangent2 = (pi) => {               
         if((this.block.type === 'circle') || (this.block.type === 'arc')){
             let sol = segmentTangentToArc(this.block, pi.x, pi.y);
             if(sol.length < 2) return;
@@ -46,6 +51,17 @@ export default class DrawNormal extends DrawBasic {
             else 
                 sol = sol[1]
             this.data = Object.assign(this.data,  {x0:sol.x, y0:sol.y}, {x1:pi.x, y1:pi.y});
+        }
+    }
+    tangent = (pi) => { 
+        if((this.block.type === 'circle') || (this.block.type === 'arc')){
+            let sol = segmentTangentToArc(this.block, this.data.x0, this.data.y0);
+            if(sol.length < 2) return;
+            if(distancePointToPoint(sol[0].x, sol[0].y, pi.x, pi.y) > distancePointToPoint(sol[1].x, sol[1].y, pi.x, pi.y))
+                sol = sol[1];
+            else 
+                sol = sol[0]
+            this.data = Object.assign(this.data,  {x1:sol.x, y1:sol.y});
         }
     }
     normal = (pi) => {
@@ -69,9 +85,6 @@ export default class DrawNormal extends DrawBasic {
         this.layerDraw.dispatchEvent(new CustomEvent('new-block', {bubbles: true, composed:true, detail:{type:'segment', data:this.data}}));};
     draw = (pi) => {this.hit = 
         this.highLight(pi.x, pi.y, [createDrawElement('segment', this.data )])}       
-    //el this.h del final implica borrado, solo se ejecutará una vez porque se pone status a 0 en deleteData
-    clickFn = [[this.hover, this.checkBlockFound], [this.m1, this.newBlock, this.deleteData, this.h]];
-    moveFn = [[this.h, this.hover], [this.m1, this.normal, this.draw]];
     dataSent = [['data-x0','data-y0'],['data-x0','data-y0', 'data-x1','data-y1'],[]];     
     dataReceived = ['x0','x1','y0','y1'];
     //Las funciones de click y move son las de basic

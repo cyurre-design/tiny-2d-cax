@@ -76,7 +76,7 @@ const templateMainMenu =`
             <md-menu-item id="line-PXA" ><div slot="headline">X+ALFA</div></md-menu-item>
             <md-menu-item id="line-PYA" ><div slot="headline">Y+ALFA</div></md-menu-item>
             <md-menu-item id="line-PDA" ><div slot="headline">D+ALFA</div></md-menu-item>
-            <md-menu-item id="line-TBP" ><div slot="headline">TANG&POINT</div></md-menu-item>
+            <md-menu-item id="line-TPB" ><div slot="headline">TANG&POINT</div></md-menu-item>
             <md-menu-item id="line-TBB" ><div slot="headline">TANG&BLOCK</div></md-menu-item>
             <md-menu-item id="line-NP" ><div slot="headline">PERP</div></md-menu-item>
           </md-menu>
@@ -685,7 +685,7 @@ class cyCad1830App extends HTMLElement {
                   //   this.viewer.interactiveDrawing.updateData({"data-d":undefined});
                   // }
                   break;
-                case 'TBP':
+                case 'TPB':
                 case 'TBB':
                 case 'NP':
                   this.drawingApp = new DrawNormal(this.viewer.layerDraw, sub1);
