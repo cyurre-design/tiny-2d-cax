@@ -122,6 +122,76 @@ export function segmentTangentToArc(c, x, y) {
         return solutions.map(s => ({x: s, y: y0 + m * s}));
     }    
 }
+
+/**
+ * 
+ * @param {Object circle} c0 
+ * @param {Object circle} c1 
+ * @returns Array de solcuiones
+ * En lugar de devolver los objetos, puesto que son degmentos, devuelve parejas de puntos en c0 y c1
+ * Y luego ya elegiremos la mejor solución por cercanía a los puntos de click originales, por ejemplo
+ * No le quita potencia pero elimina complejidad aquí, que solo genera puntos
+ * Las soluciones serian cada una un array de dos elementos, que pueden ser puntos o array de dos cooredanas
+ * eso apenas influye en la complejidad.
+ * Puede haber hasta 4 tangentes, dos interiores y dos exteriores
+ * Y casos degenerados como tener el mismo centro, estar uno completamente incluido en otro
+ * o ser tangentes por dentro o por fuera
+ */
+export function segmentsTangentToCircleAndCircle(c0, c1) {
+    let solutions = [];
+    let xp, yp, res0, res1;
+    let x0, y0, x1, y1;
+    //Si los circulos están uno dentro de otro NO hay tangentes
+    let dcc = distancePointToPoint(c0.cx, c0.cy, c1.cx, c1.cy);
+    let dr = Math.abs(c0.r - c1.r);         //diferencia de radios, valor absoluto
+    if(fuzzy_lt(dcc, dr)) return [];
+    if (dcc >= dr) { //Hay tangentes exteriores por lo menos, aunque igual solo una...
+        //Tangentes exteriores
+        if (fuzzy_eq_zero(dr)) {            //circulos de mismo radio, las tangentes no se cortan sino que son paralelas
+            const r = 0.5*(c0.r + c1.r);      //porque sí
+            const s = r * (c1.cy - c0.cy) / dcc;    //seno y coseno
+            const c = r * (c1.cx - c0.cx) / dcc;
+            //Por un lado
+            x0 = c0.cx + s, y0 = c0.cy - c;
+            x1 = c1.cx + s, y1 = c1.cy - c;
+            solutions.push([{x:x0, y:y0},{x:x1, y:y1}]);
+            //y por el otro
+            x0 = c0.cx - s, y0 = c0.cy + c;
+            x1 = c1.cx - s, y1 = c1.cy + c;
+            solutions.push([{x:x0, y:y0},{x:x1, y:y1}]);
+        } else { //xp,yp es el punto de corte de las tangentes exteriores, que estará a la izquierda o a la derecha de ambos
+            //El caso degenerado es cuando son tangentes
+            xp = (c1.cx * c0.r - c0.cx * c1.r) / (c0.r - c1.r); 
+            yp = (c1.cy * c0.r - c0.cy * c1.r) / (c0.r - c1.r);
+            //con el punto puedo obtener el seno  (vale cualquiera de los circulos)
+            const s = c0.r / Math.hypot((c0.cx - xp), (c0.cy - yp));
+            const c = Math.sqrt(1 - s*s);
+            x0 = c0.cx + c0.r*s; y0 = c0.cy - c0.r*c;
+            x1 = c1.cx + c1.r*s; y1 = c1.cy - c1.r*c;
+            solutions.push([{x:x0, y:y0},{x:x1, y:y1}]);
+            x0 = c0.cx + c0.r*s; y0 = c0.cy + c0.r*c;
+            x1 = c1.cx + c1.r*s; y1 = c1.cy + c1.r*c;
+            solutions.push([{x:x0, y:y0},{x:x1, y:y1}]);
+        }
+    }
+
+    if (dcc >= (c0.r + c1.r)) { //Hay tangentes interiores que se cortan en xp,yp
+        xp = (c1.cx * c0.r + c0.cx * c1.r) / (c0.r + c1.r);
+        yp = (c1.cy * c0.r + c0.cy * c1.r) / (c0.r + c1.r);
+        //con el punto puedo obtener el seno  (vale cualquiera de los circulos)
+        const s = c0.r / Math.hypot((c0.cx - xp), (c0.cy - yp));
+        const c = Math.sqrt(1 - s*s);
+        x0 = c0.cx + c0.r*s; y0 = c0.cy + c0.r*c;
+        x1 = c1.cx - c1.r*s; y1 = c1.cy - c1.r*c;
+        solutions.push([{x:x0, y:y0},{x:x1, y:y1}]);
+        x0 = c0.cx + c0.r*s; y0 = c0.cy - c0.r*c;
+        x1 = c1.cx - c1.r*s; y1 = c1.cy + c1.r*c;
+        solutions.push([{x:x0, y:y0},{x:x1, y:y1}]);
+        }
+
+    return solutions;
+}
+
 export function areClose(x1, y1, x2, y2, tol) {
     return (((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1) ) < tol * tol);
 }

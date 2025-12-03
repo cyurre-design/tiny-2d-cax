@@ -9,12 +9,13 @@ export default class DrawBasic {
         this.mode = mode;
         this.subMode = subMode;
         this.status = 0;    
+        this.enabled = true; //guarda para evitar ejecutar acciones en click, se pone en cada heredera
     }
     /**
      * NO SE DEBEN LLAMAR FUNCIONES SOBRECARGABLES EN EL CONSTRUCTOR
      * porque se llamarán con el this de la clase hija y ANTES del constructor de la clase hija!!!
      */
-    deleteData = () => { this.status = 0;}
+    deleteData = () => { this.status = 0; this.enabled = true}
     //Por defecto, la nomenclatura sería x0,y0 para un primer punto, x1,y1 para un segundo....
     dataSent = [['data-x0','data-y0'],['data-x1','data-y1'],[]];
     dataReceived = ['x0','x1','y0','y1'];
@@ -47,7 +48,7 @@ export default class DrawBasic {
 
     leftClick = (pi, evt) => {
         let p = this.hit || pi;
-        this.clickFn[this.status].forEach(f=>f(p)); //secuencia de acciones
+        this.clickFn[this.status].forEach(f=> { if(this.enabled) f(p)}); //secuencia de acciones
         console.log(this.status)
     };
     mouseMove = (pi) => {
