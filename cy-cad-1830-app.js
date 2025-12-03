@@ -26,6 +26,8 @@ import DrawSelection from "./cy-draw-interactive/cy-draw-selection.js"
 import DrawOrigin from "./cy-draw-interactive/cy-draw-origin.js"
 
 import DrawNormal from "./cy-draw-interactive/cy-draw-normal.js"
+import DrawSegmentPB from "./cy-draw-interactive/cy-draw-segment-PB.js"
+import DrawSegmentBB from "./cy-draw-interactive/cy-draw-segment-BB.js"
 import DrawSegment from "./cy-draw-interactive/cy-draw-segment.js"
 import DrawPolygon from "./cy-draw-interactive/cy-draw-polygon.js"
 import DrawCircle from "./cy-draw-interactive/cy-draw-circle.js"
@@ -686,15 +688,23 @@ class cyCad1830App extends HTMLElement {
                   // }
                   break;
                 case 'TPB':
+                  this.drawingApp = new DrawSegmentPB(this.viewer.layerDraw, sub1);
+                  this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
+                  //El attribute es lo que cambia el html !!
+                  this.mData.setAttribute('type','segment'+sub1);
+                  break;
                 case 'TBB':
+                  this.drawingApp = new DrawSegmentBB(this.viewer.layerDraw, sub1);
+                  this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
+                  //El attribute es lo que cambia el html !!
+                  this.mData.setAttribute('type','segment'+sub1);
+                  break;
                 case 'NP':
                   this.drawingApp = new DrawNormal(this.viewer.layerDraw, sub1);
                   this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
                   //El attribute es lo que cambia el html !!
                   this.mData.setAttribute('type','segment'+sub1);
 
-                  this.mData.updateData(this.dataStore.segment);
-                  this.drawingApp.updateData(this.dataStore.segment);
                   break;
 
             }
