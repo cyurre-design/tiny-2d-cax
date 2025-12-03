@@ -8,18 +8,18 @@ export default class DrawScale extends DrawBasic{
     }
     //Nos valen la mayotía de las funciones del básico, pero no todas
     dataSent = [['data-x0','data-y0'],[]];
-    dataReceived = ['x0','y0','s'];
+    dataReceived = ['x0','y0','sn','sd'];   //numerador y denominador
     //Para memorizar los bloques a rotar
     getBlocks = () => {
         this.blocksToScale = this.layerDraw.getSelectedBlocks();
     }
     //ATTON. los moves no siguen el ratón sino la ventana de intro, por eso se usa el x0,y0 guardado en p0
     move = (pi)=>{ //hemos guardado x0,y0 originales en data en la rutina p0
-        this.hit = this.highLight(pi.x, pi.y, this.blocksToScale.map(b => blockScale(b, this.data.x0, this.data.y0, this.data.s)));
+        this.hit = this.highLight(pi.x, pi.y, this.blocksToScale.map(b => blockScale(b, this.data.x0, this.data.y0, this.data.sn / this.data.sd)));
     }
     scale = (p)=>{
         this.layerDraw.dispatchEvent(new CustomEvent('geometry-transform',
-            {bubbles: true, composed:true, detail:{ command:'scale', data:{x:this.data.x0, y: this.data.y0, s:this.data.s }}}));
+            {bubbles: true, composed:true, detail:{ command:'scale', data:{x:this.data.x0, y: this.data.y0, s:this.data.sn / this.data.sd }}}));
         this.status = 0;    
     };
     clickFn = [[this.p0, this.getBlocks], [this.m1 , this.scale, this.deleteData ]];
@@ -34,7 +34,8 @@ export default class DrawScale extends DrawBasic{
             case 'esc'  : this.status = 0;   break;
             case 'x0'   :
             case 'y0'   : break; //ya se pone en la clase base data
-            case 's'    : this.move({x:this.data.x0 , y:this.data.y0});break;
+            case 'sn'    : 
+            case 'sd'    : this.move({x:this.data.x0 , y:this.data.y0});break;
             }
         })
     }

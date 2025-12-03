@@ -360,8 +360,10 @@ const templateScaleInputData = `
     <md-filled-text-field id="data-x0" label="Xi" class="half" type="number" value="0" step="0.5">
     </md-filled-text-field><md-filled-text-field id="data-y0" label="Yi" class="half" type="number" value="0" step="0.5"></md-filled-text-field>
  </div>
- <md-filled-text-field id="data-s" label="Zoom" class="half" type="number" value="0.5" step="0.1">
+ <md-filled-text-field id="data-sn" label="Zoom Num" class="half" type="number" value="0.5" step="0.1">
+    </md-filled-text-field><md-filled-text-field id="data-sd" label="Zoom Den" class="half" type="number" value="1.0" step="0.1">
     </md-filled-text-field>
+
  <div>
     <md-filled-button class="data _50" id="scale-esc">ESC</md-filled-button>
     <md-filled-button class="data _50" id="scale-enter">ENTER</md-filled-button>
