@@ -313,7 +313,8 @@ class cyCad1830App extends HTMLElement {
           "data-a" : 45
         },
         scale:{
-          "data-s" : 0.5
+          "data-sn" : 50,
+          "data-sd" : 100
         }
       },
       layers:{
@@ -636,8 +637,8 @@ class cyCad1830App extends HTMLElement {
             this.drawingApp = new DrawScale(this.viewer.layerDraw, sub1);
             this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
             this.mData.setAttribute('type','scale');
-            this.drawingApp.updateData(this.dataStore.scale);
-            this.mData.updateData(this.dataStore.scale) 
+            this.drawingApp.updateData(this.dataStore.geometry.scale);
+            this.mData.updateData(this.dataStore.geometry.scale) 
           }
           break;
         case 'translate': {
@@ -650,8 +651,8 @@ class cyCad1830App extends HTMLElement {
             this.drawingApp = new DrawRotate(this.viewer.layerDraw, sub1);
             this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
             this.mData.setAttribute('type','rotate');
-            this.drawingApp.updateData(this.dataStore.rotate);
-            this.mData.updateData(this.dataStore.rotate)  //inicializo, debería ser un setting y luego memorizarse TODO              break;
+            this.drawingApp.updateData(this.dataStore.geometry.rotate);
+            this.mData.updateData(this.dataStore.geometry.rotate)  //inicializo, debería ser un setting y luego memorizarse TODO              break;
             break;
         case 'draw':{
             switch( sub1) {

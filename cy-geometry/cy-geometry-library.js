@@ -86,7 +86,7 @@ export function pointProyectedToSegment(s, x1, y1) { //si no se define p, línea
 
 //específica para hacer un punto simétrico respecto a un segmento
 export function pointSymmetricSegment(s, x, y) { //si no se define p, línea con el mismo p0 que la original
-    const proyected = this.pointProyectedToSegment(s, x, y);
+    const proyected = pointProyectedToSegment(s, x, y);
     // //Si s se define mediante uy*x - ux*y + c = 0. 
     // //La perpendicular sería ux*x + uy*y + cp = 0 y calculamos cp con el punto que nos dan
     // const cp = - ( s.ux*x +s.uy*y); 

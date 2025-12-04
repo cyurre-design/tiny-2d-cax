@@ -340,8 +340,8 @@ const templateTranslateInputData = `
 const templateRotateInputData = `
 <div>
 <div>
-    <md-filled-text-field id="data-x0" label="Xi" class="half" type="number" value="0" step="0.5">
-    </md-filled-text-field><md-filled-text-field id="data-y0" label="Yi" class="half" type="number" value="0" step="0.5"></md-filled-text-field>
+    <md-filled-text-field id="data-x0" label="X0" class="half" type="number" value="0" step="0.5">
+    </md-filled-text-field><md-filled-text-field id="data-y0" label="Y0" class="half" type="number" value="0" step="0.5"></md-filled-text-field>
  </div>
  <cy-angle-data id="data-a" data-a="0" class="data"></cy-angle-data>
  <div>
@@ -355,8 +355,8 @@ const templateScaleInputData = `
     <md-filled-text-field id="data-x0" label="Xi" class="half" type="number" value="0" step="0.5">
     </md-filled-text-field><md-filled-text-field id="data-y0" label="Yi" class="half" type="number" value="0" step="0.5"></md-filled-text-field>
  </div>
- <md-filled-text-field id="data-sn" label="Zoom Num" class="half" type="number" value="0.5" step="0.1">
-    </md-filled-text-field><md-filled-text-field id="data-sd" label="Zoom Den" class="half" type="number" value="1.0" step="0.1">
+ <md-filled-text-field id="data-sn" label="Zoom Num" class="half" type="number" value="50" step="1">
+    </md-filled-text-field><md-filled-text-field id="data-sd" label="Zoom Den" class="half" type="number" value="100" step="1">
     </md-filled-text-field>
 
  <div>

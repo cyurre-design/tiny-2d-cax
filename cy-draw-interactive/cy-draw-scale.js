@@ -6,13 +6,14 @@ export default class DrawScale extends DrawBasic{
         super(layerDraw, 'scale', subMode);
         this.blocksToScale = [];
         this.moveFn = [[this.h], [this.move]];
-        this.clickFn = [[this.p0, this.getBlocks], [this.m1 , this.scale, this.deleteData ]];
+        this.clickFn = [[this.m0, this.getBlocks, this.move], []];
         this.dataSent = [['x0','y0'],[]];
         this.dataReceived = ['x0','y0','sn','sd'];   //numerador y denominador
     }
     //Para memorizar los bloques a rotar
     getBlocks = () => {
         this.blocksToScale = this.layerDraw.getSelectedBlocks();
+        if(this.blocksToScale.length > 0) this.status = 1;
     }
     //ATTON. los moves no siguen el ratón sino la ventana de intro, por eso se usa el x0,y0 guardado en p0
     move = (pi)=>{ //hemos guardado x0,y0 originales en data en la rutina p0
@@ -23,14 +24,14 @@ export default class DrawScale extends DrawBasic{
             {bubbles: true, composed:true, detail:{ command:'scale', data:{x:this.data.x0, y: this.data.y0, s:this.data.sn / this.data.sd }}}));
         this.status = 0;    
     };
-
+    deleteData = () => this.deleteDataBasic(['x0','y0'])
     updateData = (data) => {
         if(!data) return;
         const newData = this.updateDataBasic(data);
         newData.forEach(d => {  //no esperamos más que una pulsación...pero si viene la s se atiende aquí
         switch(d.idn){
-            case 'enter': this.scale(); this.status=0; this.move({x:this.data.x0 , y:this.data.y0});break;
-            case 'esc'  : this.status = 0;   break;
+            case 'enter': this.scale(); this.deleteData(); this.move({x:this.data.x0 , y:this.data.y0}); this.clear(); break;
+            case 'esc'  : this.status = 0;   this.clear(); break;
             case 'x0'   :
             case 'y0'   : break; //ya se pone en la clase base data
             case 'sn'    : 
