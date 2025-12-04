@@ -5,10 +5,11 @@ export default class DrawScale extends DrawBasic{
     constructor(layerDraw, subMode){
         super(layerDraw, 'scale', subMode);
         this.blocksToScale = [];
+        this.moveFn = [[this.h], [this.move]];
+        this.clickFn = [[this.p0, this.getBlocks], [this.m1 , this.scale, this.deleteData ]];
+        this.dataSent = [['x0','y0'],[]];
+        this.dataReceived = ['x0','y0','sn','sd'];   //numerador y denominador
     }
-    //Nos valen la mayotía de las funciones del básico, pero no todas
-    dataSent = [['data-x0','data-y0'],[]];
-    dataReceived = ['x0','y0','sn','sd'];   //numerador y denominador
     //Para memorizar los bloques a rotar
     getBlocks = () => {
         this.blocksToScale = this.layerDraw.getSelectedBlocks();
@@ -22,12 +23,10 @@ export default class DrawScale extends DrawBasic{
             {bubbles: true, composed:true, detail:{ command:'scale', data:{x:this.data.x0, y: this.data.y0, s:this.data.sn / this.data.sd }}}));
         this.status = 0;    
     };
-    clickFn = [[this.p0, this.getBlocks], [this.m1 , this.scale, this.deleteData ]];
-    moveFn = [[this.h], [this.move]];
 
-    updateData(data){
+    updateData = (data) => {
         if(!data) return;
-        const newData = super.updateData(data);
+        const newData = this.updateDataBasic(data);
         newData.forEach(d => {  //no esperamos más que una pulsación...pero si viene la s se atiende aquí
         switch(d.idn){
             case 'enter': this.scale(); this.status=0; this.move({x:this.data.x0 , y:this.data.y0});break;
@@ -39,5 +38,4 @@ export default class DrawScale extends DrawBasic{
             }
         })
     }
-
 }

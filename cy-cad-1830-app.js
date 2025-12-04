@@ -676,8 +676,8 @@ class cyCad1830App extends HTMLElement {
                   //El attribute es lo que cambia el html !!
                   this.mData.setAttribute('type','segment'+sub1);
 
-                  this.mData.updateData(this.dataStore.segment);
-                  this.drawingApp.updateData(this.dataStore.segment);
+                  this.mData.updateData(this.dataStore.geometry.segment);
+                  this.drawingApp.updateData(this.dataStore.geometry.segment);
 
                   // if((sub1 === 'PDA') || (sub1 === 'YH') || (sub1 === 'XV')){
                   //   this.mData.update({idn:['data-d'], pos:{x:this.dataStore.segment.d}});
@@ -723,8 +723,8 @@ class cyCad1830App extends HTMLElement {
               
           }
           this.mData.setAttribute('type','circle'+sub1);
-          this.drawingApp.updateData(this.dataStore.circle);
-          this.mData.updateData(this.dataStore.circle);
+          this.drawingApp.updateData(this.dataStore.geometry.circle);
+          this.mData.updateData(this.dataStore.geometry.circle);
         }
         break;
         case 'arc' :{
@@ -738,8 +738,8 @@ class cyCad1830App extends HTMLElement {
                   break;
             }
           this.mData.setAttribute('type','arc'+sub1);
-          this.drawingApp.updateData(this.dataStore.arc);
-          this.mData.updateData(this.dataStore.arc);
+          this.drawingApp.updateData(this.dataStore.geometry.arc);
+          this.mData.updateData(this.dataStore.geometry.arc);
         }
         break;
         case 'path':{
@@ -755,8 +755,8 @@ class cyCad1830App extends HTMLElement {
           this.drawingApp = new DrawPolygon(this.viewer.layerDraw, sub1)
           this.viewer.interactiveDrawing.setDrawingMode( this.drawingApp);
           this.mData.setAttribute('type','poly'+sub1);
-          this.drawingApp.updateData(this.dataStore.poly);
-          this.mData.updateData(this.dataStore.poly)  //inicializo, debería ser un setting y luego memorizarse TODO
+          this.drawingApp.updateData(this.dataStore.geometry.poly);
+          this.mData.updateData(this.dataStore.geometry.poly)  //inicializo, debería ser un setting y luego memorizarse TODO
         }
         break;
         default:break;

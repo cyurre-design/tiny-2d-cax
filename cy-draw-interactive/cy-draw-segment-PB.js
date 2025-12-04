@@ -7,7 +7,10 @@ export default class DrawSegmentPB extends DrawBasic {
         super(layerDraw, 'segment-TPB', submode);
         this.block = undefined;
         this.data.subType = 'PP';   //para el segmento interactivo
-        }
+        this.moveFn         = [[this.h], [this.m1, this.draw, this.hover]];
+        this.clickFn        = [[this.p0], [this.tangent, this.newBlock, this.deleteData, this.clear]];
+        this.dataSent       = [['data-x0','data-y0'],[],[]];     
+        this.dataReceived   = ['x0','y0'];        }
     //mientras mueve sin click, estado 0, miramos si pincha en bloque
     //en el click el pi está normalizado a rejilla, así que podría no encontrara el bloque incluso estando encima
     // del punto del move!!! por eso no se debe usar en esas condiciones
@@ -30,13 +33,13 @@ export default class DrawSegmentPB extends DrawBasic {
         this.data = Object.assign(this.data,  {x1:sol.x, y1:sol.y});
     }
     //hay muchas cosas del basic que sirven aquí
-    deleteData = () => {['x0','y0'].forEach(k => delete this.data[k]); this.block = undefined; this.status = 0;};
+    deleteData = () => {
+        this.deleteDataBasic(['x0','y0']);
+        this.block = undefined;
+    }
+    updateData = (data) => this.updateDataBasic(data);
     newBlock = (p) => {
         this.layerDraw.dispatchEvent(new CustomEvent('new-block', {bubbles: true, composed:true, detail:{type:'segment', data:this.data}}));};
     draw = (pi) => {this.hit = 
         this.highLight(pi.x, pi.y, [createDrawElement('segment', this.data )])}       
-    moveFn = [[this.h], [this.m1, this.draw, this.hover]];
-    clickFn = [[this.p0], [this.tangent, this.newBlock, this.deleteData, this.clear]];
-    dataSent = [['data-x0','data-y0'],[],[]];     
-    dataReceived = ['x0','y0'];
     }

@@ -4,6 +4,10 @@ import DrawBasic from './cy-draw-basic.js'
 export default class DrawTranslate extends DrawBasic{
     constructor(layerDraw, subMode){
         super(layerDraw, 'translate', subMode);
+        this.moveFn         = [[this.h], [this.h, this.move], []];
+        this.clickFn        = [[this.p0, this.getBlocks], [this.m1 , this.translate, this.deleteData ]];
+        this.dataSent       = [['x0','y0'],['x1','y1']]
+        this.dataReceived   = [['x0','y0','x1','y1']]
     }
     //Nos valen la mayotía de las funciones del básico
  
@@ -16,11 +20,9 @@ export default class DrawTranslate extends DrawBasic{
             {bubbles: true, composed:true, detail:{ command:'translate', data:{dx:this.hit.x - this.data.x0, dy: this.hit.y - this.data.y0}}}));
         this.status = 0;    
     };
-    clickFn = [[this.p0, this.getBlocks], [this.m1 , this.translate, this.deleteData ]];
-    moveFn = [[this.h], [this.h, this.move], []];
 
-    updateData(data){
-        const newData = super.updateData(data);
+    updateData = (data) => {
+        const newData = this.updateDataBasic(data);
         const idn = newData[0].idn;  //no esperamos más que una pulsación...
         switch(idn){
             case 'enter': this.translate(); this.status=0; move({x:this.data.x1 , y:this.data.y1});break;

@@ -7,10 +7,6 @@ export default class DrawPath extends DrawBasic{
         this.data = {subType:'PP'};
         this.thePath = createDrawElement('path', this.data ); 
     }
-    deleteData(){
-        super.deleteData(),
-        this.thePath.elements = [];
-    }
 
     pop = () => this.thePath.elements.pop();
     newSegment = (p) => {this.thePath.elements.push(createDrawElement('segment', this.data))}
@@ -44,8 +40,14 @@ export default class DrawPath extends DrawBasic{
     //El move es más sencillo, el pop seguido del new modifica el último tramo del path, que es lo que estamos dibujando
     moveFn = [[this.h], [this.h, this.m1, this.pop, this.newSegment, this.draw]];
 
-    updateData(data)  {
-        const newData = super.updateData(data);
+    deleteData = () => {
+        this.deleteDataBasic(),
+        this.thePath.elements = [];
+        this.clear();
+    }
+
+    updateData = (data) =>  {
+        const newData = this.updateDataBasic(data);
         const idn = newData[0].idn;  //no esperamos más que una pulsación...
         switch(idn){
             case 'back' : this.back();  break;

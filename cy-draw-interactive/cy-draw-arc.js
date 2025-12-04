@@ -5,29 +5,47 @@ export default class DrawArc extends DrawBasic{
     constructor(layerDraw, mode) {
         super(layerDraw, 'arc', mode); //podríamos usarlo para vértice o lado...
         switch(mode){
-            case '3P':  this.clickFn = [[this.p0], [this.pm], [this.m1, this.newBlock, this.deleteData]]; break;
-            case 'CPA': this.clickFn = [[this.p0], [this.m1, this.newBlock, this.deleteData]]; break;
-            case '2PR': this.clickFn = [[this.p0], [this.m1, this.newBlock, this.deleteData]]; break;
-            case '2PC': this.clickFn = [[this.p0], [pm],[this.m1, this.newBlock, this.deleteData]]; break;
-        }
-        //Secuencias en función del tipo de dibujp
-        switch(mode){
-            case '3P': this.moveFn = [[this.h], [this.mm, this.draw], [this.m1, this.draw]]; break;
-            case 'CPA': this.moveFn = [[this.h], [this.m1, this.draw]]; break;
-            case '2PR': this.moveFn = [[this.h], [this.m1, this.draw]]; break;
-            case '2PC': this.moveFn = [[this.h],[this.mm, this.draw], [this.m1, this.newBlock, this.draw]]; break;
+            case '3P':  {
+                this.moveFn = [[this.h], [this.mm, this.draw], [this.m1, this.draw]];
+                this.clickFn = [[this.p0], [this.pm], [this.m1, this.newBlock, this.deleteData]];
+                this.dataSent = [['x0','y0'],['xm','ym'],['x1','y1']];
+                this.dataReceived = ['x0','x1','x2','y0','y1','y2','r','a'];
+            } break;
+            case 'CPA': {
+                this.moveFn = [[this.h], [this.m1, this.draw]];
+                this.clickFn = [[this.p0], [this.m1, this.newBlock, this.deleteData]];
+                this.dataSent = [['x0','y0'],['xm','ym']];
+                this.dataReceived = ['x0','xm','y0','ym','a'];
+             } break;
+            case '2PR': {
+                this.moveFn = [[this.h], [this.m1, this.draw]];
+                this.clickFn = [[this.p0], [this.m1, this.newBlock, this.deleteData]];
+                this.dataSent = [['x0','y0'],['x1','y1']];
+                this.dataReceived = ['x0','x1','y0','y1','r'];
+             } break;
+            case '2PC': {
+                this.moveFn = [[this.h],[this.mm, this.draw], [this.m1, this.newBlock, this.draw]];
+                this.clickFn = [[this.p0], [pm],[this.m1, this.newBlock, this.deleteData]];
+                this.dataSent = [['x0','y0'],['xm','ym'],['x1','y1']];
+                this.dataReceived = ['x0','x1','xm','y0','y1','ym'];
+             } break;
         }
     }
     data = {subType:this.subMode};
-    deleteData = () => {['x0','x1','xm','y0','y1','ym'].forEach(k => delete this.data[k]); this.status = 0;};
+    //No hay que borrar lo que no se interacciona con el ratón porque no habría evento si no se da al control
+    //y perderíamos el valor
+    deleteData = () => {
+        this.deleteDataBasic(['x0','x1','xm','y0','y1','ym']);
+        //.forEach(k => delete this.data[k]);
+    }
+    updateData = (data)=>this.updateDataBasic(data);
     pm = (p) => {this.data.xm = p.x; this.data.ym = p.y; this.status = 2;};
     newBlock = (p) => {
         this.layerDraw.dispatchEvent(new CustomEvent('new-block', {bubbles: true, composed:true, detail:{type:'arc', data:this.data}}));};
     //Estas son para el move. p0 y m0 se parecen, pero las move no cambian status, se pueden retocar, pero así están separadas
     mm = (pi) => {this.data.xm = pi.x, this.data.ym = pi.y;};
     //Atención al paso por valor y no referencia porque createdraw usa el objeyo para rellenar campos!!!
-    draw = (pi) => {this.hit = this.highLight(pi.x, pi.y, createDrawElement('arc', Object.assign({},this.data) ))}
+    draw = (pi) => {
+        this.hit = this.highLight(pi.x, pi.y, createDrawElement('arc', Object.assign({},this.data) ))}
     //Y lo que se manda a input-data de posicines del cursor igual
-    dataSent = [['data-x0','data-y0'],['data-xm','data-ym'],['data-x1','data-y1']];
-    dataReceived = ['x0','x1','x2','y0','y1','y2','r','a'];
     }

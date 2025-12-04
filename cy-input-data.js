@@ -4,6 +4,7 @@ class CyAngleData extends HTMLElement {
     constructor() {
         super();
         this.dom = this.attachShadow({mode:'open'});
+        this.alfa = 45; //just-in-case
     }
 
     createStyle() {
@@ -192,12 +193,8 @@ const templatePolyRInputData = `
  </span>
  <span>
  <!--md-slider step="1" ticks min="3" max="12"></md-slider-->
- <md-filled-text-field id="data-edges" label="N EDGES" class="half" type="number" value="4" min="3" max="12" step="1"></md-filled-text-field>
- <md-filled-select id=data-subType class="half">
-  <md-select-option value="R"  selected><div slot="headline">Radius</div></md-select-option>
-  <md-select-option value="H"><div slot="headline">Edge</div></md-select-option>
-</md-filled-select>
-
+ <md-filled-text-field id="data-edges" label="N EDGES" class="_33" type="number" value="4" min="3" max="12" step="1"></md-filled-text-field>
+ <span>EDGE<md-switch slot="end" selected id="data-vertex?"></md-switch>VERTEX</span>
  </span>
  </div>
 `    
@@ -237,7 +234,6 @@ const templateSegmentPYAInputData = `
     </md-filled-text-field>
  </span>
  <span>
-    <!--md-filled-text-field id="data-a" label="ALFA" class="half" type="number" value="45" min="-90" max="90" step="1"></md-filled-text-field-->
     <cy-angle-data id="data-a" class="data"></cy-angle-data>;
  </span>
  </div>
@@ -251,7 +247,6 @@ const templateSegmentPDAInputData = `
     </md-filled-text-field>
  </span>
  <span>
-    <!--md-filled-text-field id="data-a" label="ALFA" class="half" type="number" value="45" min="-90" max="90" step="1"></md-filled-text-field-->
     <cy-angle-data id="data-a" class="data"></cy-angle-data>;
  </span>
  </div>
@@ -497,7 +492,7 @@ export default class CyInputData extends HTMLElement {
     // data-xx es el nombre publico entre ambos controles 
     /**@todo generalizar? */
     update(data){
-        const [ix,iy] = data.idn; //array de dos asciis, ej: data-x0 y data-y0
+        const [ix,iy] = data.idn.map(k => 'data-' + k); //array de dos asciis, ej: data-x0 y data-y0
         if(this.inputs[ix]){
             const v = this.format(+data.pos.x);
             this.inputs[ix].value = v;
@@ -514,8 +509,9 @@ export default class CyInputData extends HTMLElement {
     updateData= (data)=>{
         if(!data) return;
         Object.keys(data).forEach(k =>{
-            if(this.keys.includes(k))
+            if(this.keys.includes( k))
                 this.inputs[k].value = data[k];
+                this.data[k] =  data[k];
             });
     }
 

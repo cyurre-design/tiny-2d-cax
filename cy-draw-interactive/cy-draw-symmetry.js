@@ -5,17 +5,28 @@ export default class DrawSymmetry extends DrawBasic{
     constructor(layerDraw, mode) {
         super(layerDraw, 'symmetry', mode);
         this.data = {subType:mode};    
-        //Secuencias en función del tipo de dibujp
-        if(mode === 'X' || mode === 'Y'){
-            this.moveFn = [[this.drawAxis]];
-            this.clickFn = [[this.symmetryXY]]
-        } else {
-            this.moveFn = [[this.hover]];
-            this.clickFn = [[this.symmetryL]]
+        //Secuencias en función del tipo de dibujo
+        switch(mode){
+            case 'X':{
+                this.moveFn         = [[this.drawAxis]];
+                this.clickFn        = [[this.symmetryXY]]
+                this.dataSent       = [['x0','y0']];
+                this.dataReceived   = ['y0'];
+            } break;
+            case 'Y':{
+                this.moveFn         = [[this.drawAxis]];
+                this.clickFn        = [[this.symmetryXY]]
+                this.dataSent       = [['x0','y0']];
+                this.dataReceived   = ['x0'];
+            } break;
+            case 'L':{
+                this.moveFn         = [[this.hover]];
+                this.clickFn        = [[this.symmetryL]];
+                this.dataSent       = [['data-x0','data-y0']];
+                this.dataReceived   = [];
+            }
         }
-        this.dataReceived = mode === 'X' ? ['y0'] : mode === 'Y' ? ['x0'] : [];
     }
-    dataSent = [['data-x0','data-y0']];
 //      deleteData = () => {['x0','y0'].forEach(k => delete this.data[k]); this.status = 0;};
         //simetría en X o Y, ayudamos pintando un eje
     drawAxis = (pi) => {
@@ -43,5 +54,5 @@ export default class DrawSymmetry extends DrawBasic{
     symmetryXY = (pi) => { this.layerDraw.dispatchEvent(new CustomEvent('geometry-transform', {bubbles: true, composed:true,
                                             detail:{ command:'symmetry', mode:this.subMode, data:{x0:this.hit.x, y0:this.hit.y}}}));};
         //Y lo que se manda a input-data de posicines del cursor igual (mando las dos aunque solo se pinta la que toca)
-
+    updateData = (data) => this.updateDataBasic(data);
     }

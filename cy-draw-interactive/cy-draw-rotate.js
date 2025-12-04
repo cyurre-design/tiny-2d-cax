@@ -5,10 +5,11 @@ export default class DrawRotate extends DrawBasic{
     constructor(layerDraw, subMode){
         super(layerDraw, 'rotate', subMode);
         this.blocksToRotate = [];
+        this.moveFn         = [[this.h], [this.move]];
+        this.clickFn        = [[this.p0, this.getBlocks], [this.m1 , this.rotate, this.deleteData ]];
+        this.dataSent       = [['data-x0','data-y0'],[]];
+        this.dataReceived   = ['x0','y0','a'];
     }
-    //Nos valen la mayotía de las funciones del básico, pero no todas
-    dataSent = [['data-x0','data-y0'],[]];
-    dataReceived = ['x0','y0','a'];
     //Para memorizar los bloques a rotar
     getBlocks = () => {
         this.blocksToRotate = this.layerDraw.getSelectedBlocks();
@@ -22,19 +23,16 @@ export default class DrawRotate extends DrawBasic{
             {bubbles: true, composed:true, detail:{ command:'rotate', data:{x:this.data.x0, y: this.data.y0, a:this.data.a * Math.PI / 180 }}}));
         this.status = 0;    
     };
-    clickFn = [[this.p0, this.getBlocks], [this.m1 , this.rotate, this.deleteData ]];
-    moveFn = [[this.h], [this.move]];
-
-    updateData(data){
-        const newData = super.updateData(data);
+    deleteData = () => this.deleteDataBasic(['x0','y0','a']);
+    updateData = (data) => {
+        const newData = this.updateDataBasic(data);
         const idn = newData[0].idn;  //no esperamos más que una pulsación...
         switch(idn){
             case 'enter': this.rotate(); this.status=0; this.move({x:this.data.x0 , y:this.data.y0});break;
             case 'esc'  : this.status = 0;   break;
             case 'x0'   :
             case 'y0'   : this.p0({x:this.data.x0 , y:this.data.y0});break;
-            case 'a' : this.move({x:this.data.x0 , y:this.data.y0});break;
+            case 'a'    : this.move({x:this.data.x0 , y:this.data.y0});break;
         }
     }
-
 }

@@ -8,6 +8,10 @@ export default class DrawSegmentBB extends DrawBasic {
         this.block = undefined;
         this.blant = undefined;
         this.data.subType = 'PP';
+        this.moveFn         = [[this.hover], [this.m1, this.draw, this.hover]];
+        this.clickFn        = [[this.m0, this.save], [this.m1, this.tangentb, this.newBlock, this.deleteData, this.clear]];
+        this.dataSent       = [[],[],[]];     
+        this.dataReceived   = [];
     }        
     //mientras mueve sin click, estado 0, miramos si pincha en bloque
     //en el click el pi está normalizado a rejilla, así que podría no encontrara el bloque incluso estando encima
@@ -46,17 +50,13 @@ export default class DrawSegmentBB extends DrawBasic {
         this.data = Object.assign(this.data,  {x0:sol[0].x, y0:sol[0].y}, {x1:sol[1].x, y1:sol[1].y});
     }
     //Borrado para poder seguir con el comando
-    deleteData = () => {['x0','x1','y0','y1'].forEach(k => delete this.data[k]); 
-        this.block = undefined; this.blant = undefined; this.hit = undefined; this.status = 0;};
+    deleteData = () => {
+        this.deleteDataBasic(['x0','x1','y0','y1']);
+        this.block = undefined; this.blant = undefined; this.hit = undefined;
+    };
+    updateData = (data) => this.updateDataBasic(data);
     newBlock = (p) => {
         this.layerDraw.dispatchEvent(new CustomEvent('new-block', {bubbles: true, composed:true, detail:{type:'segment', data:this.data}}));};
     draw = (pi) => {this.hit = 
         this.highLight(pi.x, pi.y, [createDrawElement('segment', this.data )])}       
-    //Secuencias en función del tipo de dibujp
-    //el this.h del final implica borrado, solo se ejecutará una vez porque se pone status a 0 en deleteData
-    moveFn = [[this.hover], [this.m1, this.draw, this.hover]];
-    clickFn = [[this.m0, this.save], [this.m1, this.tangentb, this.newBlock, this.deleteData, this.clear]];
-    dataSent = [[],[],[]];     
-    dataReceived = [];
-    //Las funciones de click y move son las de basic
     }

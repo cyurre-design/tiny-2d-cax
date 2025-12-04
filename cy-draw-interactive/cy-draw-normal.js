@@ -1,8 +1,6 @@
 import DrawBasic from './cy-draw-basic.js'
 import { createDrawElement } from '../cy-geometry/cy-geometry-basic-elements.js';
-import {pointProyectedToSegment, cutSegmentToCircle,segmentTangentToArc, distancePointToPoint,
-        segmentsTangentToCircleAndCircle
-                } from '../cy-geometry/cy-geometry-library.js';
+import {pointProyectedToSegment, cutSegmentToCircle, distancePointToPoint } from '../cy-geometry/cy-geometry-library.js';
 
 export default class DrawNormal extends DrawBasic {
     constructor(layerDraw, submode){
@@ -11,6 +9,10 @@ export default class DrawNormal extends DrawBasic {
         this.data.subType = 'PP';
         //Secuencias en función del tipo de dibujp
         //el this.h del final implica borrado, solo se ejecutará una vez porque se pone status a 0 en deleteData
+        this.moveFn = [[this.h, this.hover], [this.m1, this.normal, this.draw]];
+        this.clickFn = [[this.p0], [this.m1, this.newBlock, this.deleteData, this.h]];    
+        this.dataSent = [['x0','y0'],[],[]];     
+        this.dataReceived = ['x0','y0'];
     }        
     //mientras mueve sin click, estado 0, miramos si pincha en bloque
     //en el click el pi está normalizado a rejilla, así que podría no encontrara el bloque incluso estando encima
@@ -36,14 +38,13 @@ export default class DrawNormal extends DrawBasic {
         //el x1,y1 lo pone this.m1
     }
     //hay muchas cosas del basic que sirven aquí
-    deleteData = () => {['x0','x1','y0','y1'].forEach(k => delete this.data[k]); this.block = undefined; this.status = 0;};
+    deleteData = () => {
+        this.deleteDataBasic(['x0','x1','y0','y1']); this.block = undefined;};
+    updateData = (data) => 
+        this.updateDataBasic(data);
     newBlock = (p) => {
         this.layerDraw.dispatchEvent(new CustomEvent('new-block', {bubbles: true, composed:true, detail:{type:'segment', data:this.data}}));};
     draw = (pi) => {this.hit = 
-        this.highLight(pi.x, pi.y, [createDrawElement('segment', this.data )])}   
-    
-    moveFn = [[this.h, this.hover], [this.m1, this.normal, this.draw]];
-    clickFn = [[this.p0], [this.m1, this.newBlock, this.deleteData, this.h]];    
-    dataSent = [['data-x0','data-y0'],[],[]];     
-    dataReceived = ['x0','y0'];
-    }
+        this.highLight(pi.x, pi.y, [createDrawElement('segment', this.data )])
+    }   
+}

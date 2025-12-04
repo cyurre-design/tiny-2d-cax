@@ -6,6 +6,10 @@ export default class DrawSelection extends DrawBasic{
         super(layerDraw, 'select', mode);
 
         this.data = {subType:mode};
+        this.moveFn         = [[this.m0, this.move, this.hover], [this.m1, this.draw]];
+        this.clickFn        = [[this.m0, this.select], [this.m1, this.selectBlocks, this.deleteData, this.clear]];
+        this.dataSent       = [['x0','y0'],['x1','y1']];
+        this.dataReceived   = ['x0','y0','x1','y1'];
     }
     //mientras mueve sin click, estado 0, miramos si pincha en bloque
     hover = (pi) => {
@@ -31,13 +35,8 @@ export default class DrawSelection extends DrawBasic{
         this.layerDraw.hover(p.x, p.y, bbox, true);
     }
 
-    //Y lo que se manda a input-data de posicines del cursor igual
-    //dataSent = [['data-x0','data-y0'],['data-x1','data-y1']];
-    clickFn = [[this.m0, this.select], [this.m1, this.selectBlocks, this.deleteData, this.clear]];
-    moveFn = [[this.m0, this.move, this.hover], [this.m1, this.draw]];
-
-    updateData(data)  {
-        const newData = super.updateData(data);
+    updateData = (data) => {
+        const newData = this.updateDataBasic(data);
         const idn = newData[0].idn;  //no esperamos más que una pulsación...
         switch(idn){
             case 'x0'   :
