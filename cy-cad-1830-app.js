@@ -33,6 +33,7 @@ import DrawPolygon from "./cy-draw-interactive/cy-draw-polygon.js"
 import DrawCircle from "./cy-draw-interactive/cy-draw-circle.js"
 import DrawArc from "./cy-draw-interactive/cy-draw-arc.js"
 import DrawPath from "./cy-draw-interactive/cy-draw-path.js"
+import DrawGcode from "./cy-draw-interactive/cy-draw-gcode.js"
 
 //Parsers
 import {convertDxfToGeometry} from "./parsers/cy-parser-dxf-geometry-objects.js"
@@ -104,8 +105,8 @@ const templateMainMenu =`
         </md-sub-menu>
         
         <md-menu-item id="path" ><div slot="headline">PATH</div></md-menu-item>
-        <md-menu-item id="poly-H"><div slot="headline">POLYGON</div></md-menu-item>
-        <md-menu-item id="elipse" ><div slot="headline">ELIPSE</div></md-menu-item>
+        <md-menu-item id="poly"><div slot="headline">POLYGON</div></md-menu-item>
+        <md-menu-item id="gcode" ><div slot="headline">GCODE</div></md-menu-item>
         <md-menu-item id="biarc" ><div slot="headline">BIARC</div></md-menu-item>
     </md-menu>
     <md-filled-button id="transform-menu-anchor">TRANSFORM</md-filled-button>
@@ -760,6 +761,13 @@ class cyCad1830App extends HTMLElement {
           this.mData.updateData(this.dataStore.geometry.poly)  //inicializo, debería ser un setting y luego memorizarse TODO
         }
         break;
+        case 'gcode' : {
+          this.drawingApp = new DrawGcode(this.viewer.layerDraw, '')
+          
+          this.viewer.interactiveDrawing.setDrawingMode( this.drawingApp);          
+          this.mData.setAttribute('type','gcode');
+          this.mData.focus();
+        }
         default:break;
       }
     } 

@@ -391,6 +391,17 @@ const templateSymmetryYInputData = `
 </div>
 `   
 
+const templateGcodeInputData = `
+<div>
+<textarea autofocus contenteditable="plaintext-only" id="iso-input" ></textarea>
+  <div>
+    <md-filled-button class="data _50" id="iso-esc">ESC</md-filled-button>
+    <md-filled-button class="data _50" id="iso-end">END</md-filled-button>
+ </div>
+</div>
+`   
+
+
 const templateNull = ``;
 
 // Para separar un poco identificadores de tipo y templates creo un objeto (o podría ser un Map, etc...)
@@ -421,7 +432,8 @@ const templates = {
     origin:     templateOriginInputData,
     symmetryX:  templateSymmetryXInputData,
     symmetryY:  templateSymmetryYInputData,
-    symmetryL:  templateSymmetryLInputData
+    symmetryL:  templateSymmetryLInputData,
+    gcode:      templateGcodeInputData
 
 }
 export default class CyInputData extends HTMLElement {
