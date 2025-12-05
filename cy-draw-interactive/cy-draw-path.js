@@ -6,6 +6,15 @@ export default class DrawPath extends DrawBasic{
         super(layerDraw, 'path', mode);
         this.data = {subType:'PP'};
         this.thePath = createDrawElement('path', this.data ); 
+        //Secuencias en función del tipo de dibujp, el click es sutil
+        //El move es más sencillo, el pop seguido del new modifica el último tramo del path, que es lo que estamos dibujando
+        this.moveFn = [[this.h], [this.h, this.m1, this.pop, this.newSegment, this.draw]];   
+        // 1.en m1 guardamos la nueva cota, 
+        // 2.en pop, seguido de new segment, actualizamos el último segmento visto
+        // 3.con p0 y m1 y newSegment ponemos el nuevo segmento que va a moverse (que empezará con longitud 0 porque p0 y m1 reciben el mismo punto)
+        this.clickFn = [[this.p0],[this.m1, this.pop, this.newSegment , this.p0, this.m1, this.newSegment]];
+        this.senData = [['x0','y0'],['x1','y1']];
+        this.receiveData = ['x0','y0','x1','y1'];
     }
 
     pop = () => this.thePath.elements.pop();
@@ -30,18 +39,9 @@ export default class DrawPath extends DrawBasic{
             this.data.x0 = el.x0; this.data.y0 = el.y0;
         }
     }
-  
     
-    //Secuencias en función del tipo de dibujp, el click es sutil
-    // 1.en m1 guardamos la nueva cota, 
-    // 2.en pop, seguido de new segment, actualizamos el último segmento visto
-    // 3.con p0 y m1 y newSegment ponemos el nuevo segmento que va a moverse (que empezará con longitud 0 porque p0 y m1 reciben el mismo punto)
-    clickFn = [[this.p0],[this.m1, this.pop, this.newSegment , this.p0, this.m1, this.newSegment]];
-    //El move es más sencillo, el pop seguido del new modifica el último tramo del path, que es lo que estamos dibujando
-    moveFn = [[this.h], [this.h, this.m1, this.pop, this.newSegment, this.draw]];
-
     deleteData = () => {
-        this.deleteDataBasic(),
+        this.deleteDataBasic(['x0','y0','x1','y1']),
         this.thePath.elements = [];
         this.clear();
     }
@@ -51,15 +51,13 @@ export default class DrawPath extends DrawBasic{
         const idn = newData[0].idn;  //no esperamos más que una pulsación...
         switch(idn){
             case 'back' : this.back();  break;
-            case 'end'  : this.end();   break;
+            case 'end'  : this.end();  this.deleteData(); break;
             case 'del'  : this.deleteData();   break;
             case 'enter': this.leftClick({x:this.data.x1 , y:this.data.y1}); break;
             case 'x0'   :
             case 'y0'   : 
             case 'x1'   :
             case 'y1'   : this.mouseMove({x:this.data.x1 , y:this.data.y1});
+            }
         }
-        }
-
-
     }
