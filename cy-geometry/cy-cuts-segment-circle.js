@@ -98,7 +98,7 @@ export function segment_arc_intr(segment, arc, eps = geometryPrecision) {
     //Puesto que son soluciones de la ecuación, la distancia al centro no hay que chequearla, pero el ángulo sí.
 
     const pointOnSegment = (segment, p) => {
-        let smp = segment.midpoint();
+        let smp = {x:0.5*(segment.pi.x+segment.pf.x), y:0.5*(segment.pi.y+segment.pf.y)};
         return sqDistancePointToPoint(p.x, p.y, smp.x, smp.y ) <= 0.25*segment.d*segment.d + eps;
     }
     const point_lies_on_arc_and_segment = (pt, t2) => {
