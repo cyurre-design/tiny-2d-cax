@@ -327,7 +327,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     /**@todo esto igual mejor un evento??*/
     scaleChange(scale){
         this.scale = scale;
-        this.resolution = scale / 10; //settings, TODO
+        this.resolution = scale / 20; //settings, TODO
     }
     /**@function 
      * @param {Number} x,y coordendas del cursor en espacio usuario (window, milimetros)
