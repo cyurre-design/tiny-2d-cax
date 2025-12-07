@@ -8,14 +8,14 @@ export default class DrawArc extends DrawBasic{
             case '3P':  {
                 this.moveFn = [[this.h], [this.mm, this.draw], [this.m1, this.draw]];
                 this.clickFn = [[this.p0], [this.pm], [this.m1, this.newBlock, this.deleteData]];
-                this.dataSent = [['x0','y0'],['xm','ym'],['x1','y1']];
+                this.dataSent = [['x0','y0'],['x1','y1'],['x2','y2']];
                 this.dataReceived = ['x0','x1','x2','y0','y1','y2','r','a'];
             } break;
             case 'CPA': {
                 this.moveFn = [[this.h], [this.m1, this.draw]];
                 this.clickFn = [[this.p0], [this.m1, this.newBlock, this.deleteData]];
-                this.dataSent = [['x0','y0'],['xm','ym']];
-                this.dataReceived = ['x0','xm','y0','ym','a'];
+                this.dataSent = [['x0','y0'],['x1','y1']];
+                this.dataReceived = ['x0','x1','y0','y1','a'];
              } break;
             case '2PR': {
                 this.moveFn = [[this.h], [this.m1, this.draw]];
@@ -26,8 +26,8 @@ export default class DrawArc extends DrawBasic{
             case '2PC': {
                 this.moveFn = [[this.h],[this.mm, this.draw], [this.m1, this.newBlock, this.draw]];
                 this.clickFn = [[this.p0], [pm],[this.m1, this.newBlock, this.deleteData]];
-                this.dataSent = [['x0','y0'],['xm','ym'],['x1','y1']];
-                this.dataReceived = ['x0','x1','xm','y0','y1','ym'];
+                this.dataSent = [['x0','y0'],['x1','y1'],['x2','y2']];
+                this.dataReceived = ['x0','x1','y0','y1'];
              } break;
         }
     }
@@ -35,7 +35,7 @@ export default class DrawArc extends DrawBasic{
     //No hay que borrar lo que no se interacciona con el ratón porque no habría evento si no se da al control
     //y perderíamos el valor
     deleteData = () => {
-        this.deleteDataBasic(['x0','x1','xm','y0','y1','ym']);
+        this.deleteDataBasic(['x0','x1','x2','y0','y1','y2']);
         //.forEach(k => delete this.data[k]);
     }
     updateData = (data)=>this.updateDataBasic(data);

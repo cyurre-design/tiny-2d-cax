@@ -9,7 +9,7 @@ export default class DrawSegmentPB extends DrawBasic {
         this.data.subType = 'PP';   //para el segmento interactivo
         this.moveFn         = [[this.h], [this.m1, this.draw, this.hover]];
         this.clickFn        = [[this.p0], [this.tangent, this.newBlock, this.deleteData, this.clear]];
-        this.dataSent       = [['data-x0','data-y0'],[],[]];     
+        this.dataSent       = [['x0','y0'],[],[]];     
         this.dataReceived   = ['x0','y0'];        }
     //mientras mueve sin click, estado 0, miramos si pincha en bloque
     //en el click el pi está normalizado a rejilla, así que podría no encontrara el bloque incluso estando encima

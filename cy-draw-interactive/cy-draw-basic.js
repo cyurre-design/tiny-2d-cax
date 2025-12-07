@@ -57,7 +57,7 @@ export default class DrawBasic {
     };
     mouseMove = (pi) => {
         this.moveFn[this.status].forEach(f => f(pi));
-        this.layerDraw.dispatchEvent(new CustomEvent('pos', {bubbles: true, composed:true, 
+        this.layerDraw.dispatchEvent(new CustomEvent('drawing-pos', {bubbles: true, composed:true, 
             detail:{pos:this.hit, type:this.type, subType: this.subMode, idn:this.dataSent[this.status]}}));
     };
     //Habría que chequear tipos numéricos y tal, formatos...

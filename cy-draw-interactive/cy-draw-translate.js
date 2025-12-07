@@ -20,7 +20,8 @@ export default class DrawTranslate extends DrawBasic{
             {bubbles: true, composed:true, detail:{ command:'translate', data:{dx:this.hit.x - this.data.x0, dy: this.hit.y - this.data.y0}}}));
         this.status = 0;    
     };
-
+    deleteData = () => {
+        this.deleteDataBasic(['x0','x1','y0','y1']); this.block = undefined;};
     updateData = (data) => {
         const newData = this.updateDataBasic(data);
         const idn = newData[0].idn;  //no esperamos más que una pulsación...

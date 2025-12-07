@@ -7,7 +7,7 @@ export default class DrawPolygon extends DrawBasic{
         this.moveFn         = [[this.h], [this.m1, this.draw]];
         this.clickFn        = [[this.p0], [this.m1, this.newBlock, this.deleteData]];
         this.dataSent       = [['x0','y0'],['x1','y1']]
-        this.dataReceived   = ['x0','x1','y0','y1','edges','vertex?'];
+        this.dataReceived   = ['x0','x1','y0','y1','edges','vertex'];
     }
     newBlock = (p) => {this.layerDraw.dispatchEvent(new CustomEvent('new-block', {bubbles: true, composed:true, detail:{type:'polygon', data:this.data}}));};
     draw = (pi) => {
@@ -16,8 +16,9 @@ export default class DrawPolygon extends DrawBasic{
         this.deleteDataBasic(['x0','x1','y0','y1']); this.block = undefined;};
     updateData = (data) =>{ 
         const newData = this.updateDataBasic(data);
-        if(newData[0].idn === 'vertex?')
-            this.data.subType = newData[0].v === 'on' ? 'H' : 'R';
+        console.log(this.data.edges)
+        this.data.subType = this.data['vertex'] === 0 ? 'H' : 'R';
+        console.log(this.data.subType)
     }
     }
 

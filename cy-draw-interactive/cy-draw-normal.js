@@ -11,7 +11,7 @@ export default class DrawNormal extends DrawBasic {
         //el this.h del final implica borrado, solo se ejecutará una vez porque se pone status a 0 en deleteData
         this.moveFn = [[this.h, this.hover], [this.m1, this.normal, this.draw]];
         this.clickFn = [[this.p0], [this.m1, this.newBlock, this.deleteData, this.h]];    
-        this.dataSent = [['x0','y0'],[],[]];     
+        this.dataSent = [[],['x0','y0'],[]];     
         this.dataReceived = ['x0','y0'];
     }        
     //mientras mueve sin click, estado 0, miramos si pincha en bloque

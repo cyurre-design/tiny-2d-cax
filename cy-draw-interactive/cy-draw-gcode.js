@@ -18,15 +18,10 @@ export default class DrawGcode extends DrawBasic{
         this.dataReceived = ['text'];
     }
 
-    //pop = () => this.thePath.elements.pop();
-    //newSegment = (p) => {this.thePath.elements.push(createDrawElement('segment', this.data))}
     draw = (pi) => {this.hit = this.highLight(pi.x, pi.y, this.paths)}
-    //Y lo que se manda a input-data de posicines del cursor igual
-    //dataSent = [['data-x0','data-y0'],['data-x1','data-y1']];
     
     //Esto es especifico de path, se termina desde button o tecla, en el futuro
     end(){
-        //this.pop(); //el tramo desde el último hasta donde hago click
         this.layerDraw.dispatchEvent(new CustomEvent('new-block', {bubbles: true, composed:true, detail:{type:'path', data:this.paths}}));
         this.deleteData();
     };
