@@ -8,26 +8,26 @@ export default class CyInputDataGcode extends HTMLElement {
     }
 
     createStyle() {
-        // let style = `
-        //     <style>                
-        //         #container{
-        //             position:absolute;
-        //             width:100%;
-        //         }
-        //         .half{width:50%;}
-        //         ._33{width:30%}
-        //         ._25{width:25%}
-        //     </style>
-        // `;
-        // return style;
-        return ''
+        let style = `
+            <style>                
+                #cy-input-data-basic{
+                    /*position:absolute;*/
+                    width:100%;
+                }
+                .full{width:100%}
+                .half{width:50%;}
+                ._33{width:30%}
+                ._25{width:25%}
+            </style>
+        `;
+        return style;
     }
     createTemplate() {
         return (
  `
-<cy-input-data-basic>
-<div>
-    <textarea autofocus contenteditable="plaintext-only" id="iso-input" ></textarea>
+<cy-input-data-basic >
+<div class="full">
+    <textarea autofocus class="full" contenteditable="plaintext-only" id="iso-input" ></textarea>
 </div>
 </cy-input-data-basic>
 `    )

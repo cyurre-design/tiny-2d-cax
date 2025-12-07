@@ -75,6 +75,7 @@ class CyAngleData extends HTMLElement {
 customElements.define('cy-angle-data', CyAngleData);
 
 
+const Keys4Events =  ["Enter", "Escape"]
 export default class CyInputDataBasic extends HTMLElement {
     constructor() {
         super();
@@ -103,7 +104,7 @@ export default class CyInputDataBasic extends HTMLElement {
 
         this.input = this.dom.querySelector("#container");
         this.dom.addEventListener('change', (evt)=>this.handleEvent(evt));
-        this.dom.addEventListener('click', (evt)=>this.handleEvent(evt));
+        //this.dom.addEventListener('click', (evt)=>this.handleEvent(evt));
         this.addEventListener('keyup', (evt)=>this.handleEvent(evt))
         // ..and listen for the slotchange event.
         this.shadowRoot.querySelector('slot').addEventListener('slotchange', (event) => {
@@ -134,9 +135,13 @@ export default class CyInputDataBasic extends HTMLElement {
                 this.dispatchEvent(new CustomEvent('input-data',{bubbles:true, composed:true, detail: this.data}))
             }break;
             case 'keyup':{
-                const detail = {};
-                detail[evt.target.id] = evt.target.value;
-                this.dispatchEvent(new CustomEvent('input-key',{bubbles:true, composed:true, detail: detail}))
+                const key = evt.key;
+                if( Keys4Events.indexOf(key) > -1){
+                    console.log(evt.key)
+                    const detail = {};
+                    detail[evt.target.id] = evt.target.value;
+                    this.dispatchEvent(new CustomEvent('input-key',{bubbles:true, composed:true, detail: detail}))
+                }
             }break;
         }
     }
