@@ -2,13 +2,13 @@
 
 
 const templateSingleLayer = (name, id, flag=true) => {
-    const delButton = flag===true? ` <md-filled-button id="layer-del-${id}">Del</md-filled-button>` : '';
+    const delButton = flag===true? ` <input type = "button" id="layer-del-${id}" value="DEL" class="_10"/>` : '';
   return `
-  <md-list-item id="layer-id-${id}">
-    ${name}${delButton}
-    <md-filled-button id="layer-edit-${id}">St</md-filled-button>
-    <md-switch slot="end" selected id="layer-view-${id}"></md-switch>
-  </md-list-item>
+  <div id="layer-id-${id}" class="row">
+    <span class="_75">${name}</span>${delButton}
+    <input type = "button" id="layer-edit-${id}" class="_15"value= "ST"/>
+    <input type="range" id="layer-view-${id}" class="_10" step="1" min="0" max="1" />
+  </div>
 `
 }
 
@@ -26,8 +26,24 @@ class CyLayerList extends HTMLElement {
                     position:absolute;
                     width:100%;
                 }
-                #layer-name{
-                width:100%;
+                .row{
+                display: flex;
+                flex-direction: row;
+                }
+                .column{
+                display: flex;
+                flex-direction: column;
+                }
+                .full{
+                width:100%}
+                ._75{
+                width:75%;
+                }
+                ._15{
+                width:15%;
+                }
+                ._10{
+                width:10%;
                 }
                 .active{
                 background-color:#ffcc00}
@@ -44,21 +60,21 @@ class CyLayerList extends HTMLElement {
         <span>selected color <input type="color" id="selected-color" name="selected-color" value="${st.selectedColor}"></span></br>
         <span>selected width <input type="number" id="selected-width" name="selected-width" value=${st.selectedWidth} min=1 max=6></span></br>
         <button id='style-enter'>Enter</button><button autofocus id='style-escape'>Esc</button>
-    
     `
     }
     createTemplate() {
         return `
     <dialog id='edit-style'></dialog>
-    <div id=show-layers>
-    LAYERS
-    <md-filled-button id="layer-add">Add</md-filled-button><md-switch slot="end" selected id="layer-list-show"></md-switch>
+    <div id=show-layers class="row">
+    <span class="_75">LAYERS</span>
+    <input type = "button" id="layer-add" value="ADD" class="_15"/>
+    <input type="range" id="layer-list-show" min=0 max=1 stpe=1 value=1 class="_10"/>
+    </div>
     ${this.createNewList()}
-</div>
 `}
 
     createNewList() {
-        const list = this.layers.reduce((out,ly) => (out + templateSingleLayer(ly.name, ly.lyId, ly.erasable)), '<md-list id="full-list">') + '</md-list>';
+        const list = this.layers.reduce((out,ly) => (out + templateSingleLayer(ly.name, ly.lyId, ly.erasable)), '<div id="full-list" class="column"></div>');
         return list; 
     }
     //Aquí recibimos el evento de que se quiere visualizar o tapar una capa, por ejemplo
@@ -66,7 +82,7 @@ class CyLayerList extends HTMLElement {
         //Canvasviewer debería ocultar si la capa es especial o no, aquí no se sabe
         //No metemos semántica aquí, simplemente informamos de que lo que se quier hacer (ocultar, etc...) y qué capa
         const idn = e.target.id.split('-').pop();
-        const s = e.target.selected; //boolean
+        const s = +(e.target.value)!==0; //boolean
         this.dispatchEvent(new CustomEvent('layer-handle', {bubbles:true, composed:true, detail: {layerId:idn, action: 'visibility', value:s}} ))
     }
     connectedCallback() {
@@ -82,9 +98,6 @@ class CyLayerList extends HTMLElement {
                 this.dialog.innerHTML = this.createDialog(this.editedLayer);
                 this.dialog.showModal();
             } else if (command === 'del'){
-                /**
-                 * @todo hay que sacar un dialogo si la capa no está vacía ??!
-                 */
                 this.dispatchEvent(new CustomEvent('layer-handle', {bubbles:true, composed:true, detail: {layerId:this.editedLayer.lyId, action: 'delete'}}))
             } else if(command === 'id') {
                 if(this.editedLayer.erasable){
@@ -111,7 +124,7 @@ class CyLayerList extends HTMLElement {
         })
         this.dom.querySelector('#layer-list-show').addEventListener('change', (e) => {
             //const v = this.list.querySelector('#full-list');
-            this.list.style.display = e.target.selected ? "block" : "none";
+            this.list.style.display = e.target.value==="1" ? "block" : "none";  //el html contiene asciis
         })
         this.dom.querySelector('#layer-add').addEventListener('click',  (e) =>
             this.dispatchEvent(new CustomEvent('layer-handle', {bubbles:true, composed:true, detail: {layer:undefined, action: 'create'}} )))

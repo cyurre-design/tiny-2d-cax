@@ -60,9 +60,9 @@ export default class CyInputDataSegment extends HTMLElement {
                 this.container.data[idn] =  this.initialData[k];
             });
         if((this.subType === 'PXA') || (this.subType === 'PYA') || (this.subType === 'PDA'))
-            this.dom.querySelector('#data-a').click();
+            this.dom.querySelector('#data-a').dispatchEvent(new Event("change", { bubbles: true }));
         if(this.subType === 'PDA')
-            this.dom.querySelector('#data-d').click();
+            this.dom.querySelector('#data-d').dispatchEvent(new Event("change", { bubbles: true }));
     }
     
     disconnectedCallback() {

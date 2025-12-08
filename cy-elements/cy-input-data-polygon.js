@@ -55,8 +55,8 @@ export default class CyInputDataPolygon extends HTMLElement {
                 this.container.inputs[idn].value = this.initialData[k];
                 this.container.data[idn] =  this.initialData[k];
             });
-            this.dom.querySelector('#data-vertex').click();
-            this.dom.querySelector('#data-edges').click();
+            this.dom.querySelector('#data-vertex').dispatchEvent(new Event("change", { bubbles: true }));
+            this.dom.querySelector('#data-edges').dispatchEvent(new Event("change", { bubbles: true }));
     }
     
     disconnectedCallback() {

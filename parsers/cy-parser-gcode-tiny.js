@@ -12,12 +12,13 @@ export function  gcodeToGeometry(gcode){
     function parsePath(lines){  //recibo un string, que puede incluir cr,lf, etc... que son whitespace
     const paths = [];
     let actualPath = createDrawElement('path',[]);  //global en el contexto de la función svgToGeometry
+    //globales, determinan el funcionamiento en incremental o absoluto y corte o no corte en laser
     let inc = false;        //por defecto en absolutas
-    let moving = true;      //pordefecto G0
+    let moving = true;      //por defecto G0
     //let _M=0, _T=0, _F=0, _S=0, Z=0;
-    let _X=0, _Y=0, _G = [];
     let X = 0, Y = 0; //posiciones a ir
     let cpx = 0, cpy = 0;
+    let _X=NaN, _Y=NaN, _G = [];
     for(let il = 0; il <lines.length; il++){
         let l = lines[il];
         if(l.startsWith(';')) continue;
@@ -30,9 +31,9 @@ export function  gcodeToGeometry(gcode){
         commands = commands.map(cmd=>cmd.trim());
        
         //Analizo la línea
+        _X='', _Y='', _G = [];
         for(let ix = 0; ix < commands.length; ix++){
             const command = commands[ix];
-              //  console.log(command.at(0));
             switch(command.at(0)){
                 //case 'M':   _M = parseInt(command.substring(1)); break;
                 //case 'T':   _T = parseInt(command.substring(1)); break;
@@ -58,11 +59,11 @@ export function  gcodeToGeometry(gcode){
         //solo guardo la última cota, No voy a dar error en X duplicadas, es un prototipo, aunque sería trivial
         //solo genero bloque si hay geometría, es para pintar
         let flag = false;
-        if(parseFloat(_X) !== NaN) {
+        if(!isNaN(parseFloat(_X))) {
             X = inc? X+_X : _X;
             flag = true;
         }
-        if(parseFloat(_Y) !== NaN) {
+        if(!isNaN(parseFloat(_Y))) {
             Y = inc? Y+_Y : _Y;
             flag = true;
         }

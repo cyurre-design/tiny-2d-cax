@@ -58,9 +58,9 @@ export default class CyInputDataArc extends HTMLElement {
                 this.container.data[idn] =  this.initialData[k];
             });
         if(this.subType === '2PR')
-            this.dom.querySelector('#data-r').click();
+            this.dom.querySelector('#data-r').dispatchEvent(new Event("change", { bubbles: true }));
         if(this.subType === 'CPA')
-            this.dom.querySelector('#data-a').click();
+            this.dom.querySelector('#data-a').dispatchEvent(new Event("change", { bubbles: true }));
     }
     
     disconnectedCallback() {

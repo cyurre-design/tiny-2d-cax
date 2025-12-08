@@ -29,6 +29,7 @@ export default class CyInputDataGcode extends HTMLElement {
 <div class="full">
     <textarea autofocus class="full" contenteditable="plaintext-only" id="iso-input" ></textarea>
 </div>
+<div class="row"><input type="button" id="data-escape" value="ESCAPE"/><input type="button" id="data-insert" value="INSERT"/></div> 
 </cy-input-data-basic>
 `    )
     }

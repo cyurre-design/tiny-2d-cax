@@ -22,9 +22,9 @@ class CyAngleData extends HTMLElement {
 
     createTemplate() {
         return `
-<div id="container">
-    <input type="range" id="data-coarse" step="15" min="-90" max="90" />
-    ALFA <input id="data-a" type="number" class="_33" value="${this.alfa}" min="-90" max="90" step="1" />
+<div id="container" class="column">
+    <div><input type="range" id="data-coarse" step="15" min="-90" max="90" /></div>
+    <div class=row"><span>ALFA</span><input id="data-a" type="number" class="_33" value="${this.alfa}" min="-90" max="90" step="1" />
 </div>
         `;
     }
@@ -104,7 +104,7 @@ export default class CyInputDataBasic extends HTMLElement {
 
         this.input = this.dom.querySelector("#container");
         this.dom.addEventListener('change', (evt)=>this.handleEvent(evt));
-        //this.dom.addEventListener('click', (evt)=>this.handleEvent(evt));
+        this.dom.addEventListener('click', (evt)=>this.handleEvent(evt));
         this.addEventListener('keyup', (evt)=>this.handleEvent(evt))
         // ..and listen for the slotchange event.
         this.shadowRoot.querySelector('slot').addEventListener('slotchange', (event) => {
@@ -126,8 +126,10 @@ export default class CyInputDataBasic extends HTMLElement {
         switch(evt.type){
             case 'click':{
                 const detail = {};
-                detail[evt.target.id] = evt.target.value;
-                this.dispatchEvent(new CustomEvent('input-click',{bubbles:true, composed:true, detail: detail}))
+                if(evt.target.type === "button"){
+                    detail[evt.target.id] = evt.target.value;
+                    this.dispatchEvent(new CustomEvent('input-click',{bubbles:true, composed:true, detail: detail}))
+                }
             }break;
             //Una vez que tengo el foco en el control debo mandar todos los valores, porque el usuario ya ve un 0 en los no definidos
             case 'change':{

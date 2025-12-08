@@ -59,7 +59,7 @@ export default class CyInputDataCircle extends HTMLElement {
                 this.container.data[idn] =  this.initialData[k];
             });
         if((this.subType === 'CR') || (this.subType === '2PR'))
-            this.dom.querySelector('#data-r').click();
+            this.dom.querySelector('#data-r').dispatchEvent(new Event("change", { bubbles: true }));
     }
     
     disconnectedCallback() {

@@ -22,7 +22,8 @@ export default class DrawGcode extends DrawBasic{
     
     //Esto es especifico de path, se termina desde button o tecla, en el futuro
     end(){
-        this.layerDraw.dispatchEvent(new CustomEvent('new-block', {bubbles: true, composed:true, detail:{type:'path', data:this.paths}}));
+        this.paths.forEach( p => 
+            this.layerDraw.dispatchEvent(new CustomEvent('new-block', {bubbles: true, composed:true, detail:{type:'path', data:p}})));
         this.deleteData();
     };
    
@@ -38,18 +39,14 @@ export default class DrawGcode extends DrawBasic{
         //console.log(data);
         switch(idn){
             //case 'back' : this.back();  break;
-            case 'end'  : this.end();  this.deleteData(); break;
+            case 'insert'  : this.end();  this.deleteData(); break;
             //case 'del'  : this.deleteData();   break;
-            case 'enter': this.leftClick({x:this.data.x1 , y:this.data.y1}); break;
+            case 'escape': this.leftClick({x:this.data.x1 , y:this.data.y1}); break;
             case 'input' : {
                 console.log(newData);
                 this.paths = gcodeToGeometry(newData[0].v);
                 this.highLight(0, 0, this.paths);
             } break;
-            //case 'x'   :
-            //case 'y'   : 
-            //case 'x1'   :
-            //case 'y1'   : this.mouseMove({x:this.data.x1 , y:this.data.y1});
             }
         }
     }

@@ -61,9 +61,10 @@ export default class CyInputDataTransform extends HTMLElement {
                 this.container.data[idn] =  this.initialData[k];
             });
         if(this.subType === 'rotate')
-            this.dom.querySelector('#data-a').click();
+            this.dom.querySelector('#data-a').dispatchEvent(new Event("change", { bubbles: true }));
+        
         if(this.subType === 'scale')
-            this.dom.querySelector('#data-sn').click();
+            this.dom.querySelector('#data-sn').dispatchEvent(new Event("change", { bubbles: true }));
     }
     
     disconnectedCallback() {
