@@ -29,11 +29,13 @@ export default class DrawRotate extends DrawBasic{
         const newData = this.updateDataBasic(data);
         const idn = newData[0].idn;  //no esperamos más que una pulsación...
         switch(idn){
-            case 'enter': this.rotate(); this.move({x:this.data.x0 , y:this.data.y0}); this.deleteData(); this.clear();break;
-            case 'esc'  : this.deleteData();;  this.clear(); break;
+            case 'enter'    : this.rotate(); this.move({x:this.data.x0 , y:this.data.y0}); this.deleteData(); this.clear();break;
+            case 'escape'   : this.deleteData();;  this.clear(); break;
             //case 'x0'   :
             //case 'y0'   : this.p0({x:this.data.x0 , y:this.data.y0});break;
-            case 'a'    : this.move({x:this.data.x0 , y:this.data.y0});break;
+            case 'a'        : if(this.status !== 0)
+                                this.move({x:this.data.x0 , y:this.data.y0});
+                                break;
         }
     }
 }
