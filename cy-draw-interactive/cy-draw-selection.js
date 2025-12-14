@@ -34,7 +34,8 @@ export default class DrawSelection extends DrawBasic{
         const bbox = createDrawElement('bbox', this.data);
         this.layerDraw.hover(p.x, p.y, bbox, true);
     }
-
+    deleteData = () => {
+        this.deleteDataBasic(['x0','x1','y0','y1'])} 
     updateData = (data) => {
         const newData = this.updateDataBasic(data);
         const idn = newData[0].idn;  //no esperamos más que una pulsación...

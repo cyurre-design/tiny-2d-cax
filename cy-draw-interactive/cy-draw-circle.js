@@ -33,7 +33,7 @@ export default class DrawCircle extends DrawBasic{
         }
     }
     deleteData = () => {
-        this.deleteDataBasic(['cx', 'cy', 'x0','x1','x2','y0','y1','y2','r']);
+        this.deleteDataBasic(['cx', 'cy', 'x0','x1','x2','y0','y1','y2']);
     }
     updateData = (data)=>{
         const el = this.updateDataBasic(data).find(el=>el.idn==='way');
