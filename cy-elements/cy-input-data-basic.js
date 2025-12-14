@@ -59,13 +59,17 @@ export default class CyInputDataBasic extends HTMLElement {
         this.activeApplication.subType = subType;
         this.activeApplication.classList.replace('share','show');
     }
-    //Recibo el config de geometría pero no hay nada inicializado aunqie el dom existe
+    //Recibo el config entero y cojo el de geometría y el de iso (de momento)
+    // No hay nada inicializado aunque el dom existe, así que luego hay que pasarlos a cada componente y hacia arriba
     //Paso el data entero, es pequeño y ya viene con el nombre de propiedad local
     initialData(data){
         //console.log('initialDataBasic')
         inputDataApps.forEach(app => {
-            this.dom.querySelector('cy-input-data-'+app).initialData(data)})
-
+            if(app === 'export-gcode')
+                this.dom.querySelector('cy-input-data-'+app).initialData(data.iso)
+            else
+                this.dom.querySelector('cy-input-data-'+app).initialData(data.geometry)
+            })
     }
     update(data){
         this.activeApplication.update(data);

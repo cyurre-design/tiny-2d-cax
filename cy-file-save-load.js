@@ -193,8 +193,9 @@ export async function loadProject(fileHandle = null, ) {
               "application/json": [".json"],
               "text/plain"      : [".nc", ".pxy"],
               "image/svg+xml"   : [".svg"],
-              "image/x-dxf"     : [".dxf"]
-
+              "image/x-dxf"     : [".dxf"],
+              "image/png"       : [".png"],
+              "image/jpeg"      : [".jpg"]
             },
           },
         ],
