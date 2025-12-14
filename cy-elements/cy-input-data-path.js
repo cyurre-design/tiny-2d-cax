@@ -11,17 +11,13 @@ export default class CyInputDataPath extends HTMLElement {
     set subType(type) {
         this.type = 'p' //por mantener coherencia y estandarización de tipo-subtipo-propiedad
         inputDataSubtype(this, `data-path-${this.type}`);
-        // if(this.type === '2pr')
-        //     this.dom.querySelector('#data-arc-2pr-r').dispatchEvent(new Event("change", { bubbles: true }));
-        // else if(this.type === 'cpa')
-        //     this.dom.querySelector('#data-arc-cpa-a').dispatchEvent(new Event("change", { bubbles: true }));
     }
     createStyle() {
         return `<style></style>`
     }
     createTemplate() {
         let t = 'path-p';
-        let h = `<div id="${t}" >${TX0Y0(t)+TX1Y1(t)+TENTER(t)+TESC(t)+TBACK(t)}</div>`
+        let h = `<div id="${t}" >${TX0Y0(t)+TX1Y1(t)}<div class="row">${TENTER(t)+TESC(t)+TBACK(t)}</div></div>`
         return h
     }
 

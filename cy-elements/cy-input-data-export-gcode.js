@@ -24,14 +24,14 @@ export default class CyInputDataExportGcode extends HTMLElement {
         let t = `export-gcode`;
         let h = `<div id=${t}>`;
         h += `<div class="_20">Start</div>
-                <textarea  id="data-${t}-start" autofocus class="_80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
+                <textarea  id="data-${t}-start" autofocus class="data _80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
         h +=  `<div class="_20">End</div>
-                <textarea  id="data-${t}-end" class="_80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
+                <textarea  id="data-${t}-end" class="data _80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
         h +=  `<div class="_20">Move</div>
-                <textarea  id="data-${t}-move" class="_80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
+                <textarea  id="data-${t}-move" class="data _80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
         h +=  `<div class="_20">Cut</div>
-                <textarea  id="data-${t}-cut" class="_80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
-        h +=  `<div class="row">ORDER<input type="number" min="1" step="1" value="1" id="data-order" class="_20"/>${TCWCCW}</div>`
+                <textarea  id="data-${t}-cut" class="data _80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
+        h +=  `<div class="row">ORDER<input type="number" min="1" step="1" value="1" id="data-order" class="_20"/>${TCWCCW(t)}</div>`
         h += `<div class="row">${TESC(t) + TSAVE(t)}</div></div>`
         return h
     }

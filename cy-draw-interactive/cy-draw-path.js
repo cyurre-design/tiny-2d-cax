@@ -46,18 +46,18 @@ export default class DrawPath extends DrawBasic{
         this.clear();
     }
 
+    //No facilito el manejo por teclado porque para eso es mejor el iso directamente
     updateData = (data) =>  {
         const newData = this.updateDataBasic(data);
         const idn = newData[0].idn;  //no esperamos más que una pulsación...
         switch(idn){
-            case 'back' : this.back();  break;
-            case 'end'  : this.end();  this.deleteData(); break;
-            case 'del'  : this.deleteData();   break;
-            case 'enter': this.leftClick({x:this.data.x1 , y:this.data.y1}); break;
-            case 'x0'   :
-            case 'y0'   : 
-            case 'x1'   :
-            case 'y1'   : this.mouseMove({x:this.data.x1 , y:this.data.y1});
+            case 'back'     : this.back();  break;
+            case 'enter'    : this.end();  this.deleteData(); break;
+            case 'escape'   : this.deleteData();   break;
+            // case 'x0'   :
+            // case 'y0'   : 
+            // case 'x1'   :
+            // case 'y1'   : this.mouseMove({x:this.data.x1 , y:this.data.y1});
             }
         }
     }
