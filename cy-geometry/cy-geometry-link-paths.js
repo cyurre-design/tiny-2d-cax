@@ -43,7 +43,7 @@ export function linkPaths(allPaths, tol = 0.1){
         paths.shift(); //el morrallero inicial
         paths = paths.map(p => createDrawElement('path', {elements : p}));
         //le pegamos los que ya eran paths en origen , si los hubiera
-        paths = paths.concat(blocks.filter( b => b.type === 'path'));
+        paths = paths.concat(allPaths.filter( b => b.type === 'path'));
         return paths;
     }
 

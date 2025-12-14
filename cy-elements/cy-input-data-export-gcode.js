@@ -1,7 +1,6 @@
 import { sharedStyles } from '../shared-styles.js';
-import {inputDataInit, inputDataUpdate, inputDataSubtype, setEventHandlers, TX0Y0, TX1Y1, TENTER, TESC, TBACK} from './cy-input-data-templates.js'
-
-export default class CyInputDataPath extends HTMLElement {
+import {inputDataInit, inputDataUpdate, inputDataSubtype, setEventHandlers, TCWCCW, TESC, TSAVE} from './cy-input-data-templates.js'
+export default class CyInputDataExportGcode extends HTMLElement {
     constructor( ) {
         super();
         this.dom = this.attachShadow({mode:'open'});
@@ -17,11 +16,23 @@ export default class CyInputDataPath extends HTMLElement {
         //     this.dom.querySelector('#data-arc-cpa-a').dispatchEvent(new Event("change", { bubbles: true }));
     }
     createStyle() {
-        return `<style></style>`
+        let style = `<style>
+        </style>`;
+        return style;
     }
     createTemplate() {
-        let t = 'path-p';
-        let h = `<div id="${t}" >${TX0Y0(t)+TX1Y1(t)+TENTER(t)+TESC(t)+TBACK(t)}</div>`
+        let t = `export-gcode`;
+        let h = `<div id=${t}>`;
+        h += `<div class="_20">Start</div>
+                <textarea  id="data-${t}-start" autofocus class="_80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
+        h +=  `<div class="_20">End</div>
+                <textarea  id="data-${t}-end" class="_80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
+        h +=  `<div class="_20">Move</div>
+                <textarea  id="data-${t}-move" class="_80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
+        h +=  `<div class="_20">Cut</div>
+                <textarea  id="data-${t}-cut" class="_80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
+        h +=  `<div class="row">ORDER<input type="number" min="1" step="1" value="1" id="data-order" class="_20"/>${TCWCCW}</div>`
+        h += `<div class="row">${TESC(t) + TSAVE(t)}</div></div>`
         return h
     }
 
@@ -43,7 +54,8 @@ export default class CyInputDataPath extends HTMLElement {
             if(this.dom.querySelector('#data-'+k) !== null)
                 this.dom.querySelector('#data-'+k).value = v
             }
-    }
+    }     
+    
     disconnectedCallback() {
     }
     static get observedAttributes() {return []}
@@ -55,4 +67,4 @@ export default class CyInputDataPath extends HTMLElement {
     }
     }
 }
-customElements.define('cy-input-data-path', CyInputDataPath);
+customElements.define('cy-input-data-export-gcode', CyInputDataExportGcode);

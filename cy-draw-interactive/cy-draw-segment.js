@@ -33,13 +33,15 @@ export default class DrawSegment extends DrawBasic {
         }
     }
     //hay muchas cosas del basic que sirven aquí
-    deleteData = () => {this.deleteDataBasic(['x0','x1','y0','y1'])}
+    deleteData = () => {this.deleteDataBasic(['x0','x1','y0','y1']); this.block=undefined}
     updateData = (data) => 
         this.updateDataBasic(data);
     newBlock = (p) => {
+        if(this.block === undefined) return;
         this.layerDraw.dispatchEvent(new CustomEvent('new-block', {bubbles: true, composed:true, detail:{type:'segment', data:this.data}}));
     }
-    draw = (pi) => {this.hit = 
-        this.highLight(pi.x, pi.y, [createDrawElement('segment', this.data )])
+    draw = (pi) => {
+        this.block = createDrawElement('segment', this.data );
+        this.hit = this.highLight(pi.x, pi.y, this.block)
     }
 }

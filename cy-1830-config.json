@@ -1,0 +1,24 @@
+
+{
+    "geometry":{
+      "circle-2pr-r": 50,
+      "circle-cr-r" : 20,
+      "polygon-edges" : 4,
+      "polygon-vertex" : 0,
+      "segment-pda-d": 50,
+      "segment-pda-a": 30,
+      "segment-pxa-a": 30,
+      "segment-pya-a": 30,
+      "arc-cpa-a": 30,
+      "arc-2pr-r" : 50,
+      "transform-rotate-a": 45,
+      "transform-scale-sn" : 50,
+      "transform-scale-sd" : 100
+    },
+    "layers":{
+      "path-color" : "green",
+      "path-width" : 2,
+      "selected-color" : "yellow",
+      "selected-width" : "2"
+    }
+}

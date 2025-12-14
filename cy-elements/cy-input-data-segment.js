@@ -1,70 +1,70 @@
 //Esta pijada es solo porque si no el debugger ni se molesta en poner el source en la lista...
-import CyInputDataBasic from './cy-input-data-basic.js'
-import {TX0Y0, TX1Y1, TA, TD, TXx1, TYy1} from './cy-input-data-templates.js'
+import { sharedStyles } from '../shared-styles.js';
+import {inputDataInit, inputDataUpdate, inputDataSubtype, setEventHandlers,TX0Y0, TX1Y1, TA, TD, TXx1, TYy1} from './cy-input-data-templates.js'
 export default class CyInputDataSegment extends HTMLElement {
-    constructor( subType, initialData) {
+    constructor( ) {
         super();
         this.dom = this.attachShadow({mode:'open'});
-        this.initialData = initialData;
-        this.subType = subType;
+        this.dom.adoptedStyleSheets = [sharedStyles];
     }
-
+    //Aunque los html ya están inicializados, hay que pasar la info al componente que dibuja
+    set subType(type) {
+        this.type = type.toLowerCase();
+        ['segment-np', 'segment-pp', 'segment-pxa', 'segment-pya', 'segment-pda', 'segment-tpb', 'segment-tbb'].forEach( el =>
+             this.dom.querySelector('#'+el).style.display = "none")
+        this.dom.querySelector('#segment-'+ this.type).style.display="block";
+        inputDataSubtype(this, `data-segment-${this.type}`);
+        if(this.type === 'pxa')
+             this.dom.querySelector('#data-segment-pxa-a').dispatchEvent(new Event("change", { bubbles: true }));
+        if(this.type === 'pya')
+             this.dom.querySelector('#data-segment-pya-a').dispatchEvent(new Event("change", { bubbles: true }));
+        if(this.type === 'pda'){
+             this.dom.querySelector('#data-segment-pda-a').dispatchEvent(new Event("change", { bubbles: true }));
+             this.dom.querySelector('#data-segment-pda-d').dispatchEvent(new Event("change", { bubbles: true }));
+            }
+    }
     createStyle() {
-        let style = `
-            <style>                
-                #container{
-                    position:absolute;
-                    width:100%;
-                }
-                .half{width:50%;}
-                ._33{width:30%}
-                ._25{width:25%}
-            </style>
-        `;
+        let style = `<style>
+        </style>`;
         return style;
     }
     createTemplate() {
-        let T = '';
-        switch(this.subType){
-            case 'NP'   : T = TX0Y0;            break;
-            case 'PP'   : T = TX0Y0 + TX1Y1;    break;
-            case 'PXA'  : T = TX0Y0 + TXx1 + TA;  break;
-            case 'PYA'  : T = TX0Y0 + TYy1 + TA;  break;
-            case 'PDA'  : T = TX0Y0 + TD + TA;  break;
-            case 'TPB'  : T = TX0Y0;            break;
-            case 'TBB'  : T = '';               break;
-        }
-        return (
- `
-<cy-input-data-basic>
-<div>${T}</div>
-</cy-input-data-basic>
-`    )
+        let t = 'segment-np';
+        let h =  `<div id="${t}" style="display:none;">${TX0Y0(t)}</div>`
+        t = 'segment-pp';
+        h +=  `<div id="${t}" style="display:none;">${TX0Y0(t)+TX1Y1(t)}</div>`
+        t = 'segment-pxa';
+        h +=  `<div id="${t}" style="display:none;">${TX0Y0(t)+TXx1(t)+TA(t)}</div>`
+        t = 'segment-pya';
+        h +=  `<div id="${t}" style="display:none;">${TX0Y0(t)+TYy1(t)+TA(t)}</div>`
+        t = 'segment-pda';
+        h +=  `<div id="${t}" style="display:none;">${TX0Y0(t)+TD(t)+TA(t)}</div>`
+        t = 'segment-tpb';
+        h +=  `<div id="${t}" style="display:none;">${TX0Y0(t)}</div>`
+        t = 'segment-tbb';
+        h +=  `<div id="${t}" style="display:none;"></div>`
+        return h;
     }
 
     connectedCallback() {
         this.dom.innerHTML= this.createStyle() + this.createTemplate();
-        this.container = this.dom.querySelector('cy-input-data-basic');
-        this.addEventListener('initialized', (evt) => this.init())
+        //Aquí inicializamos con valores pasados en la creación que pueden ser guardados como preferencias o por sesión...
+        inputDataInit(this) //Esto debe inicializar los punteros a componentes y lee sus valores de html
+        setEventHandlers(this);
     }
     //Llamo al contenedor, que me hace de clase base
     update(data){
-        this.container.update(data);
+         inputDataUpdate(this, data);
     }
-    init(evt){
-        if(!this.initialData) return;
-        Object.keys(this.initialData).forEach(k =>{
-            const idn = 'data-'+k
-            if(this.container.keys.includes( idn))
-                this.container.inputs[idn].value = this.initialData[k];
-                this.container.data[idn] =  this.initialData[k];
-            });
-        if((this.subType === 'PXA') || (this.subType === 'PYA') || (this.subType === 'PDA'))
-            this.dom.querySelector('#data-a').dispatchEvent(new Event("change", { bubbles: true }));
-        if(this.subType === 'PDA')
-            this.dom.querySelector('#data-d').dispatchEvent(new Event("change", { bubbles: true }));
+    //Aquí se inicializan los valores de los componentes con lo que se pase, y viene para todos los subtipos...
+    //Se inicializan antes de activarse el menú
+    initialData(data){
+        if(!data) return;
+        for(let [k,v] of Object.entries(data)){
+            if(this.dom.querySelector('#data-'+k) !== null)
+                this.dom.querySelector('#data-'+k).value = v
+            }
     }
-    
     disconnectedCallback() {
     }
     static get observedAttributes() {return []}

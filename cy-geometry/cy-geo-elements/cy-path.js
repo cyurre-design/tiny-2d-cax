@@ -1,5 +1,5 @@
 "use strict";
-import {checkBbox, blockTranslate, blockRotate, blockScale, blockSymmetryX, blockSymmetryY, blockSymmetryL, blockReverse } from '../cy-geometry-library.js'
+import {checkBbox, blockTranslate, blockRotate, blockScale, blockSymmetryX, blockSymmetryY, blockSymmetryL, blockReverse, blockLength, fuzzy_eq_point } from '../cy-geometry-library.js'
 
 //los create deben garantizar que aquí llegan bien los parámetros
 
@@ -37,7 +37,11 @@ export function pathScale(p, x, y, scale){
 
 export function pathClone(p) {
         return JSON.parse(JSON.stringify(p));
-    }    
+    }
+//versión light... no compruebo que están seguidos , se supone que se ha hecho un link en algún  momento
+export function pathIsClosed(p){
+    return fuzzy_eq_point(p.elements[0].pi, p.elements[p.elements.length-1].pf)
+}    
 /**
  * @todo
  * @param {*} p 
@@ -65,21 +69,47 @@ export function pathReverse(p) {
     els.reverse(); //Modifica els in place
     return createPath({elements: els});
     }
-    //yurre: he pasado los isPointed a devolución de true/false, que es como se usaba, y además había casos no hoogéneos
-    // isPointed(x, y, tol) { //devolvemos el primero que no sea undefined Habría que pasar desde aquí la tolerancia?
-    //     return this.elements.find(el => (el.isPointed(x, y, tol)));
-    // }
-    // isInside(r) {
-    //     return this.elements.every(el => el.isInside(r)); 
-    // }
-    // points() {
-    //     let els = this.elements;
-    //     if (els.length === 0) return [];
-    //     let points = [els[0].pi];
-    //     //let points = [new Point(els[0].pi.x, els[0].pi.y)];
-    //     points = points.concat(...els.map(e => e.pathPoints()));
-    //     return points;
-    // }
+export function pathLength(path){
+    let len = 0;
+    if(path.elements.length === 0) return len;
+    len = path.elements.reduce((len, shape) => len + blockLength(shape), 0);
+    return len;
+    }
+    // Le he preguntado a chatGPT ... que se lo sabe todo
+    // Using the shoelace formula (https://en.wikipedia.org/wiki/Shoelace_formula) modified to
+    // See https://en.wikipedia.org/wiki/Circular_segment
+    // YURRE: Uso la fórmula de segmento de circulo de wikipedia area del segmento = 0.5 * r * r * (tita - sin(tita))
+    // que se corresponde con la resta entre el qusito y el triángulo
+    // YURRE: TODO probar más exhaustivamente
+    //Dejo la inicialización de variabkes locales como las pasa, queda bien
+export function pathArea(path) {
+    let A = 0;
+    if(! pathIsClosed(path)) return 0;
+    for (const e of path.elements) {
+        if (e.type === "segment") {
+            const { x0, y0, x1, y1 } = e;
+            A += (x0 * y1 - x1 * y0);
+            continue;
+        }
+        if (e.type === "arc") {
+            const { x1, y1, x2, y2, r, da } = e;
+            // Triángulo (nutriente poligonal)
+            A += (x1 * y2 - x2 * y1);
+            // Área del arco (sector - triángulo)
+            // da ya es signed sweep angle
+            A += r * r * (da - Math.sin(da));
+            continue;
+        }
+        console.warn("Elemento desconocido:", e);
+    }
+    return A / 2;  // signo define orientación
+}
+// La orientación servirá para definir cajera o isla pero tambén el signo de recorrido en laser
+export function pathOrientation(path){
+    if(! pathIsClosed(path)) 
+        return 'open'
+    return (pathArea(path) < 0) ? 'cw' : 'ccw';
+    }
 
     //métodos exclusivos de path
 // export function pathConcat(p1, p2) { //de fin de this a comienzo de path

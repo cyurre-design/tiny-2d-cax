@@ -1,5 +1,5 @@
 "use strict";
-import { translatePoint, pointSymmetricSegment, rotateZ , scale0} from '../cy-geometry-library.js'
+import { translatePoint, pointSymmetricSegment, rotateZ , scale0, distancePointToPoint} from '../cy-geometry-library.js'
 
 
 //Por motivos operativos se mantiene una formulación interna optimizada con el vector director y la distancia al origen.
@@ -65,3 +65,6 @@ export function segmentScale(s, x, y, scale) {
 export function segmentReverse(s) {
     return createSegment({x0:s.x1, y0:s.y1, x1:s.x0, y1:s.y0})
     }
+export function segmentLength(s){
+    return s.d;
+}

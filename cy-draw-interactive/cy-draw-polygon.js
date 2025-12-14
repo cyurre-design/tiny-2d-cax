@@ -13,7 +13,7 @@ export default class DrawPolygon extends DrawBasic{
     draw = (pi) => {
         this.hit = this.highLight(pi.x, pi.y, createDrawElement('polygon', this.data ))}
     deleteData = () => {
-        this.deleteDataBasic(['x0','x1','y0','y1']); this.block = undefined;};
+        this.deleteDataBasic(['x0','x1','y0','y1','cx','cy']); this.block = undefined;};
     updateData = (data) =>{ 
         const newData = this.updateDataBasic(data);
         console.log(this.data.edges)

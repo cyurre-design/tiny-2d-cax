@@ -10,11 +10,8 @@ export default class DrawGcode extends DrawBasic{
         //Aquí no se maneja el ratón... pero tiene sentido recibir el texto y dibujarlo comos si fuera un path con ratón
         //No sé si se podrán mezclar amboas cosas, por ejemplo que cada click envíe el punto al texto....
         this.moveFn = [[this.draw]];   
-        // 1.en m1 guardamos la nueva cota, 
-        // 2.en pop, seguido de new segment, actualizamos el último segmento visto
-        // 3.con p0 y m1 y newSegment ponemos el nuevo segmento que va a moverse (que empezará con longitud 0 porque p0 y m1 reciben el mismo punto)
-        this.clickFn = [[this.m0, this.newSegment, this.draw]];
-        this.dataSent = [['x0','y0']];
+        this.clickFn = [[this.m0, this.draw]];
+        this.dataSent = [[]];
         this.dataReceived = ['text'];
     }
 
@@ -28,7 +25,7 @@ export default class DrawGcode extends DrawBasic{
     };
    
     deleteData = () => {
-        this.deleteDataBasic(['x0','y0','x1','y1']),
+        this.deleteDataBasic([]),
         this.paths = [];
         this.clear();
     }
@@ -43,7 +40,7 @@ export default class DrawGcode extends DrawBasic{
             //case 'del'  : this.deleteData();   break;
             case 'escape': this.leftClick({x:this.data.x1 , y:this.data.y1}); break;
             case 'input' : {
-                console.log(newData);
+                //console.log(newData);
                 this.paths = gcodeToGeometry(newData[0].v);
                 this.highLight(0, 0, this.paths);
             } break;

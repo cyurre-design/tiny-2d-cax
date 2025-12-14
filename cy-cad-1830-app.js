@@ -1,10 +1,14 @@
 //Layers
 import './cy-canvas-layers/cy-canvas-viewer.js';
 import {getSvgPathFromBlocks} from "./cy-canvas-layers/cy-elements-to-canvas.js"
+import { sharedStyles } from './shared-styles.js';
 
 //Application
 import "./cy-layer-list.js"
-import './cy-input-data.js';
+
+//Aunque no se llame directamente hace falta importarlo porque la ejecución define el elemento!!!!
+import CyInputDataBasic from './cy-elements/cy-input-data-basic.js';
+
 import { loadProject, saveProject, saveSvg, saveCNC } from "./cy-file-save-load.js";
 
 //From geometry
@@ -18,6 +22,7 @@ import {createCommandManager, commandLayerCreate, commandLayerDelete, commandLay
       commandChangeOrigin} from './cy-commands/cy-command-definitions.js';
 
 //For Drawing Interactively
+
 import DrawTranslate from "./cy-draw-interactive/cy-draw-translate.js"
 import DrawRotate from "./cy-draw-interactive/cy-draw-rotate.js"
 import DrawScale from "./cy-draw-interactive/cy-draw-scale.js"
@@ -34,24 +39,27 @@ import DrawCircle from "./cy-draw-interactive/cy-draw-circle.js"
 import DrawArc from "./cy-draw-interactive/cy-draw-arc.js"
 import DrawPath from "./cy-draw-interactive/cy-draw-path.js"
 import DrawGcode from "./cy-draw-interactive/cy-draw-gcode.js"
+import DrawExportGcode from "./cy-draw-interactive/cy-draw-export-gcode.js"
 
 //Parsers
 import {convertDxfToGeometry} from "./parsers/cy-parser-dxf-geometry-objects.js"
 import {isoToGeometry } from "./parsers/cy-parser-iso-geometry.js"
 import {svgToGeometry} from "./parsers/cy-parser-svg.js"
 import {pathsToIso} from "./parsers/cy-parser-geometry-to-iso.js"
-//import "./parsers/image-tracer.js";
+
+
+const defaultConfig = await fetch('./cy-1830-config.json').then(r => r.json());
 
 const templateMainMenu =`
   <span >
     <md-filled-button id="file-menu-anchor">FILE</md-filled-button>
   <!-- Note the has-overflow attribute -->
     <md-menu has-overflow positioning="popover" id="file-menu" anchor="file-menu-anchor">
-    <md-menu-item id="file-open"><div slot="headline">Open</div></md-menu-item>
-        <md-menu-item id="file-save-project"><div slot="headline">Save</div></md-menu-item>
-        <md-menu-item id="file-save-iso"><div slot="headline">Export GCode</div></md-menu-item>
-        <md-menu-item id="file-save-svg"><div slot="headline">Export Svg</div></md-menu-item>
-        <md-menu-item id="file-print"><div slot="headline">PRINT</div></md-menu-item>
+    <md-menu-item id="open-project"><div slot="headline">Open</div></md-menu-item>
+        <md-menu-item id="save-project"><div slot="headline">Save</div></md-menu-item>
+        <md-menu-item id="save-iso"><div slot="headline">Export GCode</div></md-menu-item>
+        <md-menu-item id="save-svg"><div slot="headline">Export Svg</div></md-menu-item>
+        <!--md-menu-item id="print"><div slot="headline">PRINT</div></md-menu-item-->
     </md-menu>
     <md-filled-button id="zoom-menu-anchor">ZOOM</md-filled-button>
     <md-menu has-overflow positioning="popover" id="zoom-menu" anchor="zoom-menu-anchor">
@@ -140,72 +148,42 @@ const templateMainMenu =`
 //Aprovecho y pongo aquí el width de selección, por ejemplo
 const templateSelectInputData =`
 <div>
-    <md-filled-text-field id="data-penWidth" all" label="Select Tolerance" type="number" value="1" max="5" min="0.5" step="0.5"></md-filled-text-field>
-    <div id="menu-select">
-        <md-filled-button class="submenu _25" id="select-sel">SEL</md-filled-button>
-        <md-filled-button class="submenu _25" id="select-all">ALL</md-filled-button>
-        <md-filled-button class="submenu _25" id="select-invert">INV</md-filled-button>
-        <md-filled-button class="submenu _25" id="select-del">CUT</md-filled-button>
-        <md-filled-button class="submenu _25" id="select-copy">COPY</md-filled-button>
-        <md-filled-button class="submenu _25" id="select-paste">PASTE</md-filled-button>
+    <span>Select Tolerance</span><input id="data-penWidth" type="number" value="1" max="5" min="0.5" step="0.5"/>
+    <div id="menu-select" class="column">
+      <div class="row">
+        <input type="button" class="_25" id="select-sel" value = "SEL"/>
+        <input type="button" class="_25" id="select-all" value = "ALL"/>
+        <input type="button" class="_25" id="select-invert" value = "INV"/>
+        <input type="button" class="_25" id="select-del" value = "DEL"/>
+      </div>
+      <div class="row">
+        <input type="button" class="_25" id="select-copy" value = "COPY"/>
+        <input type="button" class="_25" id="select-paste" value = "PASTE"/>
+      </div>
     </div>
 </div>
 `
-const templateLayers = `
-<div id=show-layers>
-LAYERS <md-filled-button id="layer-add">ADD</md-filled-button><md-switch slot="end" selected id="layer-show"></md-switch>
-</div>
-`
-const templateKeys = `
-<div >
-    <md-filled-button id="Enter">ENTER</md-filled-button>
-    <md-filled-button id="Escape">ESCAPE</md-filled-button>
-    <md-filled-button id="Delete">DELETE</md-filled-button>
-</div>
-`
 const templateUndo = `
-<div id='undo-redo'>
-    <md-filled-button id="undo">UNDO</md-filled-button>
-    <md-filled-button id="redo">REDO</md-filled-button>
+<div id='undo-redo' class="row">
+    <input type="button" id="undo" class="_50" value="UNDO" />
+    <input type="button" id="redo" class="_50" value="REDO" />
 </div>
 `
 const template = `
   <div id="full-screen" tabindex='1' class='column'>
     <div id="main-menu" class="row">${templateMainMenu}</div>
-    <!--div  id="hidden-row" class="row" >
-        <cy-file-loader id="cy-hidden-file"></cy-file-loader>
-    </div-->
     <div id="left" class="column" >
-    <cy-layer-list id="layer-view"></cy-layer-list>
-    ${templateUndo}
-    ${templateSelectInputData}
-    <div>
-      </md-filled-text-field><md-filled-text-field label="Link Tolerance" class="half" type="number" value="0.1" max="5" min="0.01" step="0.1"></md-filled-text-field>
-        </div>   
-    <cy-input-data id='manual-data'></cy-input-data>
+      <cy-layer-list id="layer-view" class="column"></cy-layer-list>
+      ${templateUndo}
+      ${templateSelectInputData}
+      <div class="row"><span>Link Tolerance</span><input type="number" class="half" value="0.1" max="5" min="0.01" step="0.1"/></div>   
+      <cy-input-data-basic id="input-data"></cy-input-data-basic>
     </div>
-    <cy-canvas-viewer id="viewer" tabindex="0"></cy-canvas-viewer>
-</div>
+    <cy-canvas-viewer id="viewer" tabindex="0"></cy-canvas-viewer></div>
+  </div>
   `
 const style = `
 <style>
-.row{
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  margin: 0;
-  border: none;
-  padding: 0;
-  justify-content: flex-start;
-}
-.column{
-  display: flex;
-  flex-direction: column;
-  margin: 0;
-  border: none;
-  padding: 0;
-  justify-content: flex-start;
-}
 
 .layer-name{
     margin: 2px;
@@ -219,10 +197,8 @@ const style = `
     font-size: 36px;
     background-color: lightblue;
 }
-.half{
-  width:50%;
-}    
-    #show-layers{
+
+  #show-layers{
     width:100%;
     background-color: beige;
 }
@@ -263,6 +239,15 @@ const style = `
 }
     </style>
 `
+    //Almacenamiento de los datos manuales entre entradas y salidas de menus.
+  //Pongo defaults (podrían ser de un JSON, TODO)
+  //Uso la nomenclatura de variables de los componentes
+
+function saveConfig(config) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+}
+
+
 
 class cyCad1830App extends HTMLElement {
 
@@ -270,9 +255,25 @@ class cyCad1830App extends HTMLElement {
       super();
 
       this.dom = this.attachShadow({ mode: 'open' });
+      this.dom.adoptedStyleSheets = [sharedStyles];
       this.dom.innerHTML = template + style;
     }
-
+    registerInputApplications(inputApp , drawingApp){
+      //-------------------INPUT DATA
+      //Interactividad entre parte izquierda, datos manuales y ratón.
+      //this.mData = this.dom.querySelector('#manual-data');
+      this.viewer.interactiveDrawing.setDrawingMode(drawingApp );
+      
+      // this.viewer.addEventListener('drawing-pos', (e) => 
+      //   inputApp.update(e.detail));
+      this.mData.addEventListener('input-data', (e) =>
+        drawingApp.updateData(e.detail));
+      this.mData.addEventListener('input-click', (e) => 
+        drawingApp.updateData( e.detail));
+      this.mData.addEventListener('input-key', (e) => 
+        drawingApp.updateData( e.detail));
+      }
+    
   connectedCallback(){
     this.viewer = this.dom.querySelector("#viewer");
     this.manager =  createCommandManager( this.viewer.layerDraw, this ); // 
@@ -286,70 +287,14 @@ class cyCad1830App extends HTMLElement {
     })
 
     menus.forEach(m => this[`${m}MenuEl`].addEventListener('close-menu', (e) => this.handleMenus(e)));
-
-    //Almacenamiento de los datos manuales entre entradas y salidas de menus.
-  //Pongo defaults (podrían ser de un JSON, TODO)
-  //Uso la nomenclatura de variables de los componentes
-    this.dataStore  = {
-      geometry:{
-        circle:{
-          "data-r" : 10
-        },
-        poly:{
-          "data-edges" : 4,
-          "data-subType" : 'R'
-        },
-        segment:{
-          "data-d": 500,
-          "data-a": 30
-        },
-        arc:{
-          "data-r" : 100,
-          "data-a" : 45
-        },
-        symmetry:{
-          "data-a" : 45
-        },
-        rotate:{
-          "data-a" : 45
-        },
-        scale:{
-          "data-sn" : 50,
-          "data-sd" : 100
-        }
-      },
-      layers:{
-        "path-color" : "green",
-        "path-width" : 2,
-        "selected-color" : "yellow",
-        "selected-width" : "2"
-      }
-    }
-
-    //-------------------INPUT DATA
-    //Interactividad entre parte izquierda, datos manuales y ratón.
-    this.mData = this.dom.querySelector('#manual-data');
-    this.viewer.addEventListener('pos',(e)=>this.mData.update(e.detail));
-    this.mData.addEventListener('input-data', (e) =>
-        this.drawingApp.updateData(e.detail));
-    this.mData.addEventListener('input-click', (e) => {
-          this.drawingApp.updateData(e.detail);
-        });
     
+    customElements.whenDefined('cy-input-data-basic').then(()=>{
+      //console.log('mdata inicializado')
+      this.mData = this.dom.querySelector('#input-data');
+      this.mData.initialData(defaultConfig.geometry)
+      this.viewer.addEventListener('drawing-pos', (e) => this.mData.update(e.detail));
+    })
 
-//-----------------LOAD, FILE
-    // this.dom.querySelector('#cy-hidden-file').addEventListener('file-loaded', (evt)=>{
-    //     //evt.detail.file;
-    //     evt.detail.data.geometry.layers.forEach((ly,ix)=>{
-    //         const newLayer = this.viewer.layerDraw.addLayer(evt.detail.name.split('.')[0] +'_'+ ix);
-    //         newLayer.addBlocks(ly.paths)
-    //     });
-    //     this.viewer.fit(); //se podría hacer solo con las visibles o así...
-    //     //this.viewer.redraw();
-    // });
-   
-   
-//    this.dom.addEventListener('keyup',this.handleKeys,true);
 
 //--------------Gestión de CAPAS, LAYERS
     //se pueden generar capas bien en el Load, bien en la propia aplicación (menú)
@@ -399,9 +344,6 @@ class cyCad1830App extends HTMLElement {
     this.addEventListener('set-origin', e=>{
       const dx = e.detail.data.x0, dy =e.detail.data.y0
       commandChangeOrigin( dx, dy);
-        //this.canvasHandler.view("fgPane", {x:dx, y:dy});  //rehace los cálculos del handler
-        //this.layerDraw.setOrigin( -dx, -dy);
-        //this._redrawLayers();
     });
 
 
@@ -457,7 +399,7 @@ class cyCad1830App extends HTMLElement {
         case 'sel'    : {
                           this.drawingApp = new DrawSelection(this.viewer.layerDraw, '');
                           this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
-                            this.mData.setAttribute('type','select');
+                           // this.mData.setAttribute('type','select');
                         }
                         break;
         case 'copy'   : {
@@ -488,12 +430,6 @@ class cyCad1830App extends HTMLElement {
     translateOrigin = (dx, dy) => {
       this.viewer.canvasHandler.view("fgPane", {x:dx, y:dy});  //rehace los cálculos del handler
     }
-    // handleKeys = (e)=>{
-    // if((e.key === 'Escape') || (e.key === 'Delete') || (e.key === 'Enter')){
-    //   this.viewer.interactiveDrawing.doKeyAction(e.key);
-    //   e.stopPropagation();
-    // }
-
     handleMenus = (e) => {
       //Nos ponemos una nomenclatura razonable para poner orden en los ids
       //menu, submenu, etc... separados por guiones
@@ -501,99 +437,92 @@ class cyCad1830App extends HTMLElement {
       const [main, sub1, sub2] = action.split('-');
       console.log(main, sub1, sub2);
       switch(main){
-        case 'file':{
-          switch(sub1){
-            case 'open': //this.dom.querySelector("#cy-hidden-file").click();break;
-            {
-              loadProject().then(file => {
-                console.log(file.name);
-                const type = file.name.split('.').pop();
-                if(type === 'json'){
-                  const data = JSON.parse(file.text );
-                // Restaurar modelo
-                  this.viewer.layerDraw.deserialize( data.model); //Falta restaurar historia
-                }
-                else if((type === 'nc') || (type === 'pxy')){
-                  const geo = isoToGeometry(file.text); //Hay que pasarle la configuración de máquina...por defecto fresadora
-                  geo.geometry.layers.forEach(ly => {
-                    const id = this.viewer.layerDraw.addLayer(ly.name); //debe poner el activeLayer
-                    this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.getLayer(id)));
-                    this.viewer.layerDraw.addBlocks(undefined, ly.paths);
-                  })
-                  this.viewer.fit();
-                  this.viewer.layerDraw.draw();
-                } else if(type === 'svg'){
-                  const geo = svgToGeometry(file.text);
-                  geo.layers.forEach(ly => {
-                    const id = this.viewer.layerDraw.addLayer(); //debe poner el activeLayer
-                    this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.getLayer(id)));
-                    this.viewer.layerDraw.addBlocks(undefined, ly.paths);
-                  })
-                  this.viewer.fit();
-                  this.viewer.layerDraw.draw();
+        case 'open': {
+          loadProject().then(file => {
+            console.log(file.name);
+            const type = file.name.split('.').pop();
+            if(type === 'json'){
+              const data = JSON.parse(file.text );
+            // Restaurar modelo
+              this.viewer.layerDraw.deserialize( data.model); //Falta restaurar historia
+            }
+            else if((type === 'nc') || (type === 'pxy')){
+              const geo = isoToGeometry(file.text); //Hay que pasarle la configuración de máquina...por defecto fresadora
+              geo.geometry.layers.forEach(ly => {
+                const id = this.viewer.layerDraw.addLayer(ly.name); //debe poner el activeLayer
+                this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.getLayer(id)));
+                this.viewer.layerDraw.addBlocks(undefined, ly.paths);
+              })
+              this.viewer.fit();
+              this.viewer.layerDraw.draw();
+            } else if(type === 'svg'){
+              const geo = svgToGeometry(file.text);
+              geo.layers.forEach(ly => {
+                const id = this.viewer.layerDraw.addLayer(); //debe poner el activeLayer
+                this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.getLayer(id)));
+                this.viewer.layerDraw.addBlocks(undefined, ly.paths);
+              })
+              this.viewer.fit();
+              this.viewer.layerDraw.draw();
 
-                } else if(type === 'dxf'){
-                  const layers = convertDxfToGeometry(file.text); //devuelve array de layers y cada una con sus bloques...
-                  layers.forEach(ly => {
-                    const id = this.viewer.layerDraw.addLayer(ly.name, {pathColor:`#${ly.color.toString(16)}`}); //debe poner el activeLayer
-                    this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.getLayer(id)));
-                    this.viewer.layerDraw.addBlocks(undefined, ly.blocks.concat(ly.paths).concat(ly.circles));
-                    //this.viewer.layerDraw.addBlocks(undefined, ly.paths);
-                    //this.viewer.layerDraw.addBlocks(undefined, ly.circles);
-                  })
-                  this.viewer.fit();
-                  this.viewer.layerDraw.draw();
-                }
-                else if((type === 'png') || (type === 'jpg')){
-                    ImageTracer.imageToSVG("input.png", (svg) => {
-                      console.log(svg);
-                    });
-                  }
-                //const lyId = this.viewer.layerDraw.getActiveLayerId();
-                
+            } else if(type === 'dxf'){
+              const layers = convertDxfToGeometry(file.text); //devuelve array de layers y cada una con sus bloques...
+              layers.forEach(ly => {
+                const id = this.viewer.layerDraw.addLayer(ly.name, {pathColor:`#${ly.color.toString(16)}`}); //debe poner el activeLayer
+                this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.getLayer(id)));
+                this.viewer.layerDraw.addBlocks(undefined, ly.blocks.concat(ly.paths).concat(ly.circles));
+                //this.viewer.layerDraw.addBlocks(undefined, ly.paths);
+                //this.viewer.layerDraw.addBlocks(undefined, ly.circles);
+              })
+              this.viewer.fit();
+              this.viewer.layerDraw.draw();
+            }
+            else if((type === 'png') || (type === 'jpg')){
+                ImageTracer.imageToSVG("input.png", (svg) => {
+                  console.log(svg);
+                });
               }
-            )
-            };break;
-            case 'save': {
-              switch(sub2){
-                case 'project':{
-                  const projectData = {
-                  project: { name: "unnamed", timestamp: Date.now()},
-                  model: this.viewer.layerDraw
-                  //manager: this.manager
-                  // serializamos los comandos registrados
-                  //commands: Array.from(commandRegistry.entries()).map(([name, fn]) => ({ name, source: fn.toString(), })),
-                };
-                const json = JSON.stringify(projectData, null, 2);
-                saveProject(null, json);
+            //const lyId = this.viewer.layerDraw.getActiveLayerId();
+            
+          })
+        }break;
+        case 'save': {
+          switch(sub1){
+            case 'project':{
+              const projectData = {
+              project: { name: "unnamed", timestamp: Date.now()},
+              model: this.viewer.layerDraw
+              //manager: this.manager
+              // serializamos los comandos registrados
+              //commands: Array.from(commandRegistry.entries()).map(([name, fn]) => ({ name, source: fn.toString(), })),
+              };
+              const json = JSON.stringify(projectData, null, 2);
+              saveProject(null, json);
               //saveProject(null, json);
               //     const type = file.name.split('.').pop();
-                }  break;
-                case 'iso':{
-                  let data = this.viewer.layerDraw.getSelectedBlocks();
-                  data = data.filter( b => b.type === 'path');
-                  saveCNC(null, pathsToIso(data));
-                }
-                  break;
-                case 'svg':{
-                  
-                  let data = this.viewer.layerDraw.getSelectedBlocks().filter( b => b.type === 'path');;
-                  const ww = this.viewer.layerDraw.extents;
-                  const header = `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"
-                   fill="transparent" stroke="black" strokeWidth="2px" vector-effect="non-scaling-stroke"
-                    viewBox = "${ww.xi} ${ww.yi} ${ww.xf-ww.xi} ${ww.yf-ww.yi}"
-                    preserveAspectRatio = xMidYMid meet"
-                    transform="matrix(1 0 0 -1 0 0)" >\n` 
-                  const paths = data.reduce((d,path) =>  d + `<path d="${(getSvgPathFromBlocks(path))}"/>\n`, '')
-                  const file = `${header}${paths}</svg>`
-                  saveSvg(null, file);
-                }
-                  break;
-              }
-            }
-              break;
+            }break;
+            case 'iso':{
+              //let data = this.viewer.layerDraw.getSelectedBlocks().filter( b => b.type === 'path');;
+              //En el futuro , en vez de perfil, puede elegirse tipo de mecanizado, compensación, etc...
+              this.drawingApp = new DrawExportGcode(this.viewer.layerDraw, '');
+              const inputData = new CyInputDataExportGcode( main);  //sin defaults
+              this.registerInputApplications( inputData, this.drawingApp )
+              //saveCNC(null, pathsToIso(data));
+            }break;
+            case 'svg':{   
+              let data = this.viewer.layerDraw.getSelectedBlocks().filter( b => b.type === 'path');;
+              const ww = this.viewer.layerDraw.extents;
+              const header = `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"
+                fill="transparent" stroke="black" strokeWidth="2px" vector-effect="non-scaling-stroke"
+                viewBox = "${ww.xi} ${ww.yi} ${ww.xf-ww.xi} ${ww.yf-ww.yi}"
+                preserveAspectRatio = xMidYMid meet"
+                transform="matrix(1 0 0 -1 0 0)" >\n` 
+                const paths = data.reduce((d,path) =>  d + `<path d="${(getSvgPathFromBlocks(path))}"/>\n`, '')
+                const file = `${header}${paths}</svg>`
+                saveSvg(null, file);
+            }break;
           }
-        }
+        }break;
         case 'zoom':{
             this.viewer.clearCursors();
             this.viewer.canvasHandler.setZoomMode();               
@@ -604,18 +533,27 @@ class cyCad1830App extends HTMLElement {
                 case 'in': this.viewer.canvasHandler.view('fgZoomIn'); break;
                 case 'out': this.viewer.canvasHandler.view('fgZoomOut');break;
             }
-            break;
-        }
+        }break;
+//---------------------------------------------------------
+//---------   TRANSFORMACIONES ---------------------------
+//---------------------------------------------------------
         case 'origin':{
-            this.drawingApp = new DrawOrigin(this.viewer.layerDraw, sub1);
-            this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
-            this.mData.setAttribute('type','origin');
-            }
-            break;
+          this.drawingApp = new DrawOrigin(this.viewer.layerDraw, sub1);
+          this.registerInputApplications( 'transform', this.drawingApp )
+          this.mData.setActiveApplication( 'transform', 'origin' );
+        }break;
+       /**
+         * El link debe unir tanto tramos sueltos como paths.
+         * Lo paso junto al setOrigin que se parecen mucho 
+         */
+        case 'link':{
+          this.viewer.layerDraw.link();
+        }
+        break;          
         case 'symmetry':{
-            this.drawingApp = new DrawSymmetry(this.viewer.layerDraw, sub1);
-            this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
-            this.mData.setAttribute('type','symmetry'+sub1);            //El attribute es lo que cambia el html !!
+          this.drawingApp = new DrawSymmetry(this.viewer.layerDraw, sub1);
+          this.registerInputApplications( 'transform', this.drawingApp )
+          this.mData.setActiveApplication( 'transform', `symmetry${sub1}`);
         }
         break;
         case 'cut':{
@@ -623,163 +561,82 @@ class cyCad1830App extends HTMLElement {
           const cutPoints = findAllCuts(selectedBlocks);
           commandCreateCutPoints(cutPoints); //ye un comando con undo
         }
-          break;
-        /**
-         * El link debe unir tanto tramos sueltos como paths.
-         * Lo paso junto al setOrigin que se parecen mucho 
-         */
-        case 'link':{
-          this.viewer.layerDraw.link();
-        }
-    
         break;
-
         case 'scale':{
-            this.drawingApp = new DrawScale(this.viewer.layerDraw, sub1);
-            this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
-            this.mData.setAttribute('type','scale');
-            this.drawingApp.updateData(this.dataStore.geometry.scale);
-            this.mData.updateData(this.dataStore.geometry.scale) 
-          }
-          break;
+          this.drawingApp = new DrawScale(this.viewer.layerDraw, sub1);
+          this.registerInputApplications( 'transform', this.drawingApp )
+          this.mData.setActiveApplication( 'transform', 'scale' );
+        }
+        break;
         case 'translate': {
-            this.drawingApp = new DrawTranslate(this.viewer.layerDraw, sub1);
-            this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
-            this.mData.setAttribute('type','translate');//El attribute es lo que cambia el html !!
-            }
-            break;
-        case 'rotate':
-            this.drawingApp = new DrawRotate(this.viewer.layerDraw, sub1);
-            this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
-            this.mData.setAttribute('type','rotate');
-            this.drawingApp.updateData(this.dataStore.geometry.rotate);
-            this.mData.updateData(this.dataStore.geometry.rotate)  //inicializo, debería ser un setting y luego memorizarse TODO              break;
-            break;
+          this.drawingApp = new DrawTranslate(this.viewer.layerDraw, sub1);
+          this.registerInputApplications( 'transform', this.drawingApp )
+          this.mData.setActiveApplication( 'transform', 'translate' );
+        }
+        break;
+        case 'rotate':{
+          this.drawingApp = new DrawRotate(this.viewer.layerDraw, sub1);
+          this.registerInputApplications( 'transform', this.drawingApp )
+          this.mData.setActiveApplication( 'transform', 'rotate' );
+
+        }
+        break;
         case 'draw':{
             switch( sub1) {
                 case 'start':
                 case 'stepBack':
                 case 'end': break;
             }
-            break;
-        }
+        }break;
         //Los de support y transform los dejo en plano por no hacer más profundo el árbol
         case 'point':  break;
         case 'line' :{
-            switch(sub1){
-                case 'PP':
-                case 'PXA':
-                case 'PYA':
-                case 'PDA': //En estos tres sobran cosas
-                case 'YH':
-                case 'XV':
-                  this.drawingApp = new DrawSegment(this.viewer.layerDraw, sub1);
-                  this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
-                  //El attribute es lo que cambia el html !!
-                  this.mData.setAttribute('type','segment'+sub1);
-
-                  this.mData.updateData(this.dataStore.geometry.segment);
-                  this.drawingApp.updateData(this.dataStore.geometry.segment);
-
-                  // if((sub1 === 'PDA') || (sub1 === 'YH') || (sub1 === 'XV')){
-                  //   this.mData.update({idn:['data-d'], pos:{x:this.dataStore.segment.d}});
-                  //   this.viewer.interactiveDrawing.updateData({"data-d":this.dataStore.segment.d});
-                  // } else {
-                  //   this.mData.update({idn:['data-d'], pos:{x:undefined}});
-                  //   this.viewer.interactiveDrawing.updateData({"data-d":undefined});
-                  // }
-                  break;
-                case 'TPB':
-                  this.drawingApp = new DrawSegmentPB(this.viewer.layerDraw, sub1);
-                  this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
-                  //El attribute es lo que cambia el html !!
-                  this.mData.setAttribute('type','segment'+sub1);
-                  break;
-                case 'TBB':
-                  this.drawingApp = new DrawSegmentBB(this.viewer.layerDraw, sub1);
-                  this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
-                  //El attribute es lo que cambia el html !!
-                  this.mData.setAttribute('type','segment'+sub1);
-                  break;
-                case 'NP':
-                  this.drawingApp = new DrawNormal(this.viewer.layerDraw, sub1);
-                  this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
-                  //El attribute es lo que cambia el html !!
-                  this.mData.setAttribute('type','segment'+sub1);
-
-                  break;
-
-            }
+          switch(sub1){ //agrupo acciones comunes
+            case 'NP':  this.drawingApp = new DrawNormal(this.viewer.layerDraw, sub1);    break;
+            case 'PP':
+            case 'PXA':
+            case 'PYA':
+            case 'PDA': this.drawingApp = new DrawSegment(this.viewer.layerDraw, sub1);   break;
+            case 'TPB': this.drawingApp = new DrawSegmentPB(this.viewer.layerDraw, sub1); break;
+            case 'TBB': this.drawingApp = new DrawSegmentBB(this.viewer.layerDraw, sub1); break;
+          }
+          this.registerInputApplications( 'segment', this.drawingApp )
+          this.mData.setActiveApplication( 'segment', sub1 );
         }
         break;
         case 'circle' :{
-          this.keyActions = this.drawKeys;
-          switch( sub1){
-            case 'CR' :
-            case '2PR': 
-            case 'CP':
-            case '3P': //this.viewer.interactiveDrawing.drawCircle(this.dataLayerBorrador, sub1);break;
-              this.drawingApp = new DrawCircle(this.viewer.layerDraw, sub1);
-              this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
-              break;
-              
-          }
-          this.mData.setAttribute('type','circle'+sub1);
-          this.drawingApp.updateData(this.dataStore.geometry.circle);
-          this.mData.updateData(this.dataStore.geometry.circle);
+          this.drawingApp = new DrawCircle(this.viewer.layerDraw, sub1);
+          this.registerInputApplications( 'circle', this.drawingApp )
+          this.mData.setActiveApplication( 'circle', sub1 );
         }
         break;
         case 'arc' :{
-            switch( sub1){
-                case 'CPA':
-                case '3P':
-                case '2PR':
-                case '2PC':
-                  this.drawingApp = new DrawArc(this.viewer.layerDraw, sub1);
-                  this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
-                  break;
-            }
-          this.mData.setAttribute('type','arc'+sub1);
-          this.drawingApp.updateData(this.dataStore.geometry.arc);
-          this.mData.updateData(this.dataStore.geometry.arc);
+          this.drawingApp = new DrawArc(this.viewer.layerDraw, sub1);
+          this.registerInputApplications( 'arc', this.drawingApp )        
+          //esta la última porque pone handlers 
+          this.mData.setActiveApplication( 'arc', sub1 );
         }
         break;
         case 'path':{
           this.drawingApp = new DrawPath(this.viewer.layerDraw, sub1);
-          this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
-          this.mData.setAttribute('type','path');
-
-          //this.mData.updateData(this.dataStore.path);
-          //this.viewer.interactiveDrawing.updateData(this.dataStore.path);
+          this.registerInputApplications( 'path', this.drawingApp )        
+          this.mData.setActiveApplication( 'path', sub1 );
         }
         break;
         case 'poly' :{ //quito el menú de tipo y lo pongo en el selector de input-data
-          this.drawingApp = new DrawPolygon(this.viewer.layerDraw, sub1)
-          this.viewer.interactiveDrawing.setDrawingMode( this.drawingApp);
-          this.mData.setAttribute('type','poly'+sub1);
-          this.drawingApp.updateData(this.dataStore.geometry.poly);
-          this.mData.updateData(this.dataStore.geometry.poly)  //inicializo, debería ser un setting y luego memorizarse TODO
+          this.drawingApp = new DrawPolygon(this.viewer.layerDraw, sub1);
+          this.registerInputApplications( 'polygon', this.drawingApp );
+          this.mData.setActiveApplication( 'polygon', sub1 );
         }
         break;
         case 'gcode' : {
           this.drawingApp = new DrawGcode(this.viewer.layerDraw, '')
-          
-          this.viewer.interactiveDrawing.setDrawingMode( this.drawingApp);          
-          this.mData.setAttribute('type','gcode');
-          this.mData.focus();
-        }
+          this.registerInputApplications( 'gcode', this.drawingApp )
+          this.mData.setActiveApplication( 'gcode', sub1 );
+        }break;
         default:break;
       }
     } 
-    // cursor = {
-    //     setSelect: (r)=>
-    //         {this.viewer.style.cursor = `url('data:image/svg+xml;utf8,<svg id="svg" xmlns="http://www.w3.org/2000/svg" version="1.1" width="${2*r}" height="${2*r}"><circle cx="${r}" cy="${r}" r="${r}" stroke-width="1" style="stroke: black; fill: red;"/></svg>') ${r} ${r}, pointer`},
-    //     removeSelect: () =>  this.viewer.style.cursor = "",
-    //     clearAll: ()=>{
-    //         this.cursor.removeSelect();
-    //         ["drawCursor", "zoomInCursor", "paneClickCursor"].forEach(c => this.viewer.classList.remove(c));
-    //         }
-    //     }
     //Se supone que aquí se llama al desconectar la página, pero en laa aplicaciones no parece que pase
     disconnectedCallback() {
     //hay que quitar los listeners... 

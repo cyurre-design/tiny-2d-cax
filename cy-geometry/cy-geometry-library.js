@@ -5,11 +5,11 @@ import {circle_circle_intr, arc_arc_intr, circle_arc_intr} from './cy-cuts-circl
 import {segment_arc_intr} from './cy-cuts-segment-circle.js'
 import {line_line_intr} from './cy-cuts-segment-segment.js'
 
-import {segmentTranslate, segmentRotate, segmentScale, segmentSymmetryX, segmentSymmetryY, segmentSymmetryL, segmentReverse  } from './cy-geo-elements/cy-segment.js'
-import {arcTranslate, arcRotate, arcScale, arcSymmetryX, arcSymmetryY,  arcSymmetryL, arcReverse} from './cy-geo-elements/cy-arc.js'
-import {circleTranslate, circleRotate, circleScale, circleSymmetryX, circleSymmetryY, circleSymmetryL } from './cy-geo-elements/cy-circle.js'
-import {polygonTranslate, polygonRotate, polygonScale, polygonSymmetryX, polygonSymmetryY, polygonSymmetryL} from './cy-geo-elements/cy-polygon.js'
-import {pathTranslate, pathRotate, pathScale, pathSymmetryX, pathSymmetryY, pathSymmetryL, pathReverse} from './cy-geo-elements/cy-path.js'
+import {segmentTranslate, segmentRotate, segmentScale, segmentSymmetryX, segmentSymmetryY, segmentSymmetryL, segmentReverse, segmentLength  } from './cy-geo-elements/cy-segment.js'
+import {arcTranslate, arcRotate, arcScale, arcSymmetryX, arcSymmetryY,  arcSymmetryL, arcReverse, arcLength} from './cy-geo-elements/cy-arc.js'
+import {circleTranslate, circleRotate, circleScale, circleSymmetryX, circleSymmetryY, circleSymmetryL, circleLength } from './cy-geo-elements/cy-circle.js'
+import {polygonTranslate, polygonRotate, polygonScale, polygonSymmetryX, polygonSymmetryY, polygonSymmetryL, polygonLength} from './cy-geo-elements/cy-polygon.js'
+import {pathTranslate, pathRotate, pathScale, pathSymmetryX, pathSymmetryY, pathSymmetryL, pathReverse, pathLength} from './cy-geo-elements/cy-path.js'
 import {bezierTranslate, bezierRotate, bezierScale, bezierSymmetryX, bezierSymmetryY, bezierSymmetryL, bezierReverse} from './cy-geo-elements/cy-bezier.js'
 
 
@@ -268,13 +268,19 @@ export function circleFrom3Points(p1,p2,p3){
 }
 export function centerFrom2PR(data){
     const dx = data.x1 - data.x0, dy = data.y1 - data.y0;     
+    const xm = 0.5 * (data.x0 + data.x1), ym = 0.5 * (data.y0 + data.y1);
     const d = Math.hypot(dx,dy);
     if(d > 2*data.r) return undefined
-    const dc = Math.sqrt( data.r*data.r - 0.25*d*d); //distancia centro a cuerda
-    const nx = - dy / d, ny = dx / d ; //unitario perpendicular
-    const newdata = {
-        cx: 0.5*(data.x1 +  data.x0 ) + dc*nx, //punto medio más vector a centro
-        cy: 0.5*(data.y1 +  data.y0 ) + dc*ny,
+    //const dc = Math.sqrt( data.r*data.r - 0.25*d*d); //distancia centro a cuerda
+    const ux = dx/d, uy = dy/d; //unitario, el centro estará en la normal en el punto medio
+    const h = Math.sqrt(data.r*data.r - 0.25*d*d);
+    const sols = [{x0:xm + h*uy, y0:ym - h*ux},{x0:xm - h*uy, y0:ym + h*ux}];
+    //Por definición, el p2 debe estar en el arco, lo que termina de definir todo
+    //const data = Object.assign({},sols[0]);
+    const sol = data.way==='clock'?sols[0]:sols[1];
+    const newdata = {    
+        cx: sol.x0,
+        cy: sol.y0,
         x1: data.x1,
         y1: data.y1,
         r: data.r
@@ -312,8 +318,8 @@ export function arc3P2SVG(p1, p2, p3){
     const newData = arc2PC2SVG({x:data.cx, y:data.cy}, data.r ,p1, p3, way);
     return newData;
 }
-
-export function arc2PR2SVG(p1, p2, r){
+//TODO usar centerfrom2pr
+export function arc2PR2SVG(p1, p2, r, way='clock'){
     const dx = p2.x - p1.x, dy = p2.y - p1.y;   //vector resta
     const xm = 0.5*(p2.x + p1.x), ym = 0.5*(p2.y + p1.y);   //punto medio
     const d = Math.hypot(dx,dy);
@@ -322,10 +328,11 @@ export function arc2PR2SVG(p1, p2, r){
     const h = Math.sqrt(r*r - 0.25*d*d);
     //Hay dos soluciones con -uy,ux y uy,ux, la primera es a derechas, la cojo porque 
     //si se quiere se le da la vuelta, podría ser un parámetro
-    const sols = [{x0:xm + h*uy, y0:ym - h*ux},{x0:xm + h*uy, y0:ym + h*ux}];
+    const sols = [{x0:xm + h*uy, y0:ym - h*ux},{x0:xm - h*uy, y0:ym + h*ux}];
     //Por definición, el p2 debe estar en el arco, lo que termina de definir todo
     //const data = Object.assign({},sols[0]);
-    const data = arc2PC2SVG({x:sols[0].x0, y:sols[0].y0}, r, p1, p2, 'clock')
+    const sol = way==='clock'?sols[0]:sols[1];
+    const data = arc2PC2SVG({x:sol.x0, y:sol.y0}, r, p1, p2, way)
 
     return data;
 }
@@ -528,6 +535,19 @@ export function blockReverse( block){
         case 'polygon': return ()=>{};
         case 'path': return pathReverse(block);
         case 'bezier': return bezierReverse(block);
+        default: console.log('no contemplado');
+    }
+}
+    
+export function blockLength( block){
+    switch(block.type){
+        case 'segment': return segmentLength(block);
+        case 'circle': return circleLength(block);
+        case 'arc': return arcLength(block);
+        case 'polygon': return polygonLength(block);
+        case 'path': return pathLength(block);
+        //case 'bezier': return bezierLength(block);
+        case 'point' : return 0;
         default: console.log('no contemplado');
     }
 }

@@ -1,6 +1,6 @@
     
 import { scalePixels2mm } from '../cy-canvas-layers/cy-canvas-handler.js';
-const selectionWidthInPixels = 20;
+const selectionWidthInPixels = 10;
 //El translate está definido con clone, cada vez que muevo se crea.... pero a la larga es más comprensible
 export default class DrawBasic {
     constructor(layerDraw, mode, subMode){
@@ -25,7 +25,7 @@ export default class DrawBasic {
         const w = scalePixels2mm( this.draft.pathWidth);             //O selected??
         //pintamos los bloques, si hay
         this.draft.clear();
-        if(blocks)
+        if(blocks !==undefined)
             this.draft.drawBlocks(blocks, w, this.draft.pathColor ); //es llamada desde aquí, pasarnos siempre array
         //busco el punto más cercano al cursor y lo pinto
         const selWidth = scalePixels2mm(selectionWidthInPixels);
@@ -61,14 +61,16 @@ export default class DrawBasic {
             detail:{pos:this.hit, type:this.type, subType: this.subMode, idn:this.dataSent[this.status]}}));
     };
     //Habría que chequear tipos numéricos y tal, formatos...
+    //La idea es que lo numérico, mayoritario, se pone ne received y se parsea
+    //Otras cosas menos habituales se pasan como vienen
     updateDataBasic = (data) => {
         if(!data) return;
         let newData = [];
         Object.keys(data).forEach(k =>{
-            const idn = k.split('-')[1];
-            newData.push({idn:idn,v:data[k]});
-            if(this.dataReceived.includes(idn))
-                this.data[idn] = +data[k];
+            //const idn = k.split('-')[1];
+            newData.push({idn:k,v:data[k]});
+            if(this.dataReceived.includes(k))
+                this.data[k] = +data[k];
             })
         return newData;
         }

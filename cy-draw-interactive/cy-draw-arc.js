@@ -21,7 +21,7 @@ export default class DrawArc extends DrawBasic{
                 this.moveFn = [[this.h], [this.m1, this.draw]];
                 this.clickFn = [[this.p0], [this.m1, this.newBlock, this.deleteData]];
                 this.dataSent = [['x0','y0'],['x1','y1']];
-                this.dataReceived = ['x0','x1','y0','y1','r'];
+                this.dataReceived = ['x0','x1','y0','y1','r','way'];
              } break;
             case '2PC': {
                 this.moveFn = [[this.h],[this.mm, this.draw], [this.m1, this.newBlock, this.draw]];
@@ -38,7 +38,11 @@ export default class DrawArc extends DrawBasic{
         this.deleteDataBasic(['x0','x1','x2','y0','y1','y2']);
         //.forEach(k => delete this.data[k]);
     }
-    updateData = (data)=>this.updateDataBasic(data);
+    updateData = (data)=>{
+        const el = this.updateDataBasic(data).find(el=>el.idn==='way');
+        if(this.subMode === '2PR')
+            this.data.way = el.v;
+    }
     pm = (p) => {this.data.xm = p.x; this.data.ym = p.y; this.status = 2;};
     newBlock = (p) => {
         this.layerDraw.dispatchEvent(new CustomEvent('new-block', {bubbles: true, composed:true, detail:{type:'arc', data:this.data}}));};

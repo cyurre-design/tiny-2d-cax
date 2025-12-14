@@ -52,4 +52,6 @@ export function polygonSymmetryL(p, s){
         const alfai = Math.atan2(y - cy, x - cx)
         return createPolygon({cx:cx, cy:cy, r:p.r, edges:p.edges, delta:-p.delta, alfai:alfai});
     }
-    
+export function polygonLength(p){
+    return (2 * Math.PI * Math.sin( Math.PI / p.edges));
+}

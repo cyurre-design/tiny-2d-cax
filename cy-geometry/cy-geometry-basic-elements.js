@@ -1,6 +1,6 @@
 
 "use strict";
-import {geometryPrecision, centerFrom2PR, circleFrom3Points, arc3P2SVG, arc2PR2SVG, arcCPA, arcWay, arcDxf} from './cy-geometry-library.js'
+import {geometryPrecision, fuzzy_eq, fuzzy_eq_zero, centerFrom2PR, circleFrom3Points, arc3P2SVG, arc2PR2SVG, arcCPA, arcWay, arcDxf} from './cy-geometry-library.js'
 import { translatePoint } from './cy-geometry-library.js'
 
 import {createSegment} from './cy-geo-elements/cy-segment.js'
@@ -48,7 +48,7 @@ export function createDrawElement(type, data ) {
                 if((data.x1 === undefined) || (data.y1 === undefined)) return undefined;
             }
             else{   //estas van con ángulo
-                if(!data.a) return undefined;
+                if(data.a === undefined) return undefined;
                 let alfa = data.a % 360;        //se mantiene el signo
                 alfa = alfa * Math.PI / 180;
                 switch(data.subType){
@@ -59,10 +59,12 @@ export function createDrawElement(type, data ) {
                         break;
                     case 'PXA':
                         if(!data.x1) return undefined;
+                        if(fuzzy_eq(Math.abs(alfa), 0.5*Math.PI)) return undefined
                         data.y1 = data.y0 + (data.x1 - data.x0)*Math.tan(alfa);    //tangente
                         break;
                     case 'PYA':
                         if(!data.y1) return undefined;
+                        if(fuzzy_eq_zero(alfa)) return undefined;
                         data.x1 = data.x0 + (data.y1 - data.y0)/Math.tan(alfa);    //cotangente
                         break;
                     default: return undefined;
@@ -150,7 +152,7 @@ export function createDrawElement(type, data ) {
             //La clase ARC toma 3 puntos x0,x1,x2 === cx, pi.x, pf.x 
             switch(data.subType){
                 case '2PR':{
-                        const arc = arc2PR2SVG({x:data.x0,y:data.y0},{x:data.x1,y:data.y1},Math.abs(data.r));
+                        const arc = arc2PR2SVG({x:data.x0,y:data.y0},{x:data.x1,y:data.y1},Math.abs(data.r),data.way);
                         if(!arc)
                             element = createSegment({x0:data.x0,y0:data.y0,x1:data.x1,y1:data.y1});
                         else

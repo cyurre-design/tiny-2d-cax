@@ -44,3 +44,6 @@ export function circleSymmetryL(circle, s){
     let [nx1, ny1] = pointSymmetricSegment(s, circle.x1, circle.y1);
     return createCircle({cx:ncx, cy:ncy, x0:nx0, y0:ny0, x1:nx1, y1:ny1})
     }
+export function circleLength(circle){
+    return 2 * Math.PI * circle.r;
+}

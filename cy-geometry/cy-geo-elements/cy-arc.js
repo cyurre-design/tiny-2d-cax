@@ -92,3 +92,6 @@ export function arcSymmetryL(a, s) {
 export function arcReverse(a){
     return createArc(arc2PC2SVG({x:a.cx, y:a.cy}, a.r, {x:a.x2, y:a.y2}, {x:a.x1, y:a.y1}, (a.way==='clock'?'antiClock':'clock')));
 }
+export function arcLength(a){
+    return Math.abs(a.da) * Math.PI;
+}
