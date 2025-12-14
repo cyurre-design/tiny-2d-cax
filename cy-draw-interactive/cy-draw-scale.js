@@ -29,14 +29,16 @@ export default class DrawScale extends DrawBasic{
         if(!data) return;
         const newData = this.updateDataBasic(data);
         newData.forEach(d => {  //no esperamos más que una pulsación...pero si viene la s se atiende aquí
-        switch(d.idn){
-            case 'enter': this.scale(); this.deleteData(); this.move({x:this.data.x0 , y:this.data.y0}); this.clear(); break;
-            case 'esc'  : this.status = 0;   this.clear(); break;
-            case 'x0'   :
-            case 'y0'   : break; //ya se pone en la clase base data
-            case 'sn'    : 
-            case 'sd'    : this.move({x:this.data.x0 , y:this.data.y0});break;
-            }
-        })
+            switch(d.idn){
+                case 'enter'    : this.scale(); this.deleteData(); this.move({x:this.data.x0 , y:this.data.y0}); this.clear(); break;
+                case 'escape'   : this.status = 0;   this.clear(); break;
+                case 'x0'   :
+                case 'y0'   : break; //ya se pone en la clase base data
+                case 'sn'   : 
+                case 'sd'   :  if(this.status === 1) 
+                                this.move({x:this.data.x0 , y:this.data.y0}); //Solo se mueve si ya conocemos el punto de traslado
+                                break;
+                }
+            })
     }
 }

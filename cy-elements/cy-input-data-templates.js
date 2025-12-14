@@ -69,9 +69,11 @@ export function setEventHandlers(it){
 //Pongo los handlers explícitos, se podrían llamar a específicos con callbacks o hooks
     it.dom.addEventListener('change', (evt)=>{
         //console.log(evt.target);
+        const detail = {};
         const k = keyFromId(evt.target.id);
         it.data[k] = evt.target.value;
-        it.dispatchEvent(new CustomEvent('input-data',{bubbles:true, composed:true, detail: it.data}))
+        detail[k]=evt.target.value; //La idea es pasar solo lo que cambia. Pasar todo tiene efectos colateralss
+        it.dispatchEvent(new CustomEvent('input-data',{bubbles:true, composed:true, detail: detail}))
     })
     it.dom.addEventListener('click', (evt)=>{        
         //console.log(evt.target);
