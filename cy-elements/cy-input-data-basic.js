@@ -48,8 +48,20 @@ export default class CyInputDataBasic extends HTMLElement {
         ${inputDataApps.reduce((acc,app) => acc += inputDataTemplate(app), '')}
 </div>`); }
 
+/**
+ * Es un único componente en el que comparten espacio varios componentes que están habitualmente desconectados
+ * pero la estructura y el dom están creados y los valores de los inputs, etc... también
+ * Alternamos con el menú entre las opciones, pero al estar creados, se mantienen de forma automática los
+ * valores de sesión, que se podrían guardar si se quisiera en almacenaiento local
+ * La inicialización es un poco más pejiguera. Se llama a basic que tiene el html de todos 
+ * así que primero empieza el connectedCallBak de basic, pero es el último que termina
+ * Los datos guardados en json se mandan desde el main cuando está todo definido, igual hay que afinar más
+ * Las estructuras de trabajo de cada componente solo se pueden llamar después de esto, porque acceden a los elementos
+ */
     connectedCallback() {
+        console.log('c0-basic')
         this.dom.innerHTML= this.createStyle() + this.createTemplate();
+        console.log('c1-basic')
     }
     setActiveApplication(app, subType ){
         //tapa todos
@@ -70,7 +82,7 @@ export default class CyInputDataBasic extends HTMLElement {
             else
                 this.dom.querySelector('cy-input-data-'+app).initialData(data.geometry)
             })
-    }
+        }
     update(data){
         this.activeApplication.update(data);
     }

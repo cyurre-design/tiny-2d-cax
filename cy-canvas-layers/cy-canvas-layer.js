@@ -84,12 +84,18 @@ export class CyCanvasLayer extends HTMLElement {
     //Tal como se define, drawBlocks acepta puntos...
     //Aquí no usamos el color y width del path, sino que se le pueden pasar otros valores
     drawBlocks(blocks, w, c){
-            let path = getPathFromBlocks(blocks);
-            this.ctx.lineWidth = w;
-            this.ctx.strokeStyle = c;
-            this.ctx.stroke(path);
+        let path = getPathFromBlocks(blocks);
+        this.ctx.lineWidth = w;
+        this.ctx.strokeStyle = c;
+        this.ctx.stroke(path);
     }
-
+    // drawPathArrow(block, w=2, c=this.pathColor){
+    //     const path = getArrowFromPath(block, w);
+    //     if(path === '') return;
+    //     this.ctx.lineWidth = w;
+    //     this.ctx.strokeStyle = c;
+    //     this.ctx.stroke(path);
+    // }
     _drawPaths(path, w, c){
         this.ctx.lineWidth = w;
         this.ctx.strokeStyle = c;

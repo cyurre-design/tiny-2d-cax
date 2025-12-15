@@ -108,9 +108,17 @@ export function pathArea(path) {
 export function pathOrientation(path){
     if(! pathIsClosed(path)) 
         return 'open'
-    return (pathArea(path) < 0) ? 'cw' : 'ccw';
+    return (pathArea(path) < 0) ? 'clock' : 'antiClock';
     }
-
+//Se usa de forma interactiva, miramos si el punto está cerca de un vértice
+//Como están empalmados, solo miro el inicial 
+export function pathSetStartPoint(path, point){
+    const startIx = path.elements.findIndex(el => fuzzy_eq_point(point, el.pi))
+    if(startIx === undefined ) return undefined;
+    //Aquí hay que ordenarlo pero sin cambiar el sentido, de hecho no cambia el bbox ni nada
+    path.elements = path.elements.slice(startIx).concat(path.elements.slice(0,startIx))
+    return path;
+}
     //métodos exclusivos de path
 // export function pathConcat(p1, p2) { //de fin de this a comienzo de path
 //         return p1.elements.concat(p2.elements);

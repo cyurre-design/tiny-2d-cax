@@ -176,7 +176,7 @@ export class BArc extends Arc{
         const xf = this.pf.x - this.x;
         const yf = this.pf.y - this.y;
         let min_x, min_y, max_x, max_y;
-        if(this.pathway === 1) {//normal, ccw
+        if(this.pathway === 1) {//normal, antiClock
             min_x = (yi > 0  && yf <0) ? this.x - this.r : Math.min(this.pi.x, this.pf.x);
             max_x = (yi < 0  && yf >0) ? this.x + this.r : Math.max(this.pi.x, this.pf.x);
             min_y = (xi < 0  && xf >0) ? this.y - this.r : Math.min(this.pi.y, this.pf.y);
@@ -336,7 +336,7 @@ export class BPath extends Path{
     orientation(){
         if(! this.isClosed) 
             return 'open'
-        return (this.area() < 0) ? 'cw' : 'ccw';
+        return (this.area() < 0) ? 'clock' : 'antiClock';
         }
     //Esta no se usará casi nunca, de hecho se usa solo en tests, así que no optimizo nada
     changeStart(n){ //No clona, solo reordena, los quita de la cabeza y los empalma por la cola (se puede hacer de otras maneras)
@@ -526,33 +526,33 @@ export class BPath extends Path{
         }
 }
 
-//Repositorio para gestionar las cajeras con islas. Se supone que las cajeras son ccw y las islas lo contrario
+//Repositorio para gestionar las cajeras con islas. Se supone que las cajeras son antiClock y las islas lo contrario
 //Esto tiene que ver con la definición de offset positivo o negativo para ir por fuera o por dentro, como la compensación de herramienta
 //paths a izquierdas y derechas
-// ccwPaths (cajeras)  y cwPaths (islas)
+// antiClockPaths (cajeras)  y clockPaths (islas)
 //DEFINO que viene un array de paths y el primero es la cajera y el resto islas
-//Si NO vienen con el sentido bueno (cajera ccw, isla cw) se lo ponemos en el constructor
+//Si NO vienen con el sentido bueno (cajera antiClock, isla clock) se lo ponemos en el constructor
 //Si NO hay islas debe funcionar como el algoritmo de offset
 //Aunque originalmente solo haya una cajera, se puede dividir en varias por colisiones, así que tengo un array de cajeras y otro de islas
 
 export class ComplexPath{
-    constructor(ccwPaths, cwPaths){
-        if(ccwPaths.length === 0) return;
-        if(ccwPaths.some(p=>(!(p instanceof BPath)))) {console.log('entrada errónea'); return}
-        if(cwPaths.some(p=>(!(p instanceof BPath)))) {console.log('entrada errónea'); return}
-        this.cajeras = ccwPaths;
-        this.islas = cwPaths;
+    constructor(antiClockPaths, clockPaths){
+        if(antiClockPaths.length === 0) return;
+        if(antiClockPaths.some(p=>(!(p instanceof BPath)))) {console.log('entrada errónea'); return}
+        if(clockPaths.some(p=>(!(p instanceof BPath)))) {console.log('entrada errónea'); return}
+        this.cajeras = antiClockPaths;
+        this.islas = clockPaths;
         this.cajeras.forEach(p => { //Habría que dar warning o error??
-            if(p.orientation() !== 'ccw')
+            if(p.orientation() !== 'antiClock')
                 p.reverse();
         })
         this.islas.forEach(p => {
-                if(p.orientation() !== 'cw')
+                if(p.orientation() !== 'clock')
                     p.reverse();
             })
     }
     clone(){
-        return new ComplexPath(this.cajeras.map(ccw=>ccw.clone(), this.islas.map(cw=>cw.clone())));
+        return new ComplexPath(this.cajeras.map(antiClock=>antiClock.clone(), this.islas.map(clock=>clock.clone())));
     }
 
 }
@@ -599,14 +599,14 @@ export function winding_number(path, point){
 
     // Helper function for processing an arc segment when computing the winding number.
     let process_arc_winding = (arc, point) => {
-            let is_ccw = arc.pathway === 1;
-            let point_is_left = is_ccw ? is_left_to_segment(arc, point) : is_left_or_equal_to_segment(arc, point);
+            let is_antiClock = arc.pathway === 1;
+            let point_is_left = is_antiClock ? is_left_to_segment(arc, point) : is_left_or_equal_to_segment(arc, point);
             let insideCircle = sqDistancePointToPoint(arc.x, arc.y, point.x, point.y) < arc.r*arc.r;
             let result = 0;
 
             if (arc.pi.y <= point.y) {
                 if (arc.pf.y > point.y) {     // upward crossing of arc chord
-                    if (is_ccw) {
+                    if (is_antiClock) {
                         if (point_is_left) {  // counter clockwise arc left of chord
                             result += 1;
                         } else {              // counter clockwise arc right of chord
@@ -621,14 +621,14 @@ export function winding_number(path, point){
                         // else clockwise arc right of chord, no crossing
                     }
                 } else {                // not crossing arc chord and chord is below, check if point is inside arc sector
-                    if (is_ccw && !point_is_left && arc.pf.x < point.x && point.x < arc.pi.x  && insideCircle) {
+                    if (is_antiClock && !point_is_left && arc.pf.x < point.x && point.x < arc.pi.x  && insideCircle) {
                         result += 1;
-                    } else if (!is_ccw && point_is_left && arc.pi.x < point.x && point.x < arc.pf.x && insideCircle) {
+                    } else if (!is_antiClock && point_is_left && arc.pi.x < point.x && point.x < arc.pf.x && insideCircle) {
                         result -= 1;
                     }
                 }
             } else if (arc.pf.y <= point.y) {  // downward crossing of arc chord
-                if (is_ccw) {
+                if (is_antiClock) {
                     if (!point_is_left) {      // counter clockwise arc right of chord
                         if (!insideCircle) {
                             result -= 1;
@@ -644,9 +644,9 @@ export function winding_number(path, point){
                 }
             } else {
                 // not crossing arc chord and chord is above, check if point is inside arc sector
-                if (is_ccw && !point_is_left && arc.pi.x < point.x && point.x < arc.pf.x && insideCircle) {
+                if (is_antiClock && !point_is_left && arc.pi.x < point.x && point.x < arc.pf.x && insideCircle) {
                     result += 1;
-                } else if (!is_ccw && point_is_left && arc.pf.x < point.x && point.x < arc.pi.x && insideCircle) {
+                } else if (!is_antiClock && point_is_left && arc.pf.x < point.x && point.x < arc.pi.x && insideCircle) {
                     result -= 1;
                 }
             }

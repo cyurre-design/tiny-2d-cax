@@ -1,5 +1,5 @@
 import { sharedStyles } from '../shared-styles.js';
-import {inputDataInit, inputDataUpdate, inputDataSubtype, setEventHandlers, TX0Y0, TX1Y1, TENTER, TESC, TBACK} from './cy-input-data-templates.js'
+import {inputDataInit, initialDataBasic, inputDataUpdate, inputDataSubtype, setEventHandlers, TX0Y0, TX1Y1, TENTER, TESC, TBACK} from './cy-input-data-templates.js'
 
 export default class CyInputDataPath extends HTMLElement {
     constructor( ) {
@@ -34,11 +34,7 @@ export default class CyInputDataPath extends HTMLElement {
     //Aquí se inicializan los valores de los componentes con lo que se pase, y viene para todos los subtipos...
     //Se inicializan antes de activarse el menú
     initialData(data){
-        if(!data) return;
-        for(let [k,v] of Object.entries(data)){
-            if(this.dom.querySelector('#data-'+k) !== null)
-                this.dom.querySelector('#data-'+k).value = v
-            }
+        initialDataBasic(this, data)
     }
     disconnectedCallback() {
     }

@@ -1,5 +1,5 @@
 import { sharedStyles } from '../shared-styles.js';
-import {inputDataInit, inputDataUpdate, inputDataSubtype, setEventHandlers, TX0Y0, TX1Y1, TX2Y2, TR, TCXCY, TA, TCWCCW} from './cy-input-data-templates.js'
+import {inputDataInit, inputDataUpdate, initialDataBasic, inputDataSubtype, setEventHandlers, TX0Y0, TX1Y1, TX2Y2, TR, TCXCY, TA, TCWCCW} from './cy-input-data-templates.js'
 
 export default class CyInputDataArc extends HTMLElement {
     constructor() {
@@ -40,7 +40,7 @@ export default class CyInputDataArc extends HTMLElement {
     }
 
     connectedCallback() {
-        this.dom.innerHTML= this.createStyle() + this.createTemplate();
+        //this.dom.innerHTML= this.createStyle() + this.createTemplate();
         //Aquí inicializamos con valores pasados en la creación que pueden ser guardados como preferencias o por sesión...
         inputDataInit(this) //Esto debe inicializar los punteros a componentes y lee sus valores de html
         setEventHandlers(this);
@@ -52,11 +52,7 @@ export default class CyInputDataArc extends HTMLElement {
     //Aquí se inicializan los valores de los componentes con lo que se pase, y viene para todos los subtipos...
     //Se inicializan antes de activarse el menú
     initialData(data){
-        if(!data) return;
-        for(let [k,v] of Object.entries(data)){
-            if(this.dom.querySelector('#data-'+k) !== null)
-                this.dom.querySelector('#data-'+k).value = v
-            }
+        initialDataBasic(this, data)
     }
     disconnectedCallback() {
     }

@@ -35,6 +35,10 @@ export function TSAVE(t) { return(
 `<div><input type="button" id="data-${t}-save" value="SAVE"/></div>`)}
 export function TINS(t) { return(
 `<div><input type="button" id="data-${t}-insert" value="INSERT"/></div>`)}
+export function TINVERT(t) { return(
+`<div><input type="button" id="data-${t}-invert" value="INVERT"/></div>`)}
+export function TSTART(t) { return(
+`<div><input type="button" id="data-${t}-start" value="START"/></div>`)}
 export function TSCALE(t) { return(
 `<div class="half" >NUM<input id="data-${t}-sn" class="_33" type="number" value="0" step="0.5"/></div>
 <div class="half">DEN<input id="data-${t}-sd" class="_33" type="number" value="0" step="0.5"/></div>`)}
@@ -95,6 +99,14 @@ export function setEventHandlers(it){
         }
     })
 }
+export function initialDataBasic(it, data){
+    if(!data) return;
+    for(let [k,v] of Object.entries(data)){
+        if(it.dom.querySelector('#data-'+k) !== null)
+            it.dom.querySelector('#data-'+k).value = v
+        }
+    }
+
 //intento hacerlo lo más genérico posible, pero habrá switches casi seguro.
 //Me pasan pos e idn, que es un array con los id de los campos que cambian.
 // data-xx es el nombre publico entre ambos controles 

@@ -17,9 +17,18 @@ import {scalePixels2mm, scaleMm2pixels, extents} from './cy-canvas-handler.js';
 export function getPathFromBlocks(blocks, pointDimension = 5){
     return( new Path2D(getSvgPathFromBlocks(blocks, pointDimension)))
 }
+// export function getArrowFromPath(path, pointDimension = 5){
+//     if(path.type !== 'path') return '';
+//     let x = scalePixels2mm(pointDimension);
+//     const b = path.elements[0];
+//     if(b.type === 'segment'){
+//         return new Path2D(`M ${b.x0 - x*b.uy} ${b.y0 + x*b.ux} l ${x*b.ux} ${-x*b.ux} l ${-x*b.ux} ${-x*b.ux} Z `);
+//     } else if (b.type === 'arc'){
+//         return
+//     }
+// }
 export function getSvgPathFromBlocks(blocks, pointDimension = 5){
     let x = scalePixels2mm(pointDimension);
-
     function getPathFromElement(b){
         switch(b.type){
             case 'segment': return `M ${b.x0} ${b.y0} L ${b.x1} ${b.y1} `;
@@ -40,6 +49,7 @@ export function getSvgPathFromBlocks(blocks, pointDimension = 5){
             case 'point':   return `M ${b.x0 - x} ${b.y0 - x} l ${2*x} ${2*x} m ${-2*x} 0 l ${2*x} ${-2*x}`; 
             case 'cut-point':return  `M ${b.x0 - x} ${b.y0} l ${2*x} 0 m ${-x} ${-x} l 0 ${2*x}`; 
             case 'arc-ellipse' : return `M ${b.x0} ${b.y0} A ${b.rx} ${b.ry} ${b.fi} ${b.fL} ${b.fS} ${b.x1} ${b.y1}`
+            case 'arrow'    : return `M ${b.x0 + x*b.dy} ${b.y0 - x*b.dx} L ${b.x0 + 2*x*b.dx} ${b.y0 + 2*x*b.dy} L ${b.x0 - x*b.dy} ${b.y0 + x*b.dx} Z `
         }
     }
     let theBlocks = Array.isArray(blocks)?blocks:[blocks];
