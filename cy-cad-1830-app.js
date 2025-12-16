@@ -45,7 +45,7 @@ import DrawExportGcode from "./cy-draw-interactive/cy-draw-export-gcode.js"
 import {convertDxfToGeometry} from "./parsers/cy-parser-dxf-geometry-objects.js"
 import {isoToGeometry } from "./parsers/cy-parser-iso-geometry.js"
 import {svgToGeometry} from "./parsers/cy-parser-svg.js"
-import {pathsToIso} from "./parsers/cy-parser-geometry-to-iso.js"
+import {pathsToIso, setGCodeDefaults} from "./parsers/cy-parser-geometry-to-iso.js"
 
 
 const defaultConfig = await fetch('./cy-1830-config.json').then(r => r.json());
@@ -60,22 +60,6 @@ const templateMainMenu =`
         <md-menu-item id="save-iso"><div slot="headline">Export GCode</div></md-menu-item>
         <md-menu-item id="save-svg"><div slot="headline">Export Svg</div></md-menu-item>
         <!--md-menu-item id="print"><div slot="headline">PRINT</div></md-menu-item-->
-    </md-menu>
-    <md-filled-button id="zoom-menu-anchor">ZOOM</md-filled-button>
-    <md-menu has-overflow positioning="popover" id="zoom-menu" anchor="zoom-menu-anchor">
-        <md-menu-item id="zoom-box" ><div slot="headline">BOX</div></md-menu-item>
-        <md-menu-item id="zoom-fit" ><div slot="headline">FIT</div></md-menu-item>
-        <md-menu-item id="zoom-home"><div slot="headline">HOME</div></md-menu-item>
-        <md-menu-item id="zoom-setHome"><div slot="headline">SET HOME</div></md-menu-item>
-        <md-menu-item id="zoom-in"><div slot="headline">ZOOM IN</div></md-menu-item>
-        <md-menu-item id="zoom-out"><div slot="headline">ZOOM OUT</div></md-menu-item>
-    </md-menu>
-
-    <md-filled-button id="draw-menu-anchor">DRAW</md-filled-button>
-    <md-menu has-overflow positioning="popover" id="draw-menu" anchor="draw-menu-anchor">
-        <md-menu-item id="draw-start" ><div slot="headline">DRAW START</div></md-menu-item>
-        <md-menu-item id="draw-stepBack" ><div slot="headline">STEP BACK</div></md-menu-item>
-        <md-menu-item id="draw-end" ><div slot="headline">DRAW END</div></md-menu-item>
     </md-menu>
     <md-filled-button id="support-menu-anchor">SUPPORT</md-filled-button>
     <md-menu has-overflow positioning="popover" id="support-menu" anchor="support-menu-anchor">
@@ -144,6 +128,15 @@ const templateMainMenu =`
 `
 //tools y settings fijos
 
+const templateZoom = `
+<div class="row" id='menu-zoom'>
+<input type="button" id='zoom-sethome' value="SH" class="_20"/>
+<!--input type="button" id='zoom-box' value="BOX" class="_20"/-->
+<input type="button" id='zoom-home' value="HOME" class="_20"/>
+<input type="button" id='zoom-in' value=" + " class="_20"/>
+<input type="button" id='zoom-out' value=" - " class="_20"/>
+<input type="button" id='zoom-fit' value="FIT" class="_20"/>
+</div>`
 //Esto aparecería en los comandos de transform por ejemplo
 //Aprovecho y pongo aquí el width de selección, por ejemplo
 const templateSelectInputData =`
@@ -174,6 +167,7 @@ const template = `
     <div id="main-menu" class="row">${templateMainMenu}</div>
     <div id="left" class="column" >
       <cy-layer-list id="layer-view" class="column"></cy-layer-list>
+      ${templateZoom}
       ${templateUndo}
       ${templateSelectInputData}
       <div class="row"><span>Link Tolerance</span><input type="number" class="half" value="0.1" max="5" min="0.01" step="0.1"/></div>   
@@ -258,14 +252,12 @@ class cyCad1830App extends HTMLElement {
       this.dom.adoptedStyleSheets = [sharedStyles];
       this.dom.innerHTML = template + style;
     }
-    registerInputApplications(inputApp , drawingApp){
+    registerInputApplications(drawingApp){
       //-------------------INPUT DATA
       //Interactividad entre parte izquierda, datos manuales y ratón.
       //this.mData = this.dom.querySelector('#manual-data');
       this.viewer.interactiveDrawing.setDrawingMode(drawingApp );
-      
-      // this.viewer.addEventListener('drawing-pos', (e) => 
-      //   inputApp.update(e.detail));
+
       this.mData.addEventListener('input-data', (e) =>
         drawingApp.updateData(e.detail));
       this.mData.addEventListener('input-click', (e) => 
@@ -279,19 +271,18 @@ class cyCad1830App extends HTMLElement {
     this.manager =  createCommandManager( this.viewer.layerDraw, this ); // 
 
        //--------------MENUS
-    const menus = ['file', 'zoom', /*'select',*/ 'draw', 'support', 'transform', 'settings' ]
+    const menus = ['file', 'support', 'transform', 'settings' ]
     menus.forEach(m => this[m+'MenuEl'] = this.dom.querySelector(`#${m}-menu`));
     menus.forEach(m => {
         const el = this.dom.querySelector(`#${m}-menu-anchor`);
         el.addEventListener('click',  ()=> this[`${m}MenuEl`].open = !this[`${m}MenuEl`].open);
     })
-
     menus.forEach(m => this[`${m}MenuEl`].addEventListener('close-menu', (e) => this.handleMenus(e)));
-    
+        //------------- INPUT DATA  ----------
     customElements.whenDefined('cy-input-data-basic').then(()=>{
       //console.log('mdata inicializado')
       this.mData = this.dom.querySelector('#input-data');
-      this.mData.initialData(defaultConfig.geometry)
+      this.mData.initialData(defaultConfig)
       this.viewer.addEventListener('drawing-pos', (e) => this.mData.update(e.detail));
     })
 
@@ -412,6 +403,19 @@ class cyCad1830App extends HTMLElement {
                         break;
       }
     })
+  /**sacado del menu al lateral por comodidad */
+    this.dom.querySelector('#menu-zoom').addEventListener('click', (evt) => {
+        this.viewer.clearCursors();
+        this.viewer.canvasHandler.setZoomMode();               
+        const cmd = evt.target.id.split('-')[1];
+        switch( cmd) {
+            case 'fit':     this.viewer.fit();break;
+            case 'home':    this.viewer.canvasHandler.view('fgZoomHome'); break;
+            case 'sethome': this.viewer.canvasHandler.view('fgSetHome'); break;
+            case 'in':      this.viewer.canvasHandler.view('fgZoomIn'); break;
+            case 'out':     this.viewer.canvasHandler.view('fgZoomOut');break;
+        }
+    })
 
 //-----------------CREAR CAPAS INICIALES
     //Estas capas las generamos de oficio
@@ -425,7 +429,8 @@ class cyCad1830App extends HTMLElement {
       const layerData = commandLayerCreate()
     });   
 
-    }
+    } //END of connectedcallback
+
     /**para poder llamarla desde la gestión de comandos desde donde solo queremos acceso al modelo y la app (esta) */
     translateOrigin = (dx, dy) => {
       this.viewer.canvasHandler.view("fgPane", {x:dx, y:dy});  //rehace los cálculos del handler
@@ -502,12 +507,18 @@ class cyCad1830App extends HTMLElement {
               //     const type = file.name.split('.').pop();
             }break;
             case 'iso':{
-              //let data = this.viewer.layerDraw.getSelectedBlocks().filter( b => b.type === 'path');;
               //En el futuro , en vez de perfil, puede elegirse tipo de mecanizado, compensación, etc...
+              //Se trabaja sobre paths que estén seleccionados para no dispersar la manera de hacer cosas
               this.drawingApp = new DrawExportGcode(this.viewer.layerDraw, '');
-              const inputData = new CyInputDataExportGcode( main);  //sin defaults
-              this.registerInputApplications( inputData, this.drawingApp )
-              //saveCNC(null, pathsToIso(data));
+              this.registerInputApplications( this.drawingApp );
+              //let data = this.viewer.layerDraw.getSelectedBlocks().filter( b => b.type === 'path');
+              this.mData.setActiveApplication( 'export-gcode', sub1);
+              this.viewer.layerDraw.addEventListener('generate-iso', (evt)=>{
+                setGCodeDefaults(evt.detail)
+                console.log(evt.detail.paths.length)
+                saveCNC(null, pathsToIso(evt.detail.paths))
+              })
+ //                  saveCNC(null, pathsToIso(data));
             }break;
             case 'svg':{   
               let data = this.viewer.layerDraw.getSelectedBlocks().filter( b => b.type === 'path');;
@@ -523,23 +534,12 @@ class cyCad1830App extends HTMLElement {
             }break;
           }
         }break;
-        case 'zoom':{
-            this.viewer.clearCursors();
-            this.viewer.canvasHandler.setZoomMode();               
-            switch( sub1) {
-                case 'fit': this.viewer.fit();break;
-                case 'home': this.viewer.canvasHandler.view('fgZoomHome'); break;
-                case 'setHome': this.viewer.canvasHandler.view('fgSetHome'); break;
-                case 'in': this.viewer.canvasHandler.view('fgZoomIn'); break;
-                case 'out': this.viewer.canvasHandler.view('fgZoomOut');break;
-            }
-        }break;
 //---------------------------------------------------------
 //---------   TRANSFORMACIONES ---------------------------
 //---------------------------------------------------------
         case 'origin':{
           this.drawingApp = new DrawOrigin(this.viewer.layerDraw, sub1);
-          this.registerInputApplications( 'transform', this.drawingApp )
+          this.registerInputApplications( this.drawingApp )
           this.mData.setActiveApplication( 'transform', 'origin' );
         }break;
        /**
@@ -552,7 +552,7 @@ class cyCad1830App extends HTMLElement {
         break;          
         case 'symmetry':{
           this.drawingApp = new DrawSymmetry(this.viewer.layerDraw, sub1);
-          this.registerInputApplications( 'transform', this.drawingApp )
+          this.registerInputApplications( this.drawingApp )
           this.mData.setActiveApplication( 'transform', `symmetry${sub1}`);
         }
         break;
@@ -564,19 +564,19 @@ class cyCad1830App extends HTMLElement {
         break;
         case 'scale':{
           this.drawingApp = new DrawScale(this.viewer.layerDraw, sub1);
-          this.registerInputApplications( 'transform', this.drawingApp )
+          this.registerInputApplications( this.drawingApp )
           this.mData.setActiveApplication( 'transform', 'scale' );
         }
         break;
         case 'translate': {
           this.drawingApp = new DrawTranslate(this.viewer.layerDraw, sub1);
-          this.registerInputApplications( 'transform', this.drawingApp )
+          this.registerInputApplications(  this.drawingApp )
           this.mData.setActiveApplication( 'transform', 'translate' );
         }
         break;
         case 'rotate':{
           this.drawingApp = new DrawRotate(this.viewer.layerDraw, sub1);
-          this.registerInputApplications( 'transform', this.drawingApp )
+          this.registerInputApplications(  this.drawingApp )
           this.mData.setActiveApplication( 'transform', 'rotate' );
 
         }
@@ -600,38 +600,38 @@ class cyCad1830App extends HTMLElement {
             case 'TPB': this.drawingApp = new DrawSegmentPB(this.viewer.layerDraw, sub1); break;
             case 'TBB': this.drawingApp = new DrawSegmentBB(this.viewer.layerDraw, sub1); break;
           }
-          this.registerInputApplications( 'segment', this.drawingApp )
+          this.registerInputApplications( this.drawingApp )
           this.mData.setActiveApplication( 'segment', sub1 );
         }
         break;
         case 'circle' :{
           this.drawingApp = new DrawCircle(this.viewer.layerDraw, sub1);
-          this.registerInputApplications( 'circle', this.drawingApp )
+          this.registerInputApplications(  this.drawingApp )
           this.mData.setActiveApplication( 'circle', sub1 );
         }
         break;
         case 'arc' :{
           this.drawingApp = new DrawArc(this.viewer.layerDraw, sub1);
-          this.registerInputApplications( 'arc', this.drawingApp )        
+          this.registerInputApplications( this.drawingApp )        
           //esta la última porque pone handlers 
           this.mData.setActiveApplication( 'arc', sub1 );
         }
         break;
         case 'path':{
           this.drawingApp = new DrawPath(this.viewer.layerDraw, sub1);
-          this.registerInputApplications( 'path', this.drawingApp )        
+          this.registerInputApplications( this.drawingApp )        
           this.mData.setActiveApplication( 'path', sub1 );
         }
         break;
         case 'poly' :{ //quito el menú de tipo y lo pongo en el selector de input-data
           this.drawingApp = new DrawPolygon(this.viewer.layerDraw, sub1);
-          this.registerInputApplications( 'polygon', this.drawingApp );
+          this.registerInputApplications( this.drawingApp );
           this.mData.setActiveApplication( 'polygon', sub1 );
         }
         break;
         case 'gcode' : {
           this.drawingApp = new DrawGcode(this.viewer.layerDraw, '')
-          this.registerInputApplications( 'gcode', this.drawingApp )
+          this.registerInputApplications( this.drawingApp )
           this.mData.setActiveApplication( 'gcode', sub1 );
         }break;
         default:break;

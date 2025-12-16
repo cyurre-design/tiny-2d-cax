@@ -39,9 +39,9 @@ export function geometryToIso(model){
     //podríamos hacer algo específico con los circle y tal, pero sigue siendo CCAM
 }
 export function pathsToIso(paths){
-    let str = defaults.header;
-    str = paths.reduce((acc,p)=> acc += defaults.pre +'\n' + singlePathToIso(p) + '\n' + defaults.post + '\n', str );
-    return(str + defaults.footer);
+    let str = defaults.header + '\n';   //just in case
+    str = paths.reduce((acc,p)=> acc += singlePathToIso(p) + '\n', str );
+    return(str + '\n' + defaults.footer);
 }
 function circlesToIso(circles, header, footer, pre, post){
     // let str = header;
@@ -56,7 +56,7 @@ function circlesToIso(circles, header, footer, pre, post){
 function singlePathToIso(path={elements:[]}){
     //let {_I, _J} = processConfig(configM);
     //let {formatX, formatY} = strFormatCota(configM, false);
-    let str = `G0 ${strCotas(path.elements[0].pi.x, path.elements[0].pi.y)}\n`;
+    let str = `${defaults.post}\nG0 ${strCotas(path.elements[0].pi.x, path.elements[0].pi.y)}\n${defaults.pre}\n`;
     path.elements.forEach(el=>{
         switch(el.type){
             case 'segment': str += `G01 ${strCotas(el.pf.x, el.pf.y)} \n`; break;

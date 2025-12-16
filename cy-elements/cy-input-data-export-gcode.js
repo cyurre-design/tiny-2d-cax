@@ -10,10 +10,10 @@ export default class CyInputDataExportGcode extends HTMLElement {
     set subType(type) {
         this.type = 'p' //por mantener coherencia y estandarización de tipo-subtipo-propiedad
         inputDataSubtype(this, `data-path-${this.type}`);
-        this.dom.querySelector('#data-export-gcode-start').dispatchEvent(new Event("change", { bubbles: true }));
-        this.dom.querySelector('#data-export-gcode-end').dispatchEvent(new Event("change", { bubbles: true }));
-        this.dom.querySelector('#data-export-gcode-move').dispatchEvent(new Event("change", { bubbles: true }));
-        this.dom.querySelector('#data-export-gcode-cut').dispatchEvent(new Event("change", { bubbles: true }));
+        this.dom.querySelector('#data-export-gcode-header').dispatchEvent(new Event("change", { bubbles: true }));
+        this.dom.querySelector('#data-export-gcode-footer').dispatchEvent(new Event("change", { bubbles: true }));
+        this.dom.querySelector('#data-export-gcode-post').dispatchEvent(new Event("change", { bubbles: true }));
+        this.dom.querySelector('#data-export-gcode-pre').dispatchEvent(new Event("change", { bubbles: true }));
     }
     createStyle() {
         let style = `<style>
@@ -23,27 +23,27 @@ export default class CyInputDataExportGcode extends HTMLElement {
     createTemplate() {
         let t = `export-gcode`;
         let h = `<div id=${t}>`;
-        h += `<div class="_20">Start</div>
-                <textarea  id="data-${t}-start" autofocus class="data _80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
-        h +=  `<div class="_20">End</div>
-                <textarea  id="data-${t}-end" class="data _80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
-        h +=  `<div class="_20">Move</div>
-                <textarea  id="data-${t}-move" class="data _80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
-        h +=  `<div class="_20">Cut</div>
-                <textarea  id="data-${t}-cut" class="data _80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
+        h += `<div class="_20">Header</div>
+                <textarea  id="data-${t}-header" autofocus class="data _80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
+        h +=  `<div class="_20">Footer</div>
+                <textarea  id="data-${t}-footer" class="data _80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
+        h +=  `<div class="_20">Post</div>
+                <textarea  id="data-${t}-post" class="data _80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
+        h +=  `<div class="_20">Pre</div>
+                <textarea  id="data-${t}-pre" class="data _80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
         h +=  `<div class="row">ORDER<input type="number" min="1" step="1" value="1" id="data-order" class="_20"/></div>`
         h += `<div class="row">${TESC(t) + TSAVE(t) + TINVERT(t) + TSTART(t)}</div></div>`
         return h
     }
 
     connectedCallback() {
-//        this.dom.innerHTML= this.createStyle() + this.createTemplate();
         inputDataInit(this) //Esto debe inicializar los punteros a componentes y lee sus valores de html
         setEventHandlers(this);
         this.addEventListener('input-click', (e) =>{
             if(e.detail.save !== undefined){ //no miro con qué texto viene, solo que se manda
-                //Recojo un objeto con las partes de iso puestas
-                console.log(this.data);
+                //Recojo un objeto con las partes de iso puestas y se lo paso al main con evento
+                //this.dispatchEvent(new CustomEvent('generate-iso', { bubbles: true , composed:true, detail:this.data}))
+                //console.log(this.data);
             }})
         console.log('c2-export')
     }

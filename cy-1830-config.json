@@ -22,9 +22,9 @@
       "selected-width" : "2"
     },
     "iso":{
-      "export-gcode-start": "G90 G20",
-      "export-gcode-end": "S0 M5\nM30",
-      "export-gcode-move": "F1000",
-      "export-gcode-cut": "F300 S1000 M3"
+      "export-gcode-header": "G90",
+      "export-gcode-footer": "S0 M5\nM30",
+      "export-gcode-post": "F1000",
+      "export-gcode-pre": "F300 S1000 M3"
     }
 }

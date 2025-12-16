@@ -112,12 +112,12 @@ export function pathOrientation(path){
     }
 //Se usa de forma interactiva, miramos si el punto está cerca de un vértice
 //Como están empalmados, solo miro el inicial 
+//ATTON, No toco el original en la función, eso queda para la aplicación, si quiere
 export function pathSetStartPoint(path, point){
     const startIx = path.elements.findIndex(el => fuzzy_eq_point(point, el.pi))
     if(startIx === undefined ) return undefined;
     //Aquí hay que ordenarlo pero sin cambiar el sentido, de hecho no cambia el bbox ni nada
-    path.elements = path.elements.slice(startIx).concat(path.elements.slice(0,startIx))
-    return path;
+    return createPath({elements:path.elements.slice(startIx).concat(path.elements.slice(0,startIx))})
 }
     //métodos exclusivos de path
 // export function pathConcat(p1, p2) { //de fin de this a comienzo de path

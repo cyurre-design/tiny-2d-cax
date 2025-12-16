@@ -402,7 +402,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         if(box)
             blocks = this.getBlocksInsideBox(box);
         else
-            blocks = this.getNearestBlock(x, y, 5);
+            blocks = this.getNearestBlock(x, y, 10);
         if(blocks && blocks.length > 0){
             if(select){
                 blocks.forEach(b => b.selected = b.selected? false : true);
