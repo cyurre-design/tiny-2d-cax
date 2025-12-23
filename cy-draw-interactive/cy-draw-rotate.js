@@ -5,7 +5,7 @@ export default class DrawRotate extends DrawBasic{
     constructor(layerDraw, subMode){
         super(layerDraw, 'rotate', subMode);
         this.blocksToRotate = [];
-        this.moveFn         = [[this.h], [this.move]];
+        this.moveFn         = [[this.h, this.m0, this.sendDataBasic], [this.move]];
         this.clickFn        = [[this.m0, this.getBlocks, this.move],[]];
         this.dataSent       = [['x0','y0'],[]];
         this.dataReceived   = ['x0','y0','a'];

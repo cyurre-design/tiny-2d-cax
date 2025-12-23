@@ -7,13 +7,13 @@ export default class DrawCircle extends DrawBasic{
         this.data = {subType:this.subMode};
         switch(mode){
             case '3P': {
-                this.moveFn = [[this.h], [this.m1, this.draw], [this.m2, this.draw]];
+                this.moveFn = [[this.h, this.m0, this.sendDataBasic], [this.h, this.m1, this.sendDataBasic, this.draw], [this.h, this.m2, this.sendDataBasic, this.draw]];
                 this.clickFn = [[this.p0], [this.p1], [this.p3, this.newBlock, this.deleteData]];
                 this.dataSent = [['x0','y0'],['x1','y1'],['x2','y2']];
                 this.dataReceived =['x0','y0','x1','y1','x2','y2']
             } break;
             case 'CP': {
-                this.moveFn = [[this.h], [this.m1, this.draw]];
+                this.moveFn = [[this.h, this.m0, this.sendDataBasic], [this.h, this.m1, this.sendDataBasic, this.draw]];
                 this.clickFn = [[this.p0], [this.p1, this.newBlock, this.deleteData]]; 
                 this.dataSent = [['x0','y0'],['x1','y1']];
                 this.dataReceived =['x0','y0','x1','y1']
@@ -25,7 +25,7 @@ export default class DrawCircle extends DrawBasic{
                 this.dataReceived = ['x0', 'y0', 'x1','y1', 'r']
              } break;
             case 'CR': {
-                this.moveFn = [[this.m0, this.draw]];
+                this.moveFn = [[this.h, this.m0, this.sendDataBasic, this.draw]];
                 this.clickFn = [[this.p0, this.newBlock, this.deleteData]];
                 this.dataSent = [['x0','y0'],[]];
                 this.dataReceived = ['x0', 'y0', 'r']
@@ -37,7 +37,7 @@ export default class DrawCircle extends DrawBasic{
     }
     updateData = (data)=>{
         const el = this.updateDataBasic(data).find(el=>el.idn==='way');
-        if(this.subMode === '2PR')
+        if(el!== undefined && this.subMode === '2PR')
             this.data.way = el.v;
     }
 
@@ -46,7 +46,6 @@ export default class DrawCircle extends DrawBasic{
         //Mandamos el subType o mode para orientar al create
     newBlock = (p) => {
         this.layerDraw.dispatchEvent(new CustomEvent('new-block', {bubbles: true, composed:true, detail:{type:'circle', data:this.data}}));};
-    m2  = (pi) => {this.data.x2 = pi.x, this.data.y2 = pi.y;};
+    m2  = (pi) => {[this.data.x2, this.data.y2] = this.hit !== undefined ? [this.hit.x, this.hit.y] : [pi.x, pi.y]};
     draw= (pi) => {this.hit = this.highLight(pi.x, pi.y, createDrawElement('circle', this.data ))}
-        //Y lo que se manda a input-data de posicines del cursor igual
     }

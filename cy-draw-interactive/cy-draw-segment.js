@@ -7,25 +7,25 @@ export default class DrawSegment extends DrawBasic {
         this.data.subType = submode;
         switch(this.subMode){
             case 'PP':  {
-                this.moveFn         = [[this.h], [this.m1, this.draw]];
+                this.moveFn         = [[this.h, this.m0, this.sendDataBasic], [this.h, this.m1, this.sendDataBasic, this.draw]];
                 this.clickFn        = [[this.p0], [this.m1, this.newBlock, this.deleteData]]; 
                 this.dataSent       = [['x0','y0'],['x1','y1']]
                 this.dataReceived   = ['x0','y0','x1','y1'];
             } break;
             case 'PXA':{
-                this.moveFn         = [[this.h], [this.m1, this.draw]];
+                this.moveFn         = [[this.h, this.m0, this.sendDataBasic], [this.h, this.m1, this.sendDataBasic, this.draw]];
                 this.clickFn        = [[this.p0], [this.m1, this.newBlock, this.deleteData]]; 
                 this.dataSent       = [['x0','y0'],['x1','y1']]
                 this.dataReceived   = ['x0','y0','x1','y1','a'];
             } break
             case 'PYA':{
-                this.moveFn         = [[this.h], [this.m1, this.draw]];
+                this.moveFn         = [[this.h, this.m0, this.sendDataBasic], [this.h, this.m1, this.sendDataBasic, this.draw]];
                 this.clickFn        = [[this.p0], [this.m1, this.newBlock, this.deleteData]]; 
                 this.dataSent       = [['x0','y0'],['x1','y1']]
                 this.dataReceived   = ['x0','y0','x1','y1','a'];
             } break;
             case 'PDA': {
-                this.moveFn         = [[this.m0, this.draw]];
+                this.moveFn         = [[this.h, this.m0, this.sendDataBasic, this.draw]];
                 this.clickFn        = [[this.p0, this.newBlock, this.deleteData]];
                 this.dataSent       = [['x0','y0'],[]]
                 this.dataReceived   = ['x0','y0','d','a'];

@@ -24,7 +24,7 @@ function createLayer(lyId, name, layerStyle = canvasCSS, visible = true, erasabl
         toJSON(k) {
             return {
                 lyId:this.lyId, name:this.name, layerStyle:this.layerStyle, visible: this.visible, erasable: this.erasable,
-                extBlockkIs: this.nextBlockId, blocks: this.blocks
+                nextBlockId: this.nextBlockId, blocks: this.blocks
             }
         }
     }
@@ -83,25 +83,33 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
             blocksTree:this.blocksTree.toJSON()
         }
     }
-/**@todo que llegue aqu'i solo el model ? */
-    deserialize(saved){
+/**@todo que llegue aquí solo el model ? */
+/**Por defecto NO borramos lo anterior ?... opción a confirmar?? */
+    deserialize(saved, clear = true){
         const model = saved; //.model;
-        this.layers = model.layers;
-        this.nextLayerId = model.nextLayerId;
-        this._activeLayerId = model._activeLayerId;
-        this.cutPoints = model.cutPoints;
-        this.nextPointId = model.nextPointId;
-        this.pointsTree.fromJSON( model.pointsTree);
-        this.blocksTree.fromJSON( model.blocksTree);
-        //Pero los paths se han perdido ...
-        this.layers.forEach(ly => {
-            ly.blocks.forEach(b=>{
-                b.data.canvasPath = getPathFromBlocks(b);
-                b.data.points.forEach(p => {
-                    p.canvasPath = getPathFromBlocks(p);
+        if(clear ){
+            this.layers = model.layers;
+            this.nextLayerId = model.nextLayerId;
+            this._activeLayerId = model._activeLayerId;
+            this.cutPoints = model.cutPoints;
+            this.nextPointId = model.nextPointId;
+            this.pointsTree.fromJSON( model.pointsTree);
+            this.blocksTree.fromJSON( model.blocksTree);
+            //Pero los paths se han perdido ...
+            this.layers.forEach(ly => {
+                ly.blocks.forEach(b=>{
+                    b.data.canvasPath = getPathFromBlocks(b);
+                    b.data.points.forEach(p => {
+                        p.canvasPath = getPathFromBlocks(p);
+                    })
                 })
             })
-        })
+        } else {
+            model.layers.forEach(layer => {
+                const blocks = layer.blocks;
+                this.addBlocks(this._activeLayerId, blocks);
+            })
+        }
         this.draw();
     }
     
@@ -361,9 +369,19 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         for(let ix = 0; ix < this.layers.length; ix++){
             const blocks = this.layers[ix].blocks;
             for (let jx = 0 ; jx < blocks.length; jx++){
-                if(this.ctx.isPointInStroke(blocks[jx].data.canvasPath, p.x, p.y)){
-                    return [blocks[jx]];
-                } 
+                const b = blocks[jx];
+                if(this.ctx.isPointInStroke(b.data.canvasPath, p.x, p.y)){
+                    if(b.type !== 'path'){
+                        return [b, undefined];
+                    } else { //path, miro dentro, que no tiene el path generado, 
+                        const elementPaths = b.elements.map(b => getPathFromBlocks(b) )
+                        for(let kx = 0; kx < elementPaths.length; kx++){
+                            if(this.ctx.isPointInStroke(elementPaths[kx], p.x, p.y)){
+                                return [b, b.elements[kx]];
+                            } 
+                        }
+                    }
+                }
             }
         }
         return undefined;
@@ -394,25 +412,33 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
  * @param {Number} x,y posición coordenadas window (usuario) 
  * @param {Box} box parámetro opcional, si existe, se marcan los elementos totalmente contenidos, si no, el apuntado por x,y
  * @param {boolean} [select=false] si está a true, en vez de estado hover ponemos estado selected
+ * Como el caso getNearest tiene más usos, separo por legibilidad aunque haya cosas comunes
  */
+    _hilite(blocks, select){
+        if(blocks && blocks.length > 0){
+            if(select){
+                blocks.forEach(b => b.selected = b.selected? false : true);     //permanente, selected
+            } else {
+                blocks.forEach(b => b.hover = true);
+                this.selectData.hoveredBlocks = blocks;                         //temporal, hover
+            }
+        }
+    }
     hover( x, y, box, select = false){
         let blocks;
         if(this.selectData.hoveredBlocks)
-            this.selectData.hoveredBlocks.forEach(b => b.hover = false);       
-        if(box)
+            this.selectData.hoveredBlocks.forEach(b => b.hover = false);        //gestión de hover, aquí borra anarillo
+        if(box){
             blocks = this.getBlocksInsideBox(box);
-        else
-            blocks = this.getNearestBlock(x, y, 10);
-        if(blocks && blocks.length > 0){
-            if(select){
-                blocks.forEach(b => b.selected = b.selected? false : true);
-            } else {
-                blocks.forEach(b => b.hover = true);
-                this.selectData.hoveredBlocks = blocks;
-            }
+            this._hilite(blocks, select);
         }
-        this.draw();
-        return(blocks );
+        else{
+            blocks = this.getNearestBlock(x, y, 10);
+            this._hilite(blocks ? [blocks[0]] : [], select)
+        }
+        this.draw()
+        return(blocks);
+
     }
     //TODO ver si se pasa el layer por name o por id... de momento, undefined = all
     //Estos son COMANDOS?!, sobre todo el delete!!!

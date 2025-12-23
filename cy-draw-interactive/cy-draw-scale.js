@@ -5,7 +5,7 @@ export default class DrawScale extends DrawBasic{
     constructor(layerDraw, subMode){
         super(layerDraw, 'scale', subMode);
         this.blocksToScale = [];
-        this.moveFn = [[this.h], [this.move]];
+        this.moveFn = [[this.h, this.m0, this.sendDataBasic], [this.move]];
         this.clickFn = [[this.m0, this.getBlocks, this.move], []];
         this.dataSent = [['x0','y0'],[]];
         this.dataReceived = ['x0','y0','sn','sd'];   //numerador y denominador

@@ -10,6 +10,7 @@ sharedStyles.replaceSync(`
     border: none;
     padding: 0;
     justify-content: flex-start;
+    width:100%;
   }
 .column{
   display: flex;
@@ -19,14 +20,17 @@ sharedStyles.replaceSync(`
   padding: 0;
   justify-content: flex-start;
 }
-._80{width:80%;}
-._20{width:20%;}
-._10{width:10%;}
 .full{width:100%;}
 .half{width:50%;}
+._90{width:90%;}
+._80{width:80%;}
+._70{width:70%;}
+._60{width:60%;}
 ._50{width:50%;}
 ._40{width:40%;}
 ._33{width:30%;}
 ._25{width:25%;} 
+._20{width:20%;}
+._10{width:10%;}
 
 `);

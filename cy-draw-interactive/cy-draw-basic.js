@@ -35,12 +35,27 @@ export default class DrawBasic {
     }
     clear = () => this.draft.clear();
     
-    p0 =        (pi)    => {this.data.x0 = pi.x; this.data.y0 = pi.y; this.status = 1;};
+    p0 =        (pi)    => {
+                            [this.data.x0, this.data.y0] =   (this.hit !== undefined) ? [this.hit.x, this.hit.y] : [pi.x, pi.y];
+                            this.status = 1;
+                            };
+    
     getBlocks = ()      => {this.blocksToMove = this.layerDraw.getSelectedBlocks()};
+
+    m0 =        (pi)    => {[this.data.x0, this.data.y0] =   (this.hit !== undefined) ? [this.hit.x, this.hit.y] : [pi.x, pi.y]}
+                            
+    m1 =        (pi)    => {[this.data.x1, this.data.y1] =   (this.hit !== undefined) ? [this.hit.x, this.hit.y] : [pi.x, pi.y]}
+    
     h  =        (pi)    => {this.hit = this.highLight(pi.x, pi.y, undefined);};
-    m0 =        (pi)    => {this.data.x0 = pi.x, this.data.y0 = pi.y;};
-    m1 =        (pi)    => {this.data.x1 = pi.x, this.data.y1 = pi.y;};
-    move =      (pi)    => {this.hit = this.highLight(pi.x, pi.y, undefined)};
+
+    sendDataBasic =  ()  => {
+        this.layerDraw.dispatchEvent(new CustomEvent('drawing-event', {bubbles: true, composed:true, 
+            detail:{data: this.dataBasic(this.dataSent[this.status])}}));
+    }
+    dataBasic(keys){
+        const data = keys.map(k => ({idn:k, v:this.data[k]}))
+        return data;
+    }
     deleteDataBasic = (args) => {
         this.status = 0;
         this.enabled = true;
@@ -48,7 +63,7 @@ export default class DrawBasic {
     }
     //arrays de funciones
     clickFn =   [[this.p0], [this.m1, this.deleteDataBasic ]];
-    moveFn  =   [[this.h], [this.h, this.move], []];
+    moveFn  =   [[this.h, this.m0, this.sendDataBasic], [this.h, this.m1, this.sendDataBasic], []];
 
     leftClick = (pi, evt) => {
         let p = this.hit || pi;
@@ -57,8 +72,9 @@ export default class DrawBasic {
     };
     mouseMove = (pi) => {
         this.moveFn[this.status].forEach(f => f(pi));
-        this.layerDraw.dispatchEvent(new CustomEvent('drawing-pos', {bubbles: true, composed:true, 
-            detail:{pos:this.hit, type:this.type, subType: this.subMode, idn:this.dataSent[this.status]}}));
+        // if(this.hit) //solo si hay algo que mandar
+        //     this.layerDraw.dispatchEvent(new CustomEvent('drawing-event', {bubbles: true, composed:true, 
+        //         detail:{pos:this.hit, type:this.type, subType: this.subMode, idn:this.dataSent[this.status]}}));
     };
     //Habría que chequear tipos numéricos y tal, formatos...
     //La idea es que lo numérico, mayoritario, se pone ne received y se parsea

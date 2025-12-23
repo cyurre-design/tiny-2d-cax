@@ -8,9 +8,11 @@ import './cy-input-data-path.js'
 import './cy-input-data-transform.js'
 import './cy-input-data-gcode.js'
 import './cy-input-data-export-gcode.js'
+import './cy-input-data-text.js'
+import './cy-input-data-measure.js'
 
 
-const inputDataApps = ["arc","circle","segment","polygon","path","export-gcode","gcode","transform" ];
+const inputDataApps = ["arc","circle","segment","polygon","path","export-gcode","gcode","transform","text","measure" ];
 function inputDataTemplate(app){return `<cy-input-data-${app} class="share"></cy-input-data-${app}>`} 
 const Keys4Events =  ["Enter", "Escape"]
 export default class CyInputDataBasic extends HTMLElement {
@@ -79,6 +81,8 @@ export default class CyInputDataBasic extends HTMLElement {
         inputDataApps.forEach(app => {
             if(app === 'export-gcode')
                 this.dom.querySelector('cy-input-data-'+app).initialData(data.iso)
+            else if(app === 'text')
+                this.dom.querySelector('cy-input-data-'+app).initialData(data.text)
             else
                 this.dom.querySelector('cy-input-data-'+app).initialData(data.geometry)
             })

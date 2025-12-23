@@ -13,7 +13,6 @@ export default class CyInputDataAngle extends HTMLElement {
         <style> 
             host: {display: block;}
                 #container{
-                    position:absolute;
                     width:100%;
                 }
             #data-coarse{ width:50%;}

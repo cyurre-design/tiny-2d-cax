@@ -107,23 +107,16 @@ export function initialDataBasic(it, data){
         }
     }
 
-//intento hacerlo lo más genérico posible, pero habrá switches casi seguro.
-//Me pasan pos e idn, que es un array con los id de los campos que cambian.
-// data-xx es el nombre publico entre ambos controles 
-/**@todo generalizar? */
-export function inputDataUpdate(it, data){
+//cambiado a reicbir un array de key,value
+export function inputDataUpdate(it, received){
     function format(n){ return(n.toFixed(3))};
-    const [ix,iy] = data.idn;//.map(k => 'data-' + k); //array de dos asciis, ej: data-x0 y data-y0
-    if(it.inputs[ix]){
-        const v = format(+data.pos.x);
-        it.inputs[ix].value = v;
-        it.data[ix] = v
-    }
-    if(it.inputs[iy]){
-        const v = format(+data.pos.y);
-        it.inputs[iy].value = v;
-        it.data[iy] = v
-    }
+    received.data.forEach(el => {
+    if(it.inputs[el.idn]){
+        const v = format(+el.v);
+        it.inputs[el.idn].value = v;
+        it.data[el.idn] = v
+        }
+    })
 }
 
 //Creo que ya no haría falta...

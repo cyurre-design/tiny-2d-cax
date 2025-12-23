@@ -35,7 +35,9 @@ export default class CyInputDataArc extends HTMLElement {
         t = 'arc-2pr';
         h +=  `<div id="${t}" style="display:none;">${TX0Y0(t)+TX1Y1(t)}<div class="row"><div class="_50">${TR(t)}</div><div class="_40">${TCWCCW(t)}</div></div></div>`;        
         t = 'arc-3p';
-        h += `<div id="${t}"  style="display:none;">${TX0Y0(t)+TX1Y1(t)+TX2Y2(t)}</div>`
+        h += `<div id="${t}"  style="display:none;">${TX0Y0(t)}
+        <div class="row"> XM<input id="data-${t}-xm" class="_33" type="number" value="0" step="0.5"/>
+            YM<input id="data-${t}-ym" class="_33" type="number" value="0" step="0.5"/></div>${TX1Y1(t)}</div>`
         return h;
     }
 

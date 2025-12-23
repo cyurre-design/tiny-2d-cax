@@ -8,7 +8,7 @@ export default class DrawPath extends DrawBasic{
         this.thePath = createDrawElement('path', this.data ); 
         //Secuencias en función del tipo de dibujp, el click es sutil
         //El move es más sencillo, el pop seguido del new modifica el último tramo del path, que es lo que estamos dibujando
-        this.moveFn = [[this.h], [this.h, this.m1, this.pop, this.newSegment, this.draw]];   
+        this.moveFn = [[this.h, this.m0, this.sendDataBasic], [this.h, this.m1, , this.sendDataBasic, this.pop, this.newSegment, this.draw]];   
         // 1.en m1 guardamos la nueva cota, 
         // 2.en pop, seguido de new segment, actualizamos el último segmento visto
         // 3.con p0 y m1 y newSegment ponemos el nuevo segmento que va a moverse (que empezará con longitud 0 porque p0 y m1 reciben el mismo punto)

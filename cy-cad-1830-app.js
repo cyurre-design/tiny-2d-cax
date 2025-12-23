@@ -40,6 +40,8 @@ import DrawArc from "./cy-draw-interactive/cy-draw-arc.js"
 import DrawPath from "./cy-draw-interactive/cy-draw-path.js"
 import DrawGcode from "./cy-draw-interactive/cy-draw-gcode.js"
 import DrawExportGcode from "./cy-draw-interactive/cy-draw-export-gcode.js"
+import DrawText from "./cy-draw-interactive/cy-draw-text.js"
+import DrawMeasure from "./cy-draw-interactive/cy-draw-measure.js"
 
 //Parsers
 import {convertDxfToGeometry} from "./parsers/cy-parser-dxf-geometry-objects.js"
@@ -56,6 +58,7 @@ const templateMainMenu =`
   <!-- Note the has-overflow attribute -->
     <md-menu has-overflow positioning="popover" id="file-menu" anchor="file-menu-anchor">
     <md-menu-item id="open-project"><div slot="headline">Open</div></md-menu-item>
+    <md-menu-item id="open-geometry"><div slot="headline">Load</div></md-menu-item>
         <md-menu-item id="save-project"><div slot="headline">Save</div></md-menu-item>
         <md-menu-item id="save-iso"><div slot="headline">Export GCode</div></md-menu-item>
         <md-menu-item id="save-svg"><div slot="headline">Export Svg</div></md-menu-item>
@@ -99,6 +102,7 @@ const templateMainMenu =`
         <md-menu-item id="path" ><div slot="headline">PATH</div></md-menu-item>
         <md-menu-item id="poly"><div slot="headline">POLYGON</div></md-menu-item>
         <md-menu-item id="gcode" ><div slot="headline">GCODE</div></md-menu-item>
+        <md-menu-item id="text" ><div slot="headline">TEXT</div></md-menu-item>
         <md-menu-item id="biarc" ><div slot="headline">BIARC</div></md-menu-item>
     </md-menu>
     <md-filled-button id="transform-menu-anchor">TRANSFORM</md-filled-button>
@@ -127,7 +131,12 @@ const templateMainMenu =`
 </span>
 `
 //tools y settings fijos
-
+const templateMeasure = `
+<div class="row" id='menu-measure'>
+MEASURE
+<input type="button" id='measure-block' value="BLOCK" class="_33"/>
+<input type="button" id='measure-p2p' value="P2P" class="_33"/>
+</div>`
 const templateZoom = `
 <div class="row" id='menu-zoom'>
 <input type="button" id='zoom-sethome' value="SH" class="_20"/>
@@ -168,6 +177,7 @@ const template = `
     <div id="left" class="column" >
       <cy-layer-list id="layer-view" class="column"></cy-layer-list>
       ${templateZoom}
+      ${templateMeasure}
       ${templateUndo}
       ${templateSelectInputData}
       <div class="row"><span>Link Tolerance</span><input type="number" class="half" value="0.1" max="5" min="0.01" step="0.1"/></div>   
@@ -283,7 +293,7 @@ class cyCad1830App extends HTMLElement {
       //console.log('mdata inicializado')
       this.mData = this.dom.querySelector('#input-data');
       this.mData.initialData(defaultConfig)
-      this.viewer.addEventListener('drawing-pos', (e) => this.mData.update(e.detail));
+      this.viewer.addEventListener('drawing-event', (e) => this.mData.update(e.detail));
     })
 
 
@@ -403,6 +413,7 @@ class cyCad1830App extends HTMLElement {
                         break;
       }
     })
+//----------------- ZOOM  ------------------------------ BOTONES
   /**sacado del menu al lateral por comodidad */
     this.dom.querySelector('#menu-zoom').addEventListener('click', (evt) => {
         this.viewer.clearCursors();
@@ -415,6 +426,14 @@ class cyCad1830App extends HTMLElement {
             case 'in':      this.viewer.canvasHandler.view('fgZoomIn'); break;
             case 'out':     this.viewer.canvasHandler.view('fgZoomOut');break;
         }
+    })
+//-----------------  MEASURE ---------------------------- BOTONES
+/** menu de medición, elemento, path o punto a punto */
+    this.dom.querySelector('#menu-measure').addEventListener('click', (evt) => {
+      const [main, sub1, sub2] = evt.target.id.split('-');
+      this.drawingApp = new DrawMeasure(this.viewer.layerDraw, sub1);
+      this.registerInputApplications( this.drawingApp );
+      this.mData.setActiveApplication( 'measure', sub1);
     })
 
 //-----------------CREAR CAPAS INICIALES
@@ -443,13 +462,14 @@ class cyCad1830App extends HTMLElement {
       console.log(main, sub1, sub2);
       switch(main){
         case 'open': {
+          const clear = sub1 === 'geometry'? false: true;
           loadProject().then(file => {
             console.log(file.name);
             const type = file.name.split('.').pop();
             if(type === 'json'){
               const data = JSON.parse(file.text );
             // Restaurar modelo
-              this.viewer.layerDraw.deserialize( data.model); //Falta restaurar historia
+              this.viewer.layerDraw.deserialize( data.model, clear); //Falta restaurar historia
             }
             else if((type === 'nc') || (type === 'pxy')){
               const geo = isoToGeometry(file.text); //Hay que pasarle la configuración de máquina...por defecto fresadora
@@ -482,11 +502,6 @@ class cyCad1830App extends HTMLElement {
               this.viewer.fit();
               this.viewer.layerDraw.draw();
             }
-            else if((type === 'png') || (type === 'jpg')){
-                ImageTracer.imageToSVG("input.png", (svg) => {
-                  console.log(svg);
-                });
-              }
             //const lyId = this.viewer.layerDraw.getActiveLayerId();
             
           })
@@ -581,13 +596,6 @@ class cyCad1830App extends HTMLElement {
 
         }
         break;
-        case 'draw':{
-            switch( sub1) {
-                case 'start':
-                case 'stepBack':
-                case 'end': break;
-            }
-        }break;
         //Los de support y transform los dejo en plano por no hacer más profundo el árbol
         case 'point':  break;
         case 'line' :{
@@ -621,19 +629,22 @@ class cyCad1830App extends HTMLElement {
           this.drawingApp = new DrawPath(this.viewer.layerDraw, sub1);
           this.registerInputApplications( this.drawingApp )        
           this.mData.setActiveApplication( 'path', sub1 );
-        }
-        break;
+        } break;
         case 'poly' :{ //quito el menú de tipo y lo pongo en el selector de input-data
           this.drawingApp = new DrawPolygon(this.viewer.layerDraw, sub1);
           this.registerInputApplications( this.drawingApp );
           this.mData.setActiveApplication( 'polygon', sub1 );
-        }
-        break;
+        } break;
         case 'gcode' : {
           this.drawingApp = new DrawGcode(this.viewer.layerDraw, '')
           this.registerInputApplications( this.drawingApp )
           this.mData.setActiveApplication( 'gcode', sub1 );
-        }break;
+        } break;
+        case 'text' : {
+          this.drawingApp = new DrawText(this.viewer.layerDraw, '')
+          this.registerInputApplications( this.drawingApp )
+          this.mData.setActiveApplication( 'text', sub1 );
+        } break;
         default:break;
       }
     } 

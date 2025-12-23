@@ -37,7 +37,7 @@ export default class CyInputDataTransform extends HTMLElement {
         t = 'transform-translate';
         h += `<div id="${t}"  style="display:none;">${TX0Y0(t)+TX1Y1(t)}</div>`
         t = 'transform-rotate';
-        h += `<div id="${t}"  style="display:none;">${TX0Y0(t)+TA(t)}+<div class="row">${TENTER(t)+TESC(t)}</div></div>`
+        h += `<div id="${t}"  style="display:none;">${TX0Y0(t)+TA(t)}<div class="row">${TENTER(t)+TESC(t)}</div></div>`
         t = 'transform-symmetryx';
         h += `<div id="${t}"  style="display:none;">${TYy0(t)}</div>`
         t = 'transform-symmetryy';

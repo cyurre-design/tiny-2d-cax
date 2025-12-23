@@ -5,7 +5,7 @@ export default class DrawOrigin extends DrawBasic{
         super(layerDraw, 'origin', mode);
         this.data = {subType:mode};    
         //Secuencias en función del tipo de dibujp
-        this.moveFn = [[this.drawAxes]];
+        this.moveFn = [[this.drawAxes, this.m0, this.sendDataBasic]];
         this.clickFn = [[this.setOrigin, this.deleteData]];
         //Y lo que se manda a input-data de posicines del cursor igual
         this.dataSent = [['x0','y0']];

@@ -13,7 +13,7 @@ export default class DrawExportGcode extends DrawBasic{
     constructor(layerDraw, mode) {
         super(layerDraw, 'file', mode);
         this.data = {subType:'exportISO'};
-        
+
         this.truePaths = this.layerDraw.getSelectedBlocks().filter( b => b.type === 'path');
         this.paths = [];
         this.paths.push(...this.truePaths); //son los punteros, creo
@@ -70,7 +70,9 @@ export default class DrawExportGcode extends DrawBasic{
         this.draw(this.hit);
     }
     draw = (pi) => {
-        this.hit = this.highLight(pi.x, pi.y, this.arrows)}
+        this.hit = this.highLight(pi.x, pi.y, this.arrows);
+        this.draft.drawNumber(this.arrows.map((arrow, ix) => ({x0:arrow.x0, y0:arrow.y0, text:'p' + (ix+1)})));
+        }
  
     deleteData = () => {
         this.deleteDataBasic([]),

@@ -4,7 +4,7 @@ import DrawBasic from './cy-draw-basic.js'
 export default class DrawTranslate extends DrawBasic{
     constructor(layerDraw, subMode){
         super(layerDraw, 'translate', subMode);
-        this.moveFn         = [[this.h], [this.h, this.move], []];
+        this.moveFn         = [[this.h, this.m0, this.sendDataBasic], [this.h, this.m1, this.sendDataBasic, this.move], []];
         this.clickFn        = [[this.p0, this.getBlocks], [this.m1 , this.translate, this.deleteData ]];
         this.dataSent       = [['x0','y0'],['x1','y1']]
         this.dataReceived   = [['x0','y0','x1','y1']]

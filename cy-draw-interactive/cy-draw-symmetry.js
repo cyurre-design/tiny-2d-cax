@@ -8,13 +8,13 @@ export default class DrawSymmetry extends DrawBasic{
         //Secuencias en función del tipo de dibujo
         switch(mode){
             case 'X':{
-                this.moveFn         = [[this.drawAxis]];
+                this.moveFn         = [[this.h, this.m0, this.sendDataBasic, this.drawAxis]];
                 this.clickFn        = [[this.symmetryXY]]
                 this.dataSent       = [['x0','y0']];
                 this.dataReceived   = ['y0'];
             } break;
             case 'Y':{
-                this.moveFn         = [[this.drawAxis]];
+                this.moveFn         = [[this.h, this.m0, this.sendDataBasic, this.drawAxis]];
                 this.clickFn        = [[this.symmetryXY]]
                 this.dataSent       = [['x0','y0']];
                 this.dataReceived   = ['x0'];
