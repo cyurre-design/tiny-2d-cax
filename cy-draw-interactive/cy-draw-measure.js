@@ -9,7 +9,7 @@ export default class DrawMeasure extends DrawBasic {
         switch(this.subMode){
             case 'block':  {
                 this.moveFn         = [[this.hover], []];
-                this.clickFn        = [[this.select ], []]; 
+                this.clickFn        = [[this.select, this.sendDataBasic ], []]; 
                 this.dataSent       = [['lblock','lpath'],[]]
                 this.dataReceived   = [];
             } break;
@@ -32,9 +32,10 @@ export default class DrawMeasure extends DrawBasic {
     };
     //Aquí, al hacer click no pasamos de hover a selected (sería el flag )
     select = (pi) => {
-        if(this.found && this.found.length > 0)
-            this.hit = {x:blockLength(this.found[0]), y: this.found[1]?blockLength(this.found[1]):0}
-        console.log(this.hit)
+        if(this.found && this.found.length > 0){
+            this.data.lblock = blockLength(this.found[0]);
+            this.data.lpath = this.found[1]?blockLength(this.found[1]):0
+        }
     }
     measure = () => {
         this.data.length = distancePointToPoint(this.x0, this.y0, this.x1, this.y1);
