@@ -73,6 +73,7 @@ export function setEventHandlers(it){
 //Pongo los handlers explícitos, se podrían llamar a específicos con callbacks o hooks
     it.dom.addEventListener('change', (evt)=>{
         //console.log(evt.target);
+            console.log(evt.target.id)
         const detail = {};
         const k = keyFromId(evt.target.id);
         it.data[k] = evt.target.value;
@@ -82,14 +83,16 @@ export function setEventHandlers(it){
     it.dom.addEventListener('click', (evt)=>{        
         //console.log(evt.target);
         const detail = {};
+            console.log(evt.target.id)
         if(evt.target.type === "button"){
             const k = keyFromId(evt.target.id);
             detail[k] = evt.target.value;
             it.dispatchEvent(new CustomEvent('input-click',{bubbles:true, composed:true, detail: detail}))
         }
     });
-    it.addEventListener('keyup', (evt)=>{
+    it.dom.addEventListener('keyup', (evt)=>{
         const key = evt.key;
+            console.log(evt.target.id)
         if( Keys4Events.indexOf(key) > -1){
             //console.log(evt.key)
             const detail = {};

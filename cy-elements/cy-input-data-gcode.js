@@ -10,11 +10,8 @@ export default class CyInputDataGcode extends HTMLElement {
     //Aunque los html ya están inicializados, hay que pasar la info al componente que dibuja
     set subType(type) {
         this.type = 'p' //por mantener coherencia y estandarización de tipo-subtipo-propiedad
-        inputDataSubtype(this, `data-path-${this.type}`);
-        // if(this.type === '2pr')
-        //     this.dom.querySelector('#data-arc-2pr-r').dispatchEvent(new Event("change", { bubbles: true }));
-        // else if(this.type === 'cpa')
-        //     this.dom.querySelector('#data-arc-cpa-a').dispatchEvent(new Event("change", { bubbles: true }));
+        inputDataSubtype(this, `data-gcode-p-${this.type}`);
+        this.dom.querySelector('#data-gcode-p-gcode').focus();
     }
     createStyle() {
         let style = `<style>
@@ -24,8 +21,8 @@ export default class CyInputDataGcode extends HTMLElement {
     createTemplate() {
         let t = `gcode-p`;
         let h = `<div id=${t}>`;
-        h += `<div class="full"><textarea  id="${t}"  autofocus class="full" contenteditable="plaintext-only"></textarea></div>`
-        h += `<div class="row">${TESC(t)+TINS(t)}></div> </div>`
+        h += `<textarea class="full" id="data-${t}-gcode"  autofocus class="full" contenteditable="plaintext-only"></textarea>`
+        h += `<div class="row">${TESC(t)+TINS(t)}</div> </div>`
         return h
     }
     connectedCallback() {

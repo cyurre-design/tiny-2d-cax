@@ -262,18 +262,18 @@ class cyCad1830App extends HTMLElement {
       this.dom.adoptedStyleSheets = [sharedStyles];
       this.dom.innerHTML = template + style;
     }
-    registerInputApplications(drawingApp){
+    registerInputApplications(){
       //-------------------INPUT DATA
       //Interactividad entre parte izquierda, datos manuales y ratón.
       //this.mData = this.dom.querySelector('#manual-data');
-      this.viewer.interactiveDrawing.setDrawingMode(drawingApp );
+      this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
 
       this.mData.addEventListener('input-data', (e) =>
-        drawingApp.updateData(e.detail));
+        this.drawingApp.updateData(e.detail));
       this.mData.addEventListener('input-click', (e) => 
-        drawingApp.updateData( e.detail));
+        this.drawingApp.updateData( e.detail));
       this.mData.addEventListener('input-key', (e) => 
-        drawingApp.updateData( e.detail));
+        this.drawingApp.updateData( e.detail));
       }
     
   connectedCallback(){
