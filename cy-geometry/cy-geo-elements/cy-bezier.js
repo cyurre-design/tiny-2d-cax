@@ -1,7 +1,7 @@
 "use strict";
 import {geometryPrecision, rotateZ, scale0} from '../cy-geometry-library.js'
 import {createSegment} from "./cy-segment.js"
-import { translatePoint, distancePointToPoint, pointSymmetricSegment } from '../cy-geometry-library.js'
+import { _solveq, translatePoint, distancePointToPoint, pointSymmetricSegment } from '../cy-geometry-library.js'
 import {createBiarc, biarcInterpolate} from "./cy-biarc.js"
 
 
@@ -43,9 +43,9 @@ export function createBezier(data = {} ){
         get pi(){ return ({x:this.x0,y:this.y0})} , get pf(){ return ({x:this.x1,y:this.y1})}
     };
     if(data.subType === 'Q'){
-        //elevo grado, paso de cuadrática a cúbica
-        bz.cp1x = data.x0   + 2*data.cp1x/3; bz.cp1y = data.y0   + 2*data.cp1y/3;
-        bz.cp2x = data.cp1x + 2*data.x1/3;   bz.cp1y = data.cp1y + 2*data.y1/3;
+        //elevo grado, paso de cuadrática a cúbica, cp1 = 1/3pi +2/3pm, cp2 = 2/3pm+1/3pf
+        bz.cp1x = (data.x0   + 2*data.cp1x)/3; bz.cp1y = (data.y0   + 2*data.cp1y)/3;
+        bz.cp2x = (2*data.cp1x + data.x1)/3;   bz.cp2y = (2*data.cp1y + data.y1)/3;
     }
     else{
         bz.cp1x = data.cp1x; bz.cp1y = data.cp1y;
@@ -91,7 +91,7 @@ function calculateInflexionPoints(bz){
     const a = {x: bz.cp1x - bz.x0,                 y: bz.cp1y - bz.y0};
     const b = {x: bz.cp2x - bz.cp1x - a.x,         y: bz.cp2y - bz.cp1y - a.y};
     const c = {x: bz.x1   - bz.cp2x - a.x -2*b.x,  y: bz.y1   - bz.cp2y - a.y -2*b.y};
-    const inflections = solveq(a,b,c);
+    const inflections = _solveq(a,b,c);
     return(inflections);
     }
 function isClockWise(bz){
@@ -122,7 +122,7 @@ export function bezierTranslate(bz, dx, dy) {
     return createBezier({x0:x0, y0:y0, x1:x1, y1:y1, cp1x:cp1x, cp1y:cp1y, cp2x: cp2x, cp2y:cp2y});
 }
 export function bezierSymmetryX(bz, y) {
-    return createBezier({x0: bz.x0, y: 2*y - bz.y0, x1: bz.x1, y1: 2*y - bz.y1, cp1x: bz.cp1x, cp1y: 2*y - bz.cp1y, cp2x: bz.cp2x, cp2y: 2*y - bz.cp2y} )
+    return createBezier({x0: bz.x0, y0: 2*y - bz.y0, x1: bz.x1, y1: 2*y - bz.y1, cp1x: bz.cp1x, cp1y: 2*y - bz.cp1y, cp2x: bz.cp2x, cp2y: 2*y - bz.cp2y} )
     }
 export function bezierSymmetryY(bz, x) {
     return createBezier({x0: 2*x - bz.x0, y0: bz.y0, x1: 2*x - bz.x1, y1: bz.y1, cp1x: 2*x - bz.cp1x, cp1y: bz.cp1y, cp2x: 2*x - bz.cp2x, cp2y: bz.cp2y} )
@@ -254,7 +254,7 @@ function splitAtInflexionPoints(bz, tolerance = 0.01){
 //         }
 //     }
 //     }
-function approximate(bz, tolerance = 0.01){
+export function bezierApproximate(bz, tolerance = 0.01){
     let tramos = splitAtInflexionPoints(bz, tolerance); //devuelve array de beziers, se supone
     let biarcs = [];    //lo que voy a devolver
 

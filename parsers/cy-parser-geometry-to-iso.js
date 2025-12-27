@@ -1,3 +1,5 @@
+   import { bezierApproximate } from "../cy-geometry/cy-geo-elements/cy-bezier.js"; 
+    
     //YURRE: para casa, paso cabecera, pre y post, que parece mucho más fácil de getsionar.
     // tal vez podría haber un pre y un post para los patrones...
 /**
@@ -54,18 +56,25 @@ function circlesToIso(circles, header, footer, pre, post){
 //Ya he quitado los moves y los puntos, solo geometría
 //La parte tecnológica debe resolverse antes de llegar aquí, de forma interactiva a poder ser (chaflanes, entradas...)
 function singlePathToIso(path={elements:[]}){
+    function arc2iso(a){
+        let str = '';
+        let deltc = {x: a.cx - a.pi.x, y: a.cy - a.pi.y}; //test by cross product
+        if (a.way === 'antiClock')
+            str += `G03 ${strCotas(a.pf.x, a.pf.y)} I${myRound(deltc.x)} J${myRound(deltc.y)} \n`;
+        else 
+            str += `G02 ${strCotas(a.pf.x, a.pf.y)} I${myRound(deltc.x)} J${myRound(deltc.y)} \n`;
+        return str;
+    }
     //let {_I, _J} = processConfig(configM);
     //let {formatX, formatY} = strFormatCota(configM, false);
     let str = `${defaults.post}\nG0 ${strCotas(path.elements[0].pi.x, path.elements[0].pi.y)}\n${defaults.pre}\n`;
     path.elements.forEach(el=>{
         switch(el.type){
             case 'segment': str += `G01 ${strCotas(el.pf.x, el.pf.y)} \n`; break;
-            case 'arc':{
-                let deltc = {x: el.cx - el.pi.x, y: el.cy - el.pi.y}; //test by cross product
-                if (el.way === 'antiClock')
-                    str += `G03 ${strCotas(el.pf.x, el.pf.y)} I${myRound(deltc.x)} J${myRound(deltc.y)} \n`;
-                else 
-                    str += `G02 ${strCotas(el.pf.x, el.pf.y)} I${myRound(deltc.x)} J${myRound(deltc.y)} \n`;
+            case 'arc': str += arc2iso(el); break;
+            case 'bezier':{ //este hay que aproximarlo
+                let arcs = bezierApproximate(el, 0.1); //esto hay que afinar la tolerancia
+                arcs.forEach( a => str += arc2iso(a))
                 }
                 break;
         }

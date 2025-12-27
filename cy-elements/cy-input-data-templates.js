@@ -46,8 +46,10 @@ export function TEDIT(t) { return(
 `<div class="full"><textarea autofocus contenteditable="plaintext-only" id="iso-input-${t}" ></textarea></div>`)}
 export function TCWCCW(t) { return(
 `<select class="data" id="data-${t}-way"><option value="clock">CW</option><option value="antiClock">CCW</option></select>`)}
+export function TL2RR2L(t) { return(
+`<select class="data" id="data-${t}-invert"><option value="l2r">L2R</option><option value="r2l">R2L</option></select>`)}
 
-const Keys4Events =  ["Enter", "Escape"]
+
 function keyFromId(id) {return id.split('-').pop()}
 //Función de subtipo, cuando se han generado inputs de tdos pero solo son activas las del subtipo
 export function inputDataSubtype(it, filter){
@@ -69,11 +71,12 @@ export function inputDataInit(it){
     it.allInputs = inputs.concat(others);
 }
 //Solo funcionan cuando el componente está en display block, si está en none no hace caso
+// el filtro de teclas debería ser un parámetro a setEventHandlers o hacerlo miembro y ponerlo en un set
+const Keys4Events =  ["Enter", "Escape"]
+
 export function setEventHandlers(it){
 //Pongo los handlers explícitos, se podrían llamar a específicos con callbacks o hooks
     it.dom.addEventListener('change', (evt)=>{
-        //console.log(evt.target);
-            console.log(evt.target.id)
         const detail = {};
         const k = keyFromId(evt.target.id);
         it.data[k] = evt.target.value;
@@ -81,9 +84,7 @@ export function setEventHandlers(it){
         it.dispatchEvent(new CustomEvent('input-data',{bubbles:true, composed:true, detail: detail}))
     })
     it.dom.addEventListener('click', (evt)=>{        
-        //console.log(evt.target);
         const detail = {};
-            console.log(evt.target.id)
         if(evt.target.type === "button"){
             const k = keyFromId(evt.target.id);
             detail[k] = evt.target.value;
@@ -92,9 +93,7 @@ export function setEventHandlers(it){
     });
     it.dom.addEventListener('keyup', (evt)=>{
         const key = evt.key;
-            console.log(evt.target.id)
         if( Keys4Events.indexOf(key) > -1){
-            //console.log(evt.key)
             const detail = {};
             const k = keyFromId(evt.target.id);
             detail[k] = evt.target.value;

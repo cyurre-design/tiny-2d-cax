@@ -45,7 +45,6 @@ export default class CyInputDataExportGcode extends HTMLElement {
                 //this.dispatchEvent(new CustomEvent('generate-iso', { bubbles: true , composed:true, detail:this.data}))
                 //console.log(this.data);
             }})
-        console.log('c2-export')
     }
     //Llamo al contenedor, que me hace de clase base
     update(data){

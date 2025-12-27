@@ -61,9 +61,7 @@ export default class CyInputDataBasic extends HTMLElement {
  * Las estructuras de trabajo de cada componente solo se pueden llamar después de esto, porque acceden a los elementos
  */
     connectedCallback() {
-        console.log('c0-basic')
         this.dom.innerHTML= this.createStyle() + this.createTemplate();
-        console.log('c1-basic')
     }
     setActiveApplication(app, subType ){
         //tapa todos

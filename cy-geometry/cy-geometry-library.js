@@ -18,7 +18,7 @@ export const geometryPrecision2 = 0.00000001;
 export const _2PI = 2*Math.PI;
 
 //Es la resolución de ecuaciones cuadráticas, que hay mejor que la del cole
-function _solveq(a, b, c) {
+export function _solveq(a, b, c) {
     let discriminante = (b * b - 4 * a * c);
     if (fuzzy_eq_zero(discriminante))  return [-b / (2 * a)];
     if (discriminante < 0) return []; //La sqrt da Nan si es disc < 0

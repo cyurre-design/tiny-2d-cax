@@ -1,4 +1,4 @@
-import {inputDataInit, initialDataBasic, inputDataUpdate, inputDataSubtype, setEventHandlers, TA, TESC, TINS} from './cy-input-data-templates.js'
+import {inputDataInit, initialDataBasic, inputDataUpdate, inputDataSubtype, setEventHandlers, TA,TCWCCW, TL2RR2L,TESC, TINS} from './cy-input-data-templates.js'
 import { sharedStyles } from '../shared-styles.js';
 
 export default class CyInputDataText extends HTMLElement {
@@ -13,11 +13,11 @@ export default class CyInputDataText extends HTMLElement {
         //Si no tiene subtipo se puede confundir con otros htmls 
         inputDataSubtype(this, `data-text-${this.type}`);
         this.dom.querySelector('#data-text-p-a').dispatchEvent(new Event("change", { bubbles: true }));
-        this.dom.querySelector('#data-text-way').dispatchEvent(new Event("change", { bubbles: true }));
-        this.dom.querySelector('#data-text-invert').dispatchEvent(new Event("change", { bubbles: true }));
+        this.dom.querySelector('#data-text-p-way').dispatchEvent(new Event("change", { bubbles: true }));
         this.dom.querySelector('#data-text-radius').dispatchEvent(new Event("change", { bubbles: true }));
         this.dom.querySelector('#data-text-font').dispatchEvent(new Event("change", { bubbles: true }));
         this.dom.querySelector('#data-text-size').dispatchEvent(new Event("change", { bubbles: true }));
+        this.dom.querySelector('#data-text-p-invert').dispatchEvent(new Event("change", { bubbles: true }));
     }
     createStyle() {
         let style = `<style>
@@ -30,11 +30,10 @@ export default class CyInputDataText extends HTMLElement {
         let t = `text-p`;
         let h = `<div id=${t}>
         <div class = "row">FONT <select id="data-text-font" class="_60 data"></select><input class="_20" id="data-text-size" type="number" min="1" max="100" step="0.5" value="10"/></div>
-        <div class = "row">TEXT <input class="_80 data" id="data-text-text" type="text" value="TEXT"/></div>
+        <div class = "row">TEXT <input class="_80 data" id="data-text-text" type="text" value=""/></div>
         <div class = "row">${TA(t)}</div> 
-        <div class = "row"><div class="_50">RADIUS<input class="data" id="data-text-radius" type="number" min="1" max="100" step="1" value="0"/></div>
-        <select class="_20 data" id="data-text-way" ><option value="L2R" selected>L2R</option><option value="R2L">R2L</option></select>
-        <select class="_20 data" id="data-text-invert" ><option value="CW" selected>CW</option><option value="CCW">CCW/option></select>
+        <div class = "row"><div class="_50">RADIUS<input class="data" id="data-text-radius" type="number" min="1" max="100" step="1" value="0"/>${TCWCCW(t)}${TL2RR2L(t)}</div>
+       
         </div>`
         h += `<div class="row">${TESC(t)+TINS(t)}</div> </div>`
         return h
@@ -44,6 +43,17 @@ export default class CyInputDataText extends HTMLElement {
         //Aquí inicializamos con valores pasados en la creación que pueden ser guardados como preferencias o por sesión...
         inputDataInit(this) //Esto debe inicializar los punteros a componentes y lee sus valores de html
         setEventHandlers(this);
+        //VERSION CON SERVIDOR
+        //Cuando se carga miramos qué fonts existen
+        fetch('/getFontNames').then(response=>{
+            response.json().then(fonts=>{
+              let sel = this.dom.querySelector("#data-text-font");
+              fonts.forEach(f=>
+                sel.options[sel.options.length] = new Option(f,f))
+              
+            })
+         })
+
     }
     //Llamo al contenedor, que me hace de clase base
     update(data){
@@ -52,7 +62,8 @@ export default class CyInputDataText extends HTMLElement {
     //Aquí se inicializan los valores de los componentes con lo que se pase, y viene para todos los subtipos...
     //Se inicializan antes de activarse el menú
     initialData(data){
-        initialDataBasic(this, data)
+        initialDataBasic(this, data);
+        //const buffer = fetch(this.data[]).then(res => res.arrayBuffer());
     }
     disconnectedCallback() {
     }
