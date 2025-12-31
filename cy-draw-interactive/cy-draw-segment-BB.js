@@ -44,8 +44,8 @@ export default class DrawSegmentBB extends DrawBasic {
         sol = sol.sort( (s1, s2) => (distancePointToPoint(s1[0].x, s1[0].y, this.data.x0, this.data.y0)
                                     - distancePointToPoint(s2[0].x, s2[0].y, this.data.x0, this.data.y0)))
         sol = sol.slice(0,2); //Las dos soluciones serán una exterior y otra interior, previsiblemente
-        sol = sol.sort( (s1, s2) => (distancePointToPoint(s1[0].x, s1[0].y, this.data.x1, this.data.y1)
-                                    - distancePointToPoint(s2[0].x, s2[0].y, this.data.x1, this.data.y1)))
+        sol = sol.sort( (s1, s2) => (distancePointToPoint(s1[1].x, s1[1].y, this.data.x1, this.data.y1)
+                                    - distancePointToPoint(s2[1].x, s2[1].y, this.data.x1, this.data.y1)))
         sol = sol[0]; //que es un array de dos objetos
         this.data = Object.assign(this.data,  {x0:sol[0].x, y0:sol[0].y}, {x1:sol[1].x, y1:sol[1].y});
     }
