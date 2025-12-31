@@ -89,6 +89,7 @@ export default class DrawExportGcode extends DrawBasic{
         const value = newData[0].v;
         switch(idn){
             case 'order': break;
+            case 'tol' : this.data.bezierTolerance = +value; break;
             case 'invert'  :
                 this.startChange = false;
                 this.invertMode = true

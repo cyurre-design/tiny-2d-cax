@@ -3,8 +3,8 @@
 
 //se supone que le pasamos los do arcos tangentes, se puede pasar la rutina de cálculos
 export function createBiarc(a, b){
-    const lengtha = Math.abs( a.r * a.delta); //revisar, a3 debe ser mayor que a1
-    const lengthb = Math.abs( b.r * b.delta); //revisar, a3 debe ser mayor que a1
+    const lengtha = Math.abs( a.r * a.da); //revisar, a3 debe ser mayor que a1
+    const lengthb = Math.abs( b.r * b.da); //revisar, a3 debe ser mayor que a1
     const s = lengtha / (lengtha + lengthb);
     return {a: Object.assign({},a), b: Object.assign({}, b), s: s}
     }

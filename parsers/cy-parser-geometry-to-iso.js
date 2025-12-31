@@ -73,7 +73,7 @@ function singlePathToIso(path={elements:[]}){
             case 'segment': str += `G01 ${strCotas(el.pf.x, el.pf.y)} \n`; break;
             case 'arc': str += arc2iso(el); break;
             case 'bezier':{ //este hay que aproximarlo
-                let arcs = bezierApproximate(el, 0.1); //esto hay que afinar la tolerancia
+                let arcs = bezierApproximate(el, defaults.bezierTolerance || 0.1); //esto hay que afinar la tolerancia
                 arcs.forEach( a => str += arc2iso(a))
                 }
                 break;
