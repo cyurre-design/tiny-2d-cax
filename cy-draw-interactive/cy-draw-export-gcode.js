@@ -18,14 +18,15 @@ export default class DrawExportGcode extends DrawBasic{
         this.paths = [];
         this.paths.push(...this.truePaths); //son los punteros, creo
         this.arrows = this.paths.map( p => this.createArrow(p)); //mismos índices
+        this.order = Array.from({ length: this.paths.length}, (v, i) => i );
 //        this.data.startPoints = this.paths.map( p => p.elements[0].pi); //mismos índices
 //        this.data.invert = this.paths.map(p => false); //chapucilla 
 
         this.startChange = false;
         this.invertMode = false;
-        this.moveFn = [[this.hover, this.draw],[this.draw]];   
-        this.clickFn = [[this.action, this.draw],[this.start]];
-        this.dataSent = [[],["way"]];
+        this.moveFn = [[this.hover, this.draw], [this.draw]];   
+        this.clickFn = [[this.action, this.draw], [this.start]];
+        this.dataSent = [[], ["way"]];
         this.dataReceived = ['order'];
     }
     //generar una flechita al comienzo de un path. Local, no compruebo que es un path
@@ -39,6 +40,11 @@ export default class DrawExportGcode extends DrawBasic{
         } else if(b.type === 'arc'){
             uy = Math.cos(b.ai); ux = -Math.sin(b.ai);
             x0 = b.x1; y0 = b.y1;
+        } else if(b.type === 'bezier'){
+            const dx = b.cp1x - b.x0, dy = b.cp1y - b.y0;
+            const d = Math.hypot(dx,dy);
+            ux = dx / d; uy = dy / d;
+            x0 = b.x0; y0 = b.y0;
         }
         return ({type:'arrow', x0:x0, y0:y0, dx:ux, dy:uy})
     }
@@ -71,7 +77,7 @@ export default class DrawExportGcode extends DrawBasic{
     }
     draw = (pi) => {
         this.hit = this.highLight(pi.x, pi.y, this.arrows);
-        this.draft.drawNumber(this.arrows.map((arrow, ix) => ({x0:arrow.x0, y0:arrow.y0, text:'p' + (ix+1)})));
+        this.draft.drawNumber(this.arrows.map((arrow, ix) => ({x0:arrow.x0, y0:arrow.y0, text:'p' + (this.order[ix]+1)})));
         }
  
     deleteData = () => {

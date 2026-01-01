@@ -15,8 +15,8 @@ testPoints.forEach(tp=>coefs[tp]= [(1-tp)*(1-tp)*(1-tp), (1-tp)*(1-tp)*tp, (1-tp
 // function bezierInterpolateq(tp){
 //         let cf = coefs[tp];
 //         return new Point(
-//             cf[0]*this.x + cf[1]*this.cp1.x + cf[2]*this.cp2.x + cf[3]*this.pf.x,
-//             cf[0]*this.y + cf[1]*this.cp1.y + cf[2]*this.cp2.y + cf[3]*this.pf.y,
+//             cf[0]*this.x + cf[1]*this.cp1x + cf[2]*this.cp2x + cf[3]*this.pf.x,
+//             cf[0]*this.y + cf[1]*this.cp1y + cf[2]*this.cp2y + cf[3]*this.pf.y,
 //         )
 //     }
 //Debemos garantizar la continuidad por construcción y todo será más sencillo
@@ -165,7 +165,7 @@ export function bezierScale(bz, x, y, scale) {
     return createBezier({x0:x0 + x, y0:y0 + y, x1:x1 + x, y1:y1 + y, cp1x:cp1x + x, cp1y:cp1y + y, cp2x: cp2x + x, cp2y:cp2y + y});
     }
 export function bezierReverse(bz){
-    return createBezier({x0:bz.x1 , y0:bz.y1, x1:bz.x0, y1:bz.y0, cp1x:bz.cp2.x, cp1y:bz.cp2.y, cp2x: bz.cp1.x, cp2y:bz.cp1.y});
+    return createBezier({x0:bz.x1 , y0:bz.y1, x1:bz.x0, y1:bz.y0, cp1x:bz.cp2x, cp1y:bz.cp2y, cp2x: bz.cp1x, cp2y:bz.cp1y});
 }
 
 function splitAt(bz, t){
@@ -198,7 +198,7 @@ function splitAt(bz, t){
      * El vector que une i con g sería pig = (g.x - x0, g.y - y0)
      * El vector normal al mismo sería (-pig.y, pig.x)
      * El vector que une el punto medio de pi a cp1 con g sería
-     * (g.x - pm.x, g.y - pm.y)  = (g.x - 0.5*(x0 + cp1x), g.y - 0.5*(y0 + cp1.y))
+     * (g.x - pm.x, g.y - pm.y)  = (g.x - 0.5*(x0 + cp1x), g.y - 0.5*(y0 + cp1y))
      * y en el corte estará el centro
      * @param {*} bz 
      * @param {*} g 

@@ -1,5 +1,5 @@
 import {createDrawElement} from  '../cy-geometry/cy-geometry-basic-elements.js'
-import {blockSymmetryX, blockSymmetryY, blockRotate, blockTranslate, checkBbox} from '../cy-geometry/cy-geometry-library.js'
+import {blockSymmetryX, blockSymmetryY, blockRotate, blockTranslate, checkBbox, fuzzy_eq} from '../cy-geometry/cy-geometry-library.js'
 //Convierte los commandos opentype a objetos de la librería geométrica
 //usamos un solo interface y la librería ahora va sin clases
 function path2geo(commands){
@@ -7,32 +7,35 @@ function path2geo(commands){
     let elements = [];
     let initial = {x:0, y:0};
     let pos = {x:0, y:0};
-    commands.forEach(cmd=>{
-        switch(cmd.type){
-            case 'M':
-                if(elements.length > 0){
-                    paths.push(createDrawElement('path',{elements: elements}));
-                    elements = [];
-                }
-                initial.x = cmd.x;
-                initial.y = cmd.y;
-                break; 
-            case 'Z':
-                elements.push(createDrawElement('segment', {subType:'PP', x0: pos.x, y0:pos.y, x1:initial.x, y1:initial.y}));
-                break;
-            case 'L':
-                elements.push(createDrawElement('segment', {subType:'PP', x0: pos.x, y0: pos.y, x1:cmd.x, y1:cmd.y}));
-                break; 
+    commands.forEach((cmd, ix) => {
+        if(!fuzzy_eq(cmd.x, pos.x ) || !fuzzy_eq(cmd.y, pos.y)){    //porque si no genera a veces segmentos nulos
+            switch(cmd.type){
+                case 'M':
+                    if(elements.length > 0){
+                        paths.push(createDrawElement('path',{elements: elements}));
+                        elements = [];
+                    }
+                    initial.x = cmd.x;
+                    initial.y = cmd.y;
+                    break; 
+                case 'Z':
+                    if(!fuzzy_eq(initial.x, pos.x ) || !fuzzy_eq(initial.y, pos.y))
+                        elements.push(createDrawElement('segment', {subType:'PP', x0: pos.x, y0:pos.y, x1:initial.x, y1:initial.y}));
+                    break;
+                case 'L':
+                    elements.push(createDrawElement('segment', {subType:'PP', x0: pos.x, y0: pos.y, x1:cmd.x, y1:cmd.y}));
+                    break; 
 
-            case 'C': //cubic bezier, pueden venir varias pero son independientes
-                elements.push(createDrawElement( 'bezier', {subType:"C", x0:pos.x, y0:pos.y, cp1x:cmd.x1, cp1y:cmd.y1, cp2x:cmd.x2, cp2y:cmd.y2, x1:cmd.x, y1:cmd.y}));           
-            break;
-            case 'Q': //quadratic Bezier, pero la rutina de cúbica debe adaptarlo
-                elements.push(createDrawElement( 'bezier', {subType:"Q", x0:pos.x, y0:pos.y, cp1x:cmd.x1, cp1y:cmd.y1, x1:cmd.x, y1:cmd.y}))           
-            break;
-            default:
-                console.log('ERROR');
-        }
+                case 'C': //cubic bezier, pueden venir varias pero son independientes
+                    elements.push(createDrawElement( 'bezier', {subType:"C", x0:pos.x, y0:pos.y, cp1x:cmd.x1, cp1y:cmd.y1, cp2x:cmd.x2, cp2y:cmd.y2, x1:cmd.x, y1:cmd.y}));           
+                break;
+                case 'Q': //quadratic Bezier, pero la rutina de cúbica debe adaptarlo
+                    elements.push(createDrawElement( 'bezier', {subType:"Q", x0:pos.x, y0:pos.y, cp1x:cmd.x1, cp1y:cmd.y1, x1:cmd.x, y1:cmd.y}))           
+                break;
+                default:
+                    console.log('ERROR');
+            }
+        } 
         pos.x = cmd.x;
         pos.y = cmd.y;
     })
