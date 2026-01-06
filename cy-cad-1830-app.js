@@ -271,15 +271,6 @@ class cyCad1830App extends HTMLElement {
       this.drawingApp = drawingApp;
       this.viewer.interactiveDrawing.quit();
       this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
-
-    //   this.mData.addEventListener('input-data', (e) =>
-    //     this.drawingApp.updateData(e.detail));
-    //   this.mData.addEventListener('input-click', (e) => { 
-    //     e.stopPropagation();
-    //     this.drawingApp.updateData( e.detail);
-    // })
-    //   this.mData.addEventListener('input-key', (e) => 
-    //     this.drawingApp.updateData( e.detail));
       }
     
   connectedCallback(){
@@ -403,8 +394,10 @@ class cyCad1830App extends HTMLElement {
    * Esto no está en el menú sino en la zona vertical
    */
     this.dom.querySelector('#menu-select').addEventListener('click',(evt)=>{
-      const cmd = evt.target.id.split('-')[1];
-      switch(cmd){
+      const [main, sub1, sub2] = evt.target.id.split('-');
+      this.registerInputApplications( new DrawSelection(this.viewer.layerDraw, '') );
+      this.mData.setActiveApplication( 'none', '');
+      switch(sub1){
         case 'all'    : {
                           this.viewer.layerDraw.deselectAll();
                           this.selectedBlocks = [];
@@ -417,8 +410,8 @@ class cyCad1830App extends HTMLElement {
                         }
               break;
         case 'sel'    : {
-                          this.drawingApp = new DrawSelection(this.viewer.layerDraw, '');
-                          this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
+                          //this.drawingApp = new DrawSelection(this.viewer.layerDraw, '');
+                          //this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
                            // this.mData.setAttribute('type','select');
                         }
                         break;
@@ -450,7 +443,6 @@ class cyCad1830App extends HTMLElement {
 /** menu de medición, elemento, path o punto a punto */
     this.dom.querySelector('#menu-measure').addEventListener('click', (evt) => {
       const [main, sub1, sub2] = evt.target.id.split('-');
-      //this.drawingApp = new DrawMeasure(this.viewer.layerDraw, sub1);
       this.registerInputApplications( new DrawMeasure(this.viewer.layerDraw, sub1) );
       this.mData.setActiveApplication( 'measure', sub1);
     })
@@ -460,9 +452,7 @@ class cyCad1830App extends HTMLElement {
     //Los tratamientos son aditivos y los atributos ascii
     customElements.whenDefined('cy-layer-list').then(() => {
       this.layerView.addLayer( JSON.stringify(this.viewer.axesLayer)); //Estas tienen gestión interna especial
-      this.layerView.addLayer( JSON.stringify(this.viewer.gridLayer)); //Estas tienen gestión interna especial
-      
-
+      this.layerView.addLayer( JSON.stringify(this.viewer.gridLayer)); //Estas tienen gestión interna especial  
       //Al crearla se debe poner activa ella sola.
       const layerData = commandLayerCreate()
     });   
@@ -483,7 +473,6 @@ class cyCad1830App extends HTMLElement {
         case 'open': {
           const clear = sub1 === 'geometry'? false: true;
           loadProject().then(file => {
-            console.log(file.name);
             const type = file.name.split('.').pop();
             if(type === 'json'){
               const data = JSON.parse(file.text );
@@ -515,13 +504,10 @@ class cyCad1830App extends HTMLElement {
                 const id = this.viewer.layerDraw.addLayer(ly.name, {pathColor:`#${ly.color.toString(16)}`}); //debe poner el activeLayer
                 this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.getLayer(id)));
                 this.viewer.layerDraw.addBlocks(undefined, ly.blocks.concat(ly.paths).concat(ly.circles));
-                //this.viewer.layerDraw.addBlocks(undefined, ly.paths);
-                //this.viewer.layerDraw.addBlocks(undefined, ly.circles);
               })
               this.viewer.fit();
               this.viewer.layerDraw.draw();
             }
-            //const lyId = this.viewer.layerDraw.getActiveLayerId();
             
           })
         }break;
@@ -543,13 +529,11 @@ class cyCad1830App extends HTMLElement {
             case 'iso':{
               //En el futuro , en vez de perfil, puede elegirse tipo de mecanizado, compensación, etc...
               //Se trabaja sobre paths que estén seleccionados para no dispersar la manera de hacer cosas
-              //this.drawingApp = new DrawExportGcode(this.viewer.layerDraw, '');
-              this.registerInputApplications( new DrawExportGcode(this.viewer.layerDraw, '') );
               //let data = this.viewer.layerDraw.getSelectedBlocks().filter( b => b.type === 'path');
+              this.registerInputApplications( new DrawExportGcode(this.viewer.layerDraw, '') );
               this.mData.setActiveApplication( 'export-gcode', sub1);
               this.viewer.layerDraw.addEventListener('generate-iso', (evt)=>{
                 setGCodeDefaults(evt.detail)
-                console.log(evt.detail.paths.length)
                 saveCNC(null, pathsToIso(evt.detail.paths))
               })
  //                  saveCNC(null, pathsToIso(data));
@@ -572,20 +556,18 @@ class cyCad1830App extends HTMLElement {
 //---------   TRANSFORMACIONES ---------------------------
 //---------------------------------------------------------
         case 'origin':{
-          //this.drawingApp = new DrawOrigin(this.viewer.layerDraw, sub1);
           this.registerInputApplications( new DrawOrigin(this.viewer.layerDraw, sub1) )
           this.mData.setActiveApplication( 'transform', 'origin' );
         }break;
        /**
          * El link debe unir tanto tramos sueltos como paths.
-         * Lo paso junto al setOrigin que se parecen mucho 
-         */
+        * @todo hacerlo interactivo pinchando bloque
+       */
         case 'link':{
           this.viewer.layerDraw.link();
         }
         break;          
         case 'symmetry':{
-          //this.drawingApp = new DrawSymmetry(this.viewer.layerDraw, sub1);
           this.registerInputApplications( new DrawSymmetry(this.viewer.layerDraw, sub1) )
           this.mData.setActiveApplication( 'transform', `symmetry${sub1}`);
         }
@@ -597,19 +579,16 @@ class cyCad1830App extends HTMLElement {
         }
         break;
         case 'scale':{
-          //this.drawingApp = new DrawScale(this.viewer.layerDraw, sub1);
           this.registerInputApplications( new DrawScale(this.viewer.layerDraw, sub1))
           this.mData.setActiveApplication( 'transform', 'scale' );
         }
         break;
         case 'translate': {
-          //this.drawingApp = new DrawTranslate(this.viewer.layerDraw, sub1);
           this.registerInputApplications(  new DrawTranslate(this.viewer.layerDraw, sub1) )
           this.mData.setActiveApplication( 'transform', 'translate' );
         }
         break;
         case 'rotate':{
-          //this.drawingApp = new DrawRotate(this.viewer.layerDraw, sub1);
           this.registerInputApplications(  new DrawRotate(this.viewer.layerDraw, sub1) )
           this.mData.setActiveApplication( 'transform', 'rotate' );
 
@@ -619,7 +598,7 @@ class cyCad1830App extends HTMLElement {
         case 'point':  break;
         case 'line' :{
           switch(sub1){ //agrupo acciones comunes
-            case 'NP':  this.drawingApp = new DrawNormal(this.viewer.layerDraw, sub1);    break;
+            case 'NP':  this.registerInputApplications(this.drawingApp = new DrawNormal(this.viewer.layerDraw, sub1));    break;
             case 'PP':
             case 'PXA':
             case 'PYA':
@@ -627,40 +606,32 @@ class cyCad1830App extends HTMLElement {
             case 'TPB': this.registerInputApplications( new DrawSegmentPB(this.viewer.layerDraw, sub1)); break;
             case 'TBB': this.registerInputApplications( new DrawSegmentBB(this.viewer.layerDraw, sub1)); break;
           }
-//          this.registerInputApplications( this.drawingApp )
           this.mData.setActiveApplication( 'segment', sub1 );
         }
         break;
         case 'circle' :{
-          //this.drawingApp = new DrawCircle(this.viewer.layerDraw, sub1);
           this.registerInputApplications(  new DrawCircle(this.viewer.layerDraw, sub1))
           this.mData.setActiveApplication( 'circle', sub1 );
         }
         break;
         case 'arc' :{
-          //this.drawingApp = new DrawArc(this.viewer.layerDraw, sub1);
           this.registerInputApplications( new DrawArc(this.viewer.layerDraw, sub1) )        
-          //esta la última porque pone handlers 
           this.mData.setActiveApplication( 'arc', sub1 );
         }
         break;
         case 'path':{
-          //this.drawingApp = new DrawPath(this.viewer.layerDraw, sub1);
           this.registerInputApplications( new DrawPath(this.viewer.layerDraw, sub1) )        
           this.mData.setActiveApplication( 'path', sub1 );
         } break;
         case 'poly' :{ //quito el menú de tipo y lo pongo en el selector de input-data
-          //this.drawingApp = new DrawPolygon(this.viewer.layerDraw, sub1);
           this.registerInputApplications( new DrawPolygon(this.viewer.layerDraw, sub1) );
           this.mData.setActiveApplication( 'polygon', sub1 );
         } break;
         case 'gcode' : {
-          //this.drawingApp = new DrawGcode(this.viewer.layerDraw, '')
           this.registerInputApplications( new DrawGcode(this.viewer.layerDraw, '') )
           this.mData.setActiveApplication( 'gcode', sub1 );
         } break;
         case 'text' : {
-          //this.drawingApp = new DrawText(this.viewer.layerDraw, '')
           this.registerInputApplications( new DrawText(this.viewer.layerDraw, '') )
           this.mData.setActiveApplication( 'text', sub1 );
         } break;
