@@ -23,6 +23,8 @@ import {createCommandManager, commandLayerCreate, commandLayerDelete, commandLay
 
 //For Drawing Interactively
 
+import DrawBasic from "./cy-draw-interactive/cy-draw-basic.js"
+
 import DrawTranslate from "./cy-draw-interactive/cy-draw-translate.js"
 import DrawRotate from "./cy-draw-interactive/cy-draw-rotate.js"
 import DrawScale from "./cy-draw-interactive/cy-draw-scale.js"
@@ -262,18 +264,22 @@ class cyCad1830App extends HTMLElement {
       this.dom.adoptedStyleSheets = [sharedStyles];
       this.dom.innerHTML = template + style;
     }
-    registerInputApplications(){
+    registerInputApplications(drawingApp){
       //-------------------INPUT DATA
       //Interactividad entre parte izquierda, datos manuales y ratón.
       //this.mData = this.dom.querySelector('#manual-data');
+      this.drawingApp = drawingApp;
+      this.viewer.interactiveDrawing.quit();
       this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
 
-      this.mData.addEventListener('input-data', (e) =>
-        this.drawingApp.updateData(e.detail));
-      this.mData.addEventListener('input-click', (e) => 
-        this.drawingApp.updateData( e.detail));
-      this.mData.addEventListener('input-key', (e) => 
-        this.drawingApp.updateData( e.detail));
+    //   this.mData.addEventListener('input-data', (e) =>
+    //     this.drawingApp.updateData(e.detail));
+    //   this.mData.addEventListener('input-click', (e) => { 
+    //     e.stopPropagation();
+    //     this.drawingApp.updateData( e.detail);
+    // })
+    //   this.mData.addEventListener('input-key', (e) => 
+    //     this.drawingApp.updateData( e.detail));
       }
     
   connectedCallback(){
@@ -294,6 +300,16 @@ class cyCad1830App extends HTMLElement {
       this.mData = this.dom.querySelector('#input-data');
       this.mData.initialData(defaultConfig)
       this.viewer.addEventListener('drawing-event', (e) => this.mData.update(e.detail));
+      //------------------- GESTION interactive drawing y lado izquierdo
+      this.registerInputApplications(new DrawBasic(this.viewer.layerDraw, ''))
+      //Tratamiento homogéneo de botones, inputs y teclas 
+      const events =   ['input-data', 'input-click', 'input-key'];
+      events.forEach( eType =>  
+        this.mData.addEventListener(eType, (e) => {
+          e.stopPropagation();
+          this.drawingApp.updateData( e.detail);
+        }))
+      this.mData.setActiveApplication('none');
     })
 
 
@@ -351,6 +367,7 @@ class cyCad1830App extends HTMLElement {
        
 //--------------------- TRANSFORMACIONES   ------------------------  
   this.addEventListener('geometry-transform',  (evt)=>{
+      evt.stopPropagation();
       let op = evt.detail.command, mode = evt.detail.mode || '', data = evt.detail.data;
       op += mode;
       let opData;
@@ -364,6 +381,7 @@ class cyCad1830App extends HTMLElement {
         default:          break;
       }
       const blocks = this.viewer.layerDraw.getSelectedBlocks();
+
       commandBlockTransform(blocks, opData)
         //this.layerDraw.symmetrySelected(evt.detail.mode, evt.detail.data));
   })
@@ -379,6 +397,7 @@ class cyCad1830App extends HTMLElement {
                 this.manager.redo();
             }
         })
+
 //----------------- SEL, ALL, INV, DEL -------- BOTONES
   /**select
    * Esto no está en el menú sino en la zona vertical
@@ -431,8 +450,8 @@ class cyCad1830App extends HTMLElement {
 /** menu de medición, elemento, path o punto a punto */
     this.dom.querySelector('#menu-measure').addEventListener('click', (evt) => {
       const [main, sub1, sub2] = evt.target.id.split('-');
-      this.drawingApp = new DrawMeasure(this.viewer.layerDraw, sub1);
-      this.registerInputApplications( this.drawingApp );
+      //this.drawingApp = new DrawMeasure(this.viewer.layerDraw, sub1);
+      this.registerInputApplications( new DrawMeasure(this.viewer.layerDraw, sub1) );
       this.mData.setActiveApplication( 'measure', sub1);
     })
 
@@ -524,8 +543,8 @@ class cyCad1830App extends HTMLElement {
             case 'iso':{
               //En el futuro , en vez de perfil, puede elegirse tipo de mecanizado, compensación, etc...
               //Se trabaja sobre paths que estén seleccionados para no dispersar la manera de hacer cosas
-              this.drawingApp = new DrawExportGcode(this.viewer.layerDraw, '');
-              this.registerInputApplications( this.drawingApp );
+              //this.drawingApp = new DrawExportGcode(this.viewer.layerDraw, '');
+              this.registerInputApplications( new DrawExportGcode(this.viewer.layerDraw, '') );
               //let data = this.viewer.layerDraw.getSelectedBlocks().filter( b => b.type === 'path');
               this.mData.setActiveApplication( 'export-gcode', sub1);
               this.viewer.layerDraw.addEventListener('generate-iso', (evt)=>{
@@ -553,8 +572,8 @@ class cyCad1830App extends HTMLElement {
 //---------   TRANSFORMACIONES ---------------------------
 //---------------------------------------------------------
         case 'origin':{
-          this.drawingApp = new DrawOrigin(this.viewer.layerDraw, sub1);
-          this.registerInputApplications( this.drawingApp )
+          //this.drawingApp = new DrawOrigin(this.viewer.layerDraw, sub1);
+          this.registerInputApplications( new DrawOrigin(this.viewer.layerDraw, sub1) )
           this.mData.setActiveApplication( 'transform', 'origin' );
         }break;
        /**
@@ -566,8 +585,8 @@ class cyCad1830App extends HTMLElement {
         }
         break;          
         case 'symmetry':{
-          this.drawingApp = new DrawSymmetry(this.viewer.layerDraw, sub1);
-          this.registerInputApplications( this.drawingApp )
+          //this.drawingApp = new DrawSymmetry(this.viewer.layerDraw, sub1);
+          this.registerInputApplications( new DrawSymmetry(this.viewer.layerDraw, sub1) )
           this.mData.setActiveApplication( 'transform', `symmetry${sub1}`);
         }
         break;
@@ -578,20 +597,20 @@ class cyCad1830App extends HTMLElement {
         }
         break;
         case 'scale':{
-          this.drawingApp = new DrawScale(this.viewer.layerDraw, sub1);
-          this.registerInputApplications( this.drawingApp )
+          //this.drawingApp = new DrawScale(this.viewer.layerDraw, sub1);
+          this.registerInputApplications( new DrawScale(this.viewer.layerDraw, sub1))
           this.mData.setActiveApplication( 'transform', 'scale' );
         }
         break;
         case 'translate': {
-          this.drawingApp = new DrawTranslate(this.viewer.layerDraw, sub1);
-          this.registerInputApplications(  this.drawingApp )
+          //this.drawingApp = new DrawTranslate(this.viewer.layerDraw, sub1);
+          this.registerInputApplications(  new DrawTranslate(this.viewer.layerDraw, sub1) )
           this.mData.setActiveApplication( 'transform', 'translate' );
         }
         break;
         case 'rotate':{
-          this.drawingApp = new DrawRotate(this.viewer.layerDraw, sub1);
-          this.registerInputApplications(  this.drawingApp )
+          //this.drawingApp = new DrawRotate(this.viewer.layerDraw, sub1);
+          this.registerInputApplications(  new DrawRotate(this.viewer.layerDraw, sub1) )
           this.mData.setActiveApplication( 'transform', 'rotate' );
 
         }
@@ -604,45 +623,45 @@ class cyCad1830App extends HTMLElement {
             case 'PP':
             case 'PXA':
             case 'PYA':
-            case 'PDA': this.drawingApp = new DrawSegment(this.viewer.layerDraw, sub1);   break;
-            case 'TPB': this.drawingApp = new DrawSegmentPB(this.viewer.layerDraw, sub1); break;
-            case 'TBB': this.drawingApp = new DrawSegmentBB(this.viewer.layerDraw, sub1); break;
+            case 'PDA': this.registerInputApplications( new DrawSegment(this.viewer.layerDraw, sub1) );   break;
+            case 'TPB': this.registerInputApplications( new DrawSegmentPB(this.viewer.layerDraw, sub1)); break;
+            case 'TBB': this.registerInputApplications( new DrawSegmentBB(this.viewer.layerDraw, sub1)); break;
           }
-          this.registerInputApplications( this.drawingApp )
+//          this.registerInputApplications( this.drawingApp )
           this.mData.setActiveApplication( 'segment', sub1 );
         }
         break;
         case 'circle' :{
-          this.drawingApp = new DrawCircle(this.viewer.layerDraw, sub1);
-          this.registerInputApplications(  this.drawingApp )
+          //this.drawingApp = new DrawCircle(this.viewer.layerDraw, sub1);
+          this.registerInputApplications(  new DrawCircle(this.viewer.layerDraw, sub1))
           this.mData.setActiveApplication( 'circle', sub1 );
         }
         break;
         case 'arc' :{
-          this.drawingApp = new DrawArc(this.viewer.layerDraw, sub1);
-          this.registerInputApplications( this.drawingApp )        
+          //this.drawingApp = new DrawArc(this.viewer.layerDraw, sub1);
+          this.registerInputApplications( new DrawArc(this.viewer.layerDraw, sub1) )        
           //esta la última porque pone handlers 
           this.mData.setActiveApplication( 'arc', sub1 );
         }
         break;
         case 'path':{
-          this.drawingApp = new DrawPath(this.viewer.layerDraw, sub1);
-          this.registerInputApplications( this.drawingApp )        
+          //this.drawingApp = new DrawPath(this.viewer.layerDraw, sub1);
+          this.registerInputApplications( new DrawPath(this.viewer.layerDraw, sub1) )        
           this.mData.setActiveApplication( 'path', sub1 );
         } break;
         case 'poly' :{ //quito el menú de tipo y lo pongo en el selector de input-data
-          this.drawingApp = new DrawPolygon(this.viewer.layerDraw, sub1);
-          this.registerInputApplications( this.drawingApp );
+          //this.drawingApp = new DrawPolygon(this.viewer.layerDraw, sub1);
+          this.registerInputApplications( new DrawPolygon(this.viewer.layerDraw, sub1) );
           this.mData.setActiveApplication( 'polygon', sub1 );
         } break;
         case 'gcode' : {
-          this.drawingApp = new DrawGcode(this.viewer.layerDraw, '')
-          this.registerInputApplications( this.drawingApp )
+          //this.drawingApp = new DrawGcode(this.viewer.layerDraw, '')
+          this.registerInputApplications( new DrawGcode(this.viewer.layerDraw, '') )
           this.mData.setActiveApplication( 'gcode', sub1 );
         } break;
         case 'text' : {
-          this.drawingApp = new DrawText(this.viewer.layerDraw, '')
-          this.registerInputApplications( this.drawingApp )
+          //this.drawingApp = new DrawText(this.viewer.layerDraw, '')
+          this.registerInputApplications( new DrawText(this.viewer.layerDraw, '') )
           this.mData.setActiveApplication( 'text', sub1 );
         } break;
         default:break;

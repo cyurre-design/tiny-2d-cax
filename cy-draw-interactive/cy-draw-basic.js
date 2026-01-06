@@ -16,8 +16,8 @@ export default class DrawBasic {
      * porque se llamarán con el this de la clase hija y ANTES del constructor de la clase hija!!!
      */
     //Por defecto, la nomenclatura sería x0,y0 para un primer punto, x1,y1 para un segundo....
-    dataSent = [['x0','y0'],['x1','y1'],[]];
-    dataReceived = ['x0','x1','y0','y1'];
+    dataSent = [[],[],[]];
+    dataReceived = [];
     //Al final las operaciones básicas son visualizar el punto, almacenar el punto, actualizar el status, importar data...
     //Y luego hay funciones que serán específicas, como el bloque y modo de dibujo, borrado, etc...
 
@@ -62,9 +62,11 @@ export default class DrawBasic {
         args.forEach(k => delete this.data[k]);
     }
     //arrays de funciones
-    clickFn =   [[this.p0], [this.m1, this.deleteDataBasic ]];
-    moveFn  =   [[this.h, this.m0, this.sendDataBasic], [this.h, this.m1, this.sendDataBasic], []];
-
+    //clickFn =   [[this.p0], [this.m1, this.deleteDataBasic ]];
+    clickFn =   [[],[]]
+    ///moveFn  =   [[this.h, this.m0, this.sendDataBasic], [this.h, this.m1, this.sendDataBasic], []];
+    moveFn  =   [[this.h], [], []];
+    
     leftClick = (pi, evt) => {
         let p = this.hit || pi;
         this.clickFn[this.status].forEach(f=> { if(this.enabled) f(p)}); //secuencia de acciones

@@ -10,9 +10,10 @@ import './cy-input-data-gcode.js'
 import './cy-input-data-export-gcode.js'
 import './cy-input-data-text.js'
 import './cy-input-data-measure.js'
+import './cy-input-data-none.js'
 
 
-const inputDataApps = ["arc","circle","segment","polygon","path","export-gcode","gcode","transform","text","measure" ];
+const inputDataApps = ["arc","circle","segment","polygon","path","export-gcode","gcode","transform","text","measure","none" ];
 function inputDataTemplate(app){return `<cy-input-data-${app} class="share"></cy-input-data-${app}>`} 
 const Keys4Events =  ["Enter", "Escape"]
 export default class CyInputDataBasic extends HTMLElement {
