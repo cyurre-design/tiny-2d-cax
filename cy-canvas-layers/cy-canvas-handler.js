@@ -85,7 +85,7 @@ export default class CyCanvasHandler {
                     let m = Object.assign({}, { x: (pi.x + pf.x) / 2, y: (pi.y + pf.y) / 2 });
                     let e = Object.assign({}, { w: Math.abs(pf.x - pi.x), h: Math.abs(pf.y - pi.y) });
                     this.view('fgZoomInDrag', m, e);
-    
+                    this.zctx.clearRect(0, 0, this.clrw.w, this.clrw.h);
                     this.canvas.parentNode.removeChild(this.z);
                 }
                 this.z = undefined;

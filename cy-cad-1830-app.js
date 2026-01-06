@@ -152,10 +152,11 @@ const templateZoom = `
 //Aprovecho y pongo aquí el width de selección, por ejemplo
 const templateSelectInputData =`
 <div>
-    <span>Select Tolerance</span><input id="data-penWidth" type="number" value="1" max="5" min="0.5" step="0.5"/>
+    
     <div id="menu-select" class="column">
-      <div class="row">
-        <input type="button" class="_25" id="select-sel" value = "SEL"/>
+        <div>SELECT<span>Tolerance</span><input id="data-penWidth" type="number" value="1" max="5" min="0.5" step="0.5"/></div>
+        <div class="row">
+        <!--input type="button" class="_25" id="select-sel" value = "SEL"/-->
         <input type="button" class="_25" id="select-all" value = "ALL"/>
         <input type="button" class="_25" id="select-invert" value = "INV"/>
         <input type="button" class="_25" id="select-del" value = "DEL"/>
@@ -267,7 +268,6 @@ class cyCad1830App extends HTMLElement {
     registerInputApplications(drawingApp){
       //-------------------INPUT DATA
       //Interactividad entre parte izquierda, datos manuales y ratón.
-      //this.mData = this.dom.querySelector('#manual-data');
       this.drawingApp = drawingApp;
       this.viewer.interactiveDrawing.quit();
       this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
@@ -409,10 +409,7 @@ class cyCad1830App extends HTMLElement {
                           commandBlockDelete(this.selectedBlocks);
                         }
               break;
-        case 'sel'    : {
-                          //this.drawingApp = new DrawSelection(this.viewer.layerDraw, '');
-                          //this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
-                           // this.mData.setAttribute('type','select');
+        case 'sel'    : { //este es el modo por defecto
                         }
                         break;
         case 'copy'   : {
