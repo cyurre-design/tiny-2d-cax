@@ -111,7 +111,7 @@ const templateMainMenu =`
     <md-filled-button id="transform-menu-anchor">TRANSFORM</md-filled-button>
     <md-menu has-overflow positioning="popover" id="transform-menu" anchor="transform-menu-anchor">
         <md-menu-item id="cut"><div slot="headline">CUT</div></md-menu-item>        
-        <md-menu-item id="link"><div slot="headline">LINK</div></md-menu-item>        
+        <md-menu-item id="link"><div slot="headline">LINK-UNLINK</div></md-menu-item>        
         <md-menu-item id="translate"><div slot="headline">TRANSLATE</div></md-menu-item>    
         <md-menu-item id="origin"><div slot="headline" >SET ORIGIN</div></md-menu-item>
         <md-menu-item id="rotate"><div slot="headline" >ROTATE</div></md-menu-item>

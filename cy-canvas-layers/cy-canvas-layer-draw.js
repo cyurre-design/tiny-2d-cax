@@ -402,8 +402,12 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     getBlocksInsideBox(box){ //la search funciona en rbushes
         const layer = this.getActiveLayer();
         let bboxes = this.blocksTree.search({minX:box.x0, maxX: box.x1, minY: box.y0, maxY: box.y1});
+        //Lo de mirar en el mismo layer sería opcional, a quitar
         bboxes = bboxes.filter(b => b.lyId === this._activeLayerId);
-        return ( bboxes.map(bb => layer.blocks.find(b => b.data.id === bb.id)).filter(b=>insideBbox(box,b.bbox)));
+        //debug
+        let blocks = bboxes.map(bb => layer.blocks.find(b => b.data.id === bb.id)).filter( b => b !== undefined);
+        blocks = blocks.filter(b=>insideBbox(box,b.bbox));
+        return blocks;
     }
 //--------------- Selección, deselección...  ------------------------------
 //Seguimos la misma filosofía de buscar todo y en su caso filtrar

@@ -6,7 +6,18 @@ import { createDrawElement } from "./cy-geometry-basic-elements.js";
  * @param tol @todo solucionar el paso de la base de datos...
  * @returns 
  */
-
+export function unlinkPaths(paths){
+    let newBlocks = [];
+    paths.forEach( p => {
+        if(p.type !== 'path'){
+            newBlocks.push(p);
+        } else {
+            //Si es un path, lo desenlazamos en sus elementos
+            p.elements.forEach(e => newBlocks.push(e));
+        }
+    });
+    return newBlocks;
+}
 
 export function linkPaths(allPaths, tol = 0.1){
     //Algoritmo 1, junta los que están seguidos y convierte todo a pthas (con su pi, pf, bbox)
