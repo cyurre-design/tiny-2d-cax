@@ -39,6 +39,10 @@ export function TINVERT(t) { return(
 `<div><input type="button" id="data-${t}-invert" value="INVERT"/></div>`)}
 export function TSTART(t) { return(
 `<div><input type="button" id="data-${t}-start" value="START"/></div>`)}
+export function TLINK(t) { return(
+`<div><input type="button" id="data-${t}-link" value="LINK"/></div>`)}
+export function TUNLINK(t) { return(
+`<div><input type="button" id="data-${t}-unlink" value="UNLINK"/></div>`)}
 export function TSCALE(t) { return(
 `<div class="half" >NUM<input id="data-${t}-sn" class="_33" type="number" value="0" step="0.5"/></div>
 <div class="half">DEN<input id="data-${t}-sd" class="_33" type="number" value="0" step="0.5"/></div>`)}
@@ -109,7 +113,7 @@ export function initialDataBasic(it, data){
         }
     }
 
-//cambiado a reicbir un array de key,value
+//cambiado a recibir un array de key,value
 export function inputDataUpdate(it, received){
     function format(n){ return(n.toFixed(3))};
     received.data.forEach(el => {

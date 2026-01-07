@@ -13,8 +13,8 @@ export default class DrawPath extends DrawBasic{
         // 2.en pop, seguido de new segment, actualizamos el último segmento visto
         // 3.con p0 y m1 y newSegment ponemos el nuevo segmento que va a moverse (que empezará con longitud 0 porque p0 y m1 reciben el mismo punto)
         this.clickFn = [[this.p0],[this.m1, this.pop, this.newSegment , this.p0, this.m1, this.newSegment]];
-        this.senData = [['x0','y0'],['x1','y1']];
-        this.receiveData = ['x0','y0','x1','y1'];
+        this.dataSent = [['x0','y0'],['x1','y1']];
+        this.dataReceived = ['x0','y0','x1','y1'];
     }
 
     pop = () => this.thePath.elements.pop();

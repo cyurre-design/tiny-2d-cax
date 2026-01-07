@@ -31,6 +31,7 @@ import DrawScale from "./cy-draw-interactive/cy-draw-scale.js"
 import DrawSymmetry from "./cy-draw-interactive/cy-draw-symmetry.js"
 import DrawSelection from "./cy-draw-interactive/cy-draw-selection.js"
 import DrawOrigin from "./cy-draw-interactive/cy-draw-origin.js"
+import DrawLink from "./cy-draw-interactive/cy-draw-link.js"
 
 import DrawNormal from "./cy-draw-interactive/cy-draw-normal.js"
 import DrawSegmentPB from "./cy-draw-interactive/cy-draw-segment-PB.js"
@@ -182,8 +183,7 @@ const template = `
       ${templateZoom}
       ${templateMeasure}
       ${templateUndo}
-      ${templateSelectInputData}
-      <div class="row"><span>Link Tolerance</span><input type="number" class="half" value="0.1" max="5" min="0.01" step="0.1"/></div>   
+      ${templateSelectInputData} 
       <cy-input-data-basic id="input-data"></cy-input-data-basic>
     </div>
     <cy-canvas-viewer id="viewer" tabindex="0"></cy-canvas-viewer></div>
@@ -561,7 +561,9 @@ class cyCad1830App extends HTMLElement {
         * @todo hacerlo interactivo pinchando bloque
        */
         case 'link':{
-          this.viewer.layerDraw.link();
+          this.registerInputApplications( new DrawLink(this.viewer.layerDraw, sub1) )
+          this.mData.setActiveApplication( 'transform', `link`);
+          //this.viewer.layerDraw.link();
         }
         break;          
         case 'symmetry':{

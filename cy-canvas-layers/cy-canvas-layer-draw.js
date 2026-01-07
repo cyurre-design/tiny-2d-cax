@@ -3,7 +3,6 @@ import {CyCanvasLayer, canvasCSS} from './cy-canvas-layer.js';
 import {scalePixels2mm, scaleMm2pixels, position2pixels} from './cy-canvas-handler.js';
 import { checkBbox, insideBbox, blockTranslate }  from '../cy-geometry/cy-geometry-library.js';
 import { getRelevantPoints }  from '../cy-geometry/cy-geometry-basic-elements.js';
-import {linkPaths} from '../cy-geometry/cy-geometry-link-paths.js'
 import {getPathFromBlocks} from './cy-elements-to-canvas.js'
 
 // ------------------------
@@ -508,17 +507,8 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         layer.blocks = [];
         this.addBlocks(this._activeLayerId, newBlocks);
     }
-    link(){
-        const tol = 0.1 ; //SETTINGS
-        const layer = this.getActiveLayer();
-
-        const newBlocks = linkPaths(layer.blocks, tol);
-        layer.blocks.forEach(b => {
-            this.blocksTree.remove(b.data.tree);         //lo saco del Rbush
-            //Borro los puntos asociados, se borran por referencia, así que guardo lo que meto al tree (también se pueden borrar con una fon de comparación)
-            b.data.points.forEach( p => this.pointsTree.remove(p.data.tree));
-        })
-        layer.blocks = [];
+    replaceBlocks(oldBlocks, newBlocks){
+        oldBlocks.forEach(b => this.deleteBlock(b));
         this.addBlocks(this._activeLayerId, newBlocks);
     }
     draw() {
