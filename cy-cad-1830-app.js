@@ -19,7 +19,8 @@ import {createDrawElement } from './cy-geometry/cy-geometry-basic-elements.js';
 //Commands
 import {createCommandManager, commandLayerCreate, commandLayerDelete, commandLayerSetStyle, 
       commandBlockCreate, commandBlockDelete, commandBlockTransform, commandCreateCutPoints,
-      commandChangeOrigin} from './cy-commands/cy-command-definitions.js';
+      commandChangeOrigin,
+      commandLinkUnlink} from './cy-commands/cy-command-definitions.js';
 
 //For Drawing Interactively
 
@@ -246,14 +247,13 @@ const style = `
 }
     </style>
 `
-    //Almacenamiento de los datos manuales entre entradas y salidas de menus.
+  //Almacenamiento de los datos manuales entre entradas y salidas de menus.
   //Pongo defaults (podrían ser de un JSON, TODO)
   //Uso la nomenclatura de variables de los componentes
 
-function saveConfig(config) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
-}
-
+// function saveConfig(config) {
+//   localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+// }
 
 
 class cyCad1830App extends HTMLElement {
@@ -265,13 +265,13 @@ class cyCad1830App extends HTMLElement {
       this.dom.adoptedStyleSheets = [sharedStyles];
       this.dom.innerHTML = template + style;
     }
-    registerInputApplications(drawingApp){
-      //-------------------INPUT DATA
-      //Interactividad entre parte izquierda, datos manuales y ratón.
-      this.drawingApp = drawingApp;
-      this.viewer.interactiveDrawing.quit();
-      this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
-      }
+  registerInputApplications(drawingApp){
+    //-------------------INPUT DATA
+    //Interactividad entre parte izquierda, datos manuales y ratón.
+    this.drawingApp = drawingApp;
+    this.viewer.interactiveDrawing.quit();
+    this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
+    }
     
   connectedCallback(){
     this.viewer = this.dom.querySelector("#viewer");
@@ -353,6 +353,12 @@ class cyCad1830App extends HTMLElement {
       const dx = e.detail.data.x0, dy =e.detail.data.y0
       commandChangeOrigin( dx, dy);
     });
+    /**@listens link-unlink cuando se ejecuta de verdad el comando link o unlink definido de forma interactiva */
+    //Los comandos en realidad no se ejecutan al accionar el menú sino cuando se dan por concluidas las partes interactivas
+    this.addEventListener('link-unlink', e=>{
+      //Aquí se debería hacer el comando link o unlink
+      commandLinkUnlink( e.detail.mode, e.detail.data.tol);
+      });
 
 
        
@@ -460,6 +466,7 @@ class cyCad1830App extends HTMLElement {
     translateOrigin = (dx, dy) => {
       this.viewer.canvasHandler.view("fgPane", {x:dx, y:dy});  //rehace los cálculos del handler
     }
+
     handleMenus = (e) => {
       //Nos ponemos una nomenclatura razonable para poner orden en los ids
       //menu, submenu, etc... separados por guiones

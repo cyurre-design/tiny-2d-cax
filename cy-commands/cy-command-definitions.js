@@ -1,4 +1,7 @@
 import {createHistorySystem} from "./cy-command-manager.js"
+import {linkPaths, unlinkPaths} from '../cy-geometry/cy-geometry-link-paths.js';
+
+
 
 let commandManager;
 export  function createCommandManager(application, blocks) {
@@ -147,7 +150,7 @@ export function commandCreateCutPoints(cutPoints){
     commandManager.execute(theCommand);    
     }
     //------------------ ORIGIN ----------------
-    //Guardo todo aunque solo afecta a la capa activa, todo?
+    //Guardo todo aunque solo afecta a la capa activa, todo? 
 export function commandChangeOrigin( dx, dy){
     const theCommand = commandManager.makeCommand({
         execute(p, a) {
@@ -165,6 +168,37 @@ export function commandChangeOrigin( dx, dy){
     redo(p,a){
         p.deserialize(JSON.parse(this.copiaAfter));
         a.translateOrigin(dx,dy);
+        p.draw();
+    }
+    })
+    commandManager.execute(theCommand);  
+}
+    //------------------ ORIGIN ----------------
+    //Guardo todo aunque solo afecta a la capa activa, todo? 
+export function commandLinkUnlink(mode, tolerance ){          //mode: link, unlink
+    const theCommand = commandManager.makeCommand({
+        execute(p, a) {
+          this.copiaBefore = JSON.stringify(p);
+          const oldBlocks = p.getSelectedBlocks();
+          if(mode === 'link'){ 
+            if(oldBlocks.length > 1){
+              const newBlocks = linkPaths(oldBlocks, tolerance);
+              p.replaceBlocks(oldBlocks, newBlocks);
+            }
+          }
+          else if(mode === 'unlink'){
+            const newBlocks = unlinkPaths(oldBlocks); 
+            p.replaceBlocks(oldBlocks, newBlocks);
+          }
+          this.copiaAfter = JSON.stringify(p);
+          p.draw();
+    },
+    undo(p,a){
+        p.deserialize(JSON.parse(this.copiaBefore));
+        p.draw();
+    },
+    redo(p,a){
+        p.deserialize(JSON.parse(this.copiaAfter));
         p.draw();
     }
     })
