@@ -179,6 +179,8 @@ export default class CyCanvasViewer extends HTMLElement {
      */
     fit(){
         const bbox = this.layerDraw.getBBox();
+        if(bbox.x0 === Infinity || bbox.y0 === Infinity || bbox.x1 === -Infinity || bbox.y1 === -Infinity)
+            return; //no hay nada que encuadrar
         this.canvasHandler.view('fgZoomInDrag', 
                                   {x: 0.5*(bbox.x0 + bbox.x1), y: 0.5*(bbox.y0 + bbox.y1)},
                                   {w: 1.1*(bbox.x1 - bbox.x0), h: 1.1*(bbox.y1 - bbox.y0)});
