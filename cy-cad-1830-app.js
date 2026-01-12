@@ -478,7 +478,7 @@ class cyCad1830App extends HTMLElement {
           const clear = sub1 === 'geometry'? false: true;
           loadProject().then(file => {
             const type = file.name.split('.').pop();
-            if(type === 'json'){
+            if(type.toLowerCase() === 'json'){
               const data = JSON.parse(file.text );
             // Restaurar modelo
               this.viewer.layerDraw.deserialize( data.model, clear); //Falta restaurar historia
