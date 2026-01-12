@@ -64,13 +64,23 @@ export class Bezier extends Point{
         this.D1 = new Point(this.A2.x - this.A1.x, this.A2.y - this.A1.y);
         this.E0 = new Point(this.D1.x - this.D0.x, this.D1.y - this.D0.y);
     }
+
+    //https://www.caffeineowl.com/graphics/2d/vectorial/bezierintro.html
     calculateInflexionPoints(){
-        const a = {x: this.cp1.x - this.x, y:this.cp1.y - this.y};
-        const b = {x: this.cp2.x - this.cp1.x - a.x, y: this.cp2.y - this.cp1.y - a.y};
-        const c = {x: this.pf.x - this.cp2.x - a.x -2*b.x, y: this.pf.y - this.cp2.y - a.y -2*b.y};
-        const inflections = solveq(a,b,c);
-        return(inflections);
+        const pa = {x: this.cp1.x - this.x, y:this.cp1.y - this.y};
+        const pb = {x: this.cp2.x - this.cp1.x - pa.x, y: this.cp2.y - this.cp1.y - pa.y};
+        const pc = {x: this.pf.x - this.cp2.x - pa.x -2*pb.x, y: this.pf.y - this.cp2.y - pa.y -2*pb.y};
+        //a*x^2 + bx + c
+        const a = pb.x*pc.y - pb.y*pc.x;
+        const b = pa.x*pc.y - pa.y*pc.x;
+        const c = pa.x*pb.y - pa.y*pb.x;
+        //Yurre, el atajo para evitar epsilons de solveq aquí parece que no vale, uso la eq. estándar del cole
+        let d = b*b - 4*a*c;
+        if(d < 0) return([]);
+        d = Math.sqrt(d);
+        return([ (-b + d)/(2*a), (-b - d)/(2*a)]);
     }
+
     isClockWise(){
         /// The orientation of the Bezier curve
         /// </summary>
