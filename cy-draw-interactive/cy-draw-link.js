@@ -42,16 +42,12 @@ export default class DrawLink extends DrawBasic{
         const idn = newData[0].idn;  //no esperamos más que una pulsación...
         switch(idn){
             case 'link'   :
+            case 'unlink' :
                this.layerDraw.dispatchEvent(
-                    new CustomEvent('link-unlink', {bubbles: true, composed:true, detail:{ mode:'link', data:{tol:this.data.tol}}}));
+                    new CustomEvent('link-unlink', {bubbles: true, composed:true, detail:{ mode:  idn, data:{tol:this.data.tol}}}));
                 this.deleteData();
                 break
-            case 'unlink'   :   //Podría limitar a uno cada vez...
-               this.layerDraw.dispatchEvent(
-                    new CustomEvent('link-unlink', {bubbles: true, composed:true, detail:{ mode:'unlink', data:{tol:this.data.tol}}}));
-                this.deleteData();
-                 break;
-            case 'tol'  : console.log(this.data.tol)
+            default: break;
         }
         }
     }
