@@ -1,6 +1,6 @@
 'use strict'
 //Más adelante se pueden hacer instalables, de momento pongo los parsers incluidos aquí
-import * as dxfParser from '/parsers/fg-dxf-parser.js'
+//import * as dxfParser from '/parsers/fg-dxf-parser.js'
 import  svgParser from '/parsers/cy-parser-svg.js'
 import  {isoToGeometry} from '/parsers/cy-parser-iso-geometry.js'
 import jsonParser from '/parsers/cy-parser-json.js'
