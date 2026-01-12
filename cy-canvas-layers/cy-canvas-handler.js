@@ -72,6 +72,7 @@ export default class CyCanvasHandler {
                 if (this.z) {
                     const w = Math.abs(this.finalPoint.x - this.initialPoint.x);
                     const h = Math.abs(this.finalPoint.y - this.initialPoint.y);
+                    if(w<10 || h<10) return;
                     let p = {x: (this.initialPoint.x < this.finalPoint.x ? this.initialPoint.x : this.finalPoint.x),
                              y: (this.initialPoint.y < this.finalPoint.y ? this.initialPoint.y : this.finalPoint.y)};
                     this.zctx.clearRect(0, 0, this.clrw.w, this.clrw.h);
