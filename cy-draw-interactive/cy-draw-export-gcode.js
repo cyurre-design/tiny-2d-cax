@@ -24,10 +24,11 @@ export default class DrawExportGcode extends DrawBasic{
 
         this.startChange = false;
         this.invertMode = false;
+        this.startOrder = false;
         this.moveFn = [[this.hover, this.draw], [this.draw]];   
         this.clickFn = [[this.action, this.draw], [this.start]];
-        this.dataSent = [[], ["way"]];
-        this.dataReceived = ['order'];
+        this.dataSent = [[], []];
+        this.dataReceived = [];
     }
     //generar una flechita al comienzo de un path. Local, no compruebo que es un path
     //Sería más limpio un método de segmento y arco, como getUnitVector o así
@@ -64,13 +65,16 @@ export default class DrawExportGcode extends DrawBasic{
     //Las funciones de invert y reverse devuelven paths nuevos
     //Eso hace que el iso haya que generarlo con el array this.paths
     action = (pi) => {  //Según el modo puesto en la pantalla
-        const pathIx = this.getPath(pi);
+        const pathIx = this.getPath(pi);    //este índice es el original
         if(pathIx === undefined) return;
         if(this.startChange === true){
             this.paths[pathIx] = pathSetStartPoint(this.paths[pathIx], this.hit);
         } else if(this.invertMode === true){
             this.paths[pathIx] = pathReverse(this.paths[pathIx]);
-        }
+        } else if(this.startOrder === true){
+            this.order[pathIx] = this.pathIx;
+            if(this.pathIx < this.order.length-1) this.pathIx++;
+        };
         //Hay que cambiar las flechitas
         this.arrows[pathIx] = this.createArrow(this.paths[pathIx]);
         this.draw(this.hit);
@@ -80,6 +84,11 @@ export default class DrawExportGcode extends DrawBasic{
         this.draft.drawNumber(this.arrows.map((arrow, ix) => ({x0:arrow.x0, y0:arrow.y0, text:'p' + (this.order[ix]+1)})));
         }
  
+    deleteFlags = () => {
+        this.startChange = false;
+        this.invertMode = false;
+        this.startOrder = false;
+    }
     deleteData = () => {
         this.deleteDataBasic([]),
         this.paths = [];
@@ -94,22 +103,34 @@ export default class DrawExportGcode extends DrawBasic{
         const idn = newData[0].idn;  //no esperamos más que una pulsación...
         const value = newData[0].v;
         switch(idn){
-            case 'order': break;
             case 'tol' : this.data.bezierTolerance = +value; break;
             case 'invert'  :
-                this.startChange = false;
+                this.deleteFlags();
                 this.invertMode = true
                 break;
             case 'start'    :
-                this.startChange = true;
-                this.invertMode = false
+                this.deleteFlags();
                 break;
             case 'save'  :  
+            //primero comprueno que todos tienen su orden
                 this.data.paths = this.paths;
+                let maxIx = Math.max(...this.order);
+                for(let i = 0; i < this.data.paths.length; i++){
+                    if(this.order[i] === -1) this.order[i] = ++maxIx;
+                }
+                this.data.paths.sort( (a,b) => this.order[this.truePaths.indexOf(a)] - this.order[this.truePaths.indexOf(b)] );
                 this.layerDraw.dispatchEvent(new CustomEvent('generate-iso', { bubbles: true , composed:true, detail:this.data}));
                 //this.deleteData();
                 break;
-            case 'escape': //this.leftClick({x:this.data.x1 , y:this.data.y1}); break;
+            case 'order': 
+                this.deleteFlags();
+                this.startOrder = true;
+                this.order = Array.from({ length: this.paths.length}, (v, i) => -1 );
+                this.pathIx = 0;
+
+                break;
+            case 'end': this.deleteFlags();
+                break;
             default: this.data[idn] = value;
             }
         }

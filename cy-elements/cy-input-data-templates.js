@@ -28,7 +28,7 @@ Y2<input id="data-${t}-y2" class="_33" type="number" value="0" step="0.5"/>`)}
 export function TENTER(t) { return(
 `<div><input type="button" id="data-${t}-enter" value="ENTER"/></div>`)}
 export function TESC(t) { return(
-`<div><input type="button" id="data-${t}-escape" value="ESCAPE"/></div>`)}
+`<div><input type="button" id="data-${t}-escape" value="ESC"/></div>`)}
 export function TBACK(t) { return(
 `<div><input type="button" id="data-${t}-back" value="BACK"/></div>`)}
 export function TSAVE(t) { return(
@@ -39,6 +39,10 @@ export function TINVERT(t) { return(
 `<div><input type="button" id="data-${t}-invert" value="INVERT"/></div>`)}
 export function TSTART(t) { return(
 `<div><input type="button" id="data-${t}-start" value="START"/></div>`)}
+export function TORDER(t) { return(
+`<div><input type="button" id="data-${t}-order" value="ORDER"/></div>`)}
+export function TEND(t) { return(
+`<div><input type="button" id="data-${t}-end" value="END"/></div>`)}
 export function TLINK(t) { return(
 `<div><input type="button" id="data-${t}-link" value="LINK"/></div>`)}
 export function TUNLINK(t) { return(

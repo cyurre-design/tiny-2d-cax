@@ -1,5 +1,5 @@
 import { sharedStyles } from '../shared-styles.js';
-import {inputDataInit, initialDataBasic, inputDataUpdate, inputDataSubtype, setEventHandlers, TSTART, TESC, TSAVE, TINVERT} from './cy-input-data-templates.js'
+import {inputDataInit, initialDataBasic, inputDataUpdate, inputDataSubtype, setEventHandlers, TSTART, TESC, TSAVE, TINVERT, TORDER, TEND} from './cy-input-data-templates.js'
 export default class CyInputDataExportGcode extends HTMLElement {
     constructor( ) {
         super();
@@ -32,9 +32,8 @@ export default class CyInputDataExportGcode extends HTMLElement {
                 <textarea  id="data-${t}-post" class="data _80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
         h +=  `<div class="_20">Pre</div>
                 <textarea  id="data-${t}-pre" class="data _80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
-        h +=  `<div class="row">ORDER<input type="number" min="1" step="1" value="1" id="data-${t}-order" class="_20"/></div>`
         h += `<div class = "row"> Bezier to Arc Tolerance<input type="number" min="0.01" max="1" step="0.01" value="0.1" id="data-${t}-tol"/></div>`
-        h += `<div class="row">${TESC(t) + TSAVE(t) + TINVERT(t) + TSTART(t)}</div></div>`
+        h += `<div class="row">${TSAVE(t) + TINVERT(t) + TSTART(t) + TORDER(t) + TEND(t)}</div></div>`
         return h
     }
 
