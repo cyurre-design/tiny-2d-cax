@@ -9,7 +9,7 @@ import "./cy-layer-list.js"
 //Aunque no se llame directamente hace falta importarlo porque la ejecución define el elemento!!!!
 import CyInputDataBasic from './cy-elements/cy-input-data-basic.js';
 
-import { loadProject, saveProject, saveSvg, saveCNC } from "./cy-file-save-load.js";
+import { loadProject, saveProject, saveSvg, saveCNC } from "./obsoletos/cy-file-save-load.js";
 
 //From geometry
 
@@ -33,6 +33,7 @@ import DrawSymmetry from "./cy-draw-interactive/cy-draw-symmetry.js"
 import DrawSelection from "./cy-draw-interactive/cy-draw-selection.js"
 import DrawOrigin from "./cy-draw-interactive/cy-draw-origin.js"
 import DrawLink from "./cy-draw-interactive/cy-draw-link.js"
+import DrawBoolean from "./cy-draw-interactive/cy-draw-boolean.js"
 
 import DrawNormal from "./cy-draw-interactive/cy-draw-normal.js"
 import DrawSegmentPB from "./cy-draw-interactive/cy-draw-segment-PB.js"
@@ -102,7 +103,7 @@ const templateMainMenu =`
             <md-menu-item id="circle-CR" ><div slot="headline">C + R</div></md-menu-item>
           </md-menu>
         </md-sub-menu>
-        
+
         <md-menu-item id="path" ><div slot="headline">PATH</div></md-menu-item>
         <md-menu-item id="poly"><div slot="headline">POLYGON</div></md-menu-item>
         <md-menu-item id="gcode" ><div slot="headline">GCODE</div></md-menu-item>
@@ -125,6 +126,7 @@ const templateMainMenu =`
             <md-menu-item id="symmetry-L"><div slot="headline">SIM-L</div></md-menu-item>
           </md-menu>
         </md-sub-menu>
+        <md-menu-item id="boolean"><div slot="headline">BOOLEAN</div></md-menu-item>
     </md-menu>
     <md-filled-button id="settings-menu-anchor">SETTINGS</md-filled-button>
       <md-menu has-overflow positioning="popover" id="settings-menu" anchor="settings-menu-anchor">
@@ -359,7 +361,13 @@ class cyCad1830App extends HTMLElement {
       //Aquí se debería hacer el comando link o unlink
       commandLinkUnlink( e.detail.mode, e.detail.data.tol);
       });
-
+    /**@listens boolean-op  para hacer operaciones con paths */
+    // Para las and y or se admiten n paths, pero para not y xor solo 2
+    this.addEventListener('boolean-op', e=>{
+      //Aquí se debería hacer el comando propiamente dicho y guardar info de deshacer
+      //commandBooleanOperation(e.detail.mode, e.detail.data);
+      console.log('boolean-op', e.detail.mode, e.detail.paths);
+      });
 
        
 //--------------------- TRANSFORMACIONES   ------------------------  
@@ -597,9 +605,13 @@ class cyCad1830App extends HTMLElement {
         case 'rotate':{
           this.registerInputApplications(  new DrawRotate(this.viewer.layerDraw, sub1) )
           this.mData.setActiveApplication( 'transform', 'rotate' );
-
         }
         break;
+        case 'boolean':{
+          this.registerInputApplications(  new DrawBoolean(this.viewer.layerDraw, sub1) )
+          this.mData.setActiveApplication( 'transform', 'boolean' );
+        }
+        break;        
         //Los de support y transform los dejo en plano por no hacer más profundo el árbol
         case 'point':  break;
         case 'line' :{

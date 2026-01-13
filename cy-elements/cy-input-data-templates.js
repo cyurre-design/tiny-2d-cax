@@ -47,6 +47,14 @@ export function TLINK(t) { return(
 `<div><input type="button" id="data-${t}-link" value="LINK"/></div>`)}
 export function TUNLINK(t) { return(
 `<div><input type="button" id="data-${t}-unlink" value="UNLINK"/></div>`)}
+export function TOR(t) { return(
+`<div><input type="button" id="data-${t}-or" value="OR"/></div>`)}
+export function TAND(t) { return(
+`<div><input type="button" id="data-${t}-and" value="AND"/></div>`)}
+export function TNOT(t) { return(
+`<div><input type="button" id="data-${t}-not" value="NOT"/></div>`)}
+export function TXOR(t) { return(
+`<div><input type="button" id="data-${t}-xor" value="XOR"/></div>`)}
 export function TSCALE(t) { return(
 `<div class="half" >NUM<input id="data-${t}-sn" class="_33" type="number" value="0" step="0.5"/></div>
 <div class="half">DEN<input id="data-${t}-sd" class="_33" type="number" value="0" step="0.5"/></div>`)}

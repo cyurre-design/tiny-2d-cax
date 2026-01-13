@@ -1,6 +1,6 @@
 import { sharedStyles } from '../shared-styles.js';
 import { inputDataInit, inputDataUpdate, initialDataBasic, inputDataSubtype, setEventHandlers, TX0Y0, TX1Y1, TA, TENTER, TESC, 
-    TLINK, TUNLINK, TSCALE, TXx0, TYy0} from './cy-input-data-templates.js'
+    TLINK, TUNLINK, TAND, TOR, TNOT, TXOR, TSCALE, TXx0, TYy0} from './cy-input-data-templates.js'
 
 export default class CyInputDataTransform extends HTMLElement {
     constructor() {
@@ -12,7 +12,7 @@ export default class CyInputDataTransform extends HTMLElement {
     set subType(type) {
         this.type = type.toLowerCase();
         ['transform-origin', 'transform-scale', 'transform-translate', 'transform-rotate',
-            'transform-symmetryx', 'transform-symmetryy', 'transform-symmetryl', 'transform-link' ].forEach( el =>
+            'transform-symmetryx', 'transform-symmetryy', 'transform-symmetryl', 'transform-link', 'transform-boolean' ].forEach( el =>
                 this.dom.querySelector('#'+el).style.display = "none")
         this.dom.querySelector('#transform-'+ this.type).style.display="block";
         inputDataSubtype(this, `data-transform-${this.type}`);
@@ -52,6 +52,10 @@ export default class CyInputDataTransform extends HTMLElement {
         h += `<div id="${t}"  style="display:none;">
                 <div class="row"><span>Link Tolerance</span><input id= data-${t}-tol type="number" class="half" value="0.1" max="5" min="0.01" step="0.1"/></div>
                 <div class="row">${TLINK(t)+TUNLINK(t)}</div>
+            </div>`
+        t = `transform-boolean`;
+        h += `<div id=${t} style="display:none;">
+                <div class="row">${TOR(t) + TAND(t) + TNOT(t) + TXOR(t)}</div>
             </div>`
         return h;
     }
