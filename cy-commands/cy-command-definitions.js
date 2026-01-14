@@ -1,6 +1,6 @@
 import {createHistorySystem} from "./cy-command-manager.js"
 import {linkPaths, unlinkPaths} from '../cy-geometry/cy-geometry-link-paths.js';
-
+import {pathBoolean} from '../cy-geometry/cy-path-boolean.js'
 
 
 let commandManager;
@@ -190,6 +190,28 @@ export function commandLinkUnlink(mode, tolerance ){          //mode: link, unli
             const newBlocks = unlinkPaths(oldBlocks); 
             p.replaceBlocks(oldBlocks, newBlocks);
           }
+          this.copiaAfter = JSON.stringify(p);
+          p.draw();
+    },
+    undo(p,a){
+        p.deserialize(JSON.parse(this.copiaBefore));
+        p.draw();
+    },
+    redo(p,a){
+        p.deserialize(JSON.parse(this.copiaAfter));
+        p.draw();
+    }
+    })
+    commandManager.execute(theCommand);  
+}
+
+export function commandBooleanOperation(path1, path2, operation, tolerance ){          //mode: link, unlink
+    const theCommand = commandManager.makeCommand({
+        execute(p, a) {
+          this.copiaBefore = JSON.stringify(p);
+          const oldPaths = [path1, path2];
+          const newPaths = pathBoolean(path1, path2, operation).posPaths;
+          p.replaceBlocks(oldPaths, newPaths);
           this.copiaAfter = JSON.stringify(p);
           p.draw();
     },

@@ -52,10 +52,10 @@ function _boundingBox (a, eps = geometryPrecision){
             case 0b1101: return(a.fS === 1? Object.assign(bboxS, {x0:bboxC.x0, y0:bboxC.y0}) : Object.assign(bboxS, {x0:bboxC.x0, y0:bboxC.y0}));
         }          
     }
-
-function arcClone(a) {   //un solo nivel de atributos, copio todo
-        return createArc(a);
-    }
+export function arcMidpoint(a){
+    const midAngle = (a.ai + a.da/2);
+    return {x: a.cx + a.r * Math.cos(midAngle), y: a.cy + a.r * Math.sin(midAngle)};
+}
 
 export function arcTranslate(a, dx, dy) {
         const [cx, cy] = translatePoint(a.cx, a.cy, dx, dy);
@@ -95,3 +95,52 @@ export function arcReverse(a){
 export function arcLength(a){
     return Math.abs(a.da) * a.r ;
 }
+    //YURRE: AL final testeo aquí que los puntos no coinciden con pi o pf porque es donde el "this" está "más cerca"
+export function arcSplitAtPoints( s, pointsOnSeg, eps = geometryPrecision){
+        let result = [];
+        let points = pointsOnSeg;
+        if((points.length !== 0) && fuzzy_eq_point(s.pi, points[0], eps)) {
+            if(points[0].ovp !== undefined) s.pi.ovp = points[0].ovp;
+            points.shift(); //quito el primero y dejo el orginal
+        }
+        if((points.length !== 0) && fuzzy_eq_point(s.pf, points[points.length-1], eps)) {
+            points.pop(); //quito el último y dejo el original
+        }
+        points = [s.pi, ...points, s.pf];
+        const cc = s.way === 1? "antiClock" : "clock"
+        for(let i=1; i < points.length; i++){
+            let a = createArc(arc2PC2SVG({x:s.cx, y:s.cy}, s.r, points[i-1], points[i], cc));
+            if(points[i-1].ovp !== undefined) {
+                a.ovp = points[i-1].ovp;
+                delete points[i].ovp;
+            }
+            result.push(a);
+        }
+        return result;
+    }
+export function arcClosestPoint(a, point, eps = geometryPrecision){
+        //if(fuzzy_eq_point(this, point, eps))    //el this.x y this.y son el centro
+        //    return {x:this.pi.x, y:this.pi.y};
+        if (pointWithinArcSweep(a, point)){
+            let v = {x:point.x - a.x, y: point.y - a.y};
+            const m = a.r / Math.hypot(v.x, v.y) ; //escalado
+            return {x:a.x + m*v.x, y:a.y + m*v.y}
+        }
+        //Si no está en el ángulo barrido, el punto más cercano es uno de los extremos.
+        const dpi = sqDistancePointToPoint(a.pi.x, a.pi.y, point.x, point.y);
+        const dpf = sqDistancePointToPoint(a.pf.x, a.pf.y, point.x, point.y);
+        return( dpi < dpf? a.pi: a.pf);
+        }    
+export function arcInsideOffset(a, point, offset, eps){
+        let absoff = Math.abs(offset)-eps;
+        let absoff2 = absoff*absoff ; 
+        let r2 = sqDistancePointToPoint(point.x, point.y, a.x, a.y);
+        if( r2 > (a.r+absoff)*(a.r+absoff)) return false;
+        if( r2 < (a.r-absoff)*(a.r-absoff)) return false;
+        //Aquí está dentro del "tubo" +- offset de la circunferencia, si está fuera del span puede estar cerca de los bordes
+        if (pointWithinArcSweep(a, point)) return true;
+        //Quedan las esquinas redondeadas, de todas las maneras no es totalmente exacto....
+        if(sqDistancePointToPoint(point.x, point.y, a.pi.x, a.pi.y) < absoff2) return true;
+        if(sqDistancePointToPoint(point.x, point.y, a.pf.x, a.pf.y) < absoff2) return true;
+        return false;
+    }    

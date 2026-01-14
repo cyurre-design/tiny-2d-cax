@@ -5,8 +5,8 @@ import {circle_circle_intr, arc_arc_intr, circle_arc_intr} from './cy-cuts-circl
 import {segment_arc_intr} from './cy-cuts-segment-circle.js'
 import {line_line_intr} from './cy-cuts-segment-segment.js'
 
-import {segmentTranslate, segmentRotate, segmentScale, segmentSymmetryX, segmentSymmetryY, segmentSymmetryL, segmentReverse, segmentLength  } from './cy-geo-elements/cy-segment.js'
-import {arcTranslate, arcRotate, arcScale, arcSymmetryX, arcSymmetryY,  arcSymmetryL, arcReverse, arcLength} from './cy-geo-elements/cy-arc.js'
+import {segmentTranslate, segmentRotate, segmentScale, segmentSymmetryX, segmentSymmetryY, segmentSymmetryL, segmentReverse, segmentLength, segmentMidpoint, segmentSplitAtPoints  } from './cy-geo-elements/cy-segment.js'
+import {arcTranslate, arcRotate, arcScale, arcSymmetryX, arcSymmetryY,  arcSymmetryL, arcReverse, arcLength, arcMidpoint, arcSplitAtPoints} from './cy-geo-elements/cy-arc.js'
 import {circleTranslate, circleRotate, circleScale, circleSymmetryX, circleSymmetryY, circleSymmetryL, circleLength } from './cy-geo-elements/cy-circle.js'
 import {polygonTranslate, polygonRotate, polygonScale, polygonSymmetryX, polygonSymmetryY, polygonSymmetryL, polygonLength} from './cy-geo-elements/cy-polygon.js'
 import {pathTranslate, pathRotate, pathScale, pathSymmetryX, pathSymmetryY, pathSymmetryL, pathReverse, pathLength} from './cy-geo-elements/cy-path.js'
@@ -243,7 +243,16 @@ export function normalize_radians(angle) {
     return (angle % (_2PI) + _2PI) % (_2PI)
 }
 
-
+//YURRE; para el segmento usamos una versión diferente del vectorial para usar solo el signo
+// pf-pi es x:ux*l, y:uy*l      (pf-pi) x (p-pi) =
+// = (pf.x - pi.x) * (point.y - pi.y) - (pf.y - pi.y) * (point.x - pi.x) ;
+// = l*ux*(p.y-pi.y) -l*uy*(p.x-pi.x) y para saber el signo no influye l
+export function is_left_to_segment(s, p){
+    return ((s.ux*(p.y-s.pi.y) - s.uy*(p.x-s.pi.x)) > 0 );
+}
+export function is_left_or_equal_to_segment(s, p){
+    return ((s.ux*(p.y-s.pi.y) - s.uy*(p.x-s.pi.x)) >= 0 );
+}
 //Lo hacemos en formato ax+by+c=0, para líneas infinitas aunque no chequeamos aquí que lo sean.
 //nuestra línea es uy*x - ux*y + c = 0  (Ax+By+C=0 con A*A + B*B = 1)
 //https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
@@ -460,6 +469,9 @@ export function findAllCuts(elements) { //busca los cortes , un array de ellos
     }
 
 //------------------ Funciones geométricas agrupadas --------------------
+export function blockClone( block){
+    return structuredClone(block);
+}
 export function blockTranslate( block, dx, dy){
     switch(block.type){
         case 'segment': return segmentTranslate(block, dx, dy);
@@ -551,4 +563,27 @@ export function blockLength( block){
         default: console.log('no contemplado');
     }
 }
-
+export function blockMidpoint( block){
+    switch(block.type){
+        case 'segment': return segmentMidpoint(block);
+        case 'circle': return {x:block.cx - block.r, y:block.cy};
+        case 'arc': return arcMidpoint(block);
+        case 'polygon': 
+        
+        //case 'bezier': return bezierMidPoint(block);
+        case 'point' :
+        case 'path': 
+        default: console.log('no contemplado');
+    }
+}
+export function blockSplitAtPoints( block, points){
+    switch(block.type){
+        case 'segment': return segmentSplitAtPoints(block, points);
+        //case 'circle': return circleSplitAtPoints(block, points);
+        case 'arc': return arcSplitAtPoints(block, points);
+        case 'polygon':
+        case 'path': 
+        case 'bezier':
+        default: console.log('no contemplado');
+    }
+}

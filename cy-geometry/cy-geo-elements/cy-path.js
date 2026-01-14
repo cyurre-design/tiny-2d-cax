@@ -1,5 +1,7 @@
 "use strict";
-import {checkBbox, blockTranslate, blockRotate, blockScale, blockSymmetryX, blockSymmetryY, blockSymmetryL, blockReverse, blockLength, fuzzy_eq_point } from '../cy-geometry-library.js'
+import {checkBbox, is_left_to_segment, is_left_or_equal_to_segment, fuzzy_eq_point,
+    blockClone, blockTranslate, blockRotate, blockScale, 
+    blockSymmetryX, blockSymmetryY, blockSymmetryL, blockReverse, blockLength } from '../cy-geometry-library.js'
 
 //los create deben garantizar que aquí llegan bien los parámetros
 
@@ -8,9 +10,7 @@ export function createPath( data = {elements:[]}){
         type : 'path',
         elements : data.elements, 
         get pi(){ return p.elements[0].pi},
-        get pf(){ return p.elements[p.elements.length -1].pf}
-        //No chequeo cruces intermedios, se puede tratar con otras librerías
-        //closed : (distancePointToPoint(this.x0, this.y0, this.x1, this.y1) <= geometryPrecision)? true: false;
+        get pf(){ return p.elements[p.elements.length -1].pf},
     }
     p.bbox = calculateBbox(p);
     return p;
@@ -18,13 +18,7 @@ export function createPath( data = {elements:[]}){
 function calculateBbox(p){
         return p.elements.reduce ((box, el)=> checkBbox(box, el.bbox), {x0:Infinity, y0:Infinity, x1:-Infinity, y1:-Infinity});
     }
-/**
- * @todo incluir posibles elementos de tipo arco 
- * @param {*} p 
- * @param {*} dx 
- * @param {*} dy 
- * @returns 
- */
+
 export function pathTranslate(p, dx, dy){
         return createPath( {elements:p.elements.map(el => blockTranslate( el, dx, dy))});
     }
@@ -118,6 +112,172 @@ export function pathSetStartPoint(path, point){
     if(startIx === -1 ) return undefined;
     //Aquí hay que ordenarlo pero sin cambiar el sentido, de hecho no cambia el bbox ni nada
     return createPath({elements:path.elements.slice(startIx).concat(path.elements.slice(0,startIx))})
+}
+
+    //YURRE: NO modifico el original, clono o rehago lo que haga falta
+    //blocks es un shallow copy, por eso clono por siacaso. Por otra parte controlo que "actual" sea siempre clonado
+    // Hay que incluir el caso de solape en el punto inicial (last = first)
+export function pathRemoveRedundant(path, options={pos_equal_eps: geometryPrecision, invert_area: false}) {
+        let eps = options.pos_equal_eps;
+        let blocks = path.elements.filter(block=> !fuzzy_eq_point(block.pi, block.pf, eps)); //quito los elementos de l=0
+        let result = createPath([]);
+        //result.isClosed = path.isClosed;
+        if(blocks.length < 2) {
+            if(blocks.length > 0) result.elements.push(blockClone(blocks[0])) ; //después de filtrar solo ha quedado 0 o 1
+            return result;
+        }
+        let elements = [];
+        let actual = blockClone(blocks.shift()); //cojo el primero
+        let isArc = (sh) => sh.type === "arc";
+        let onArc = isArc(actual);
+        //let change = false; // actual, elements, etc... son globales en el scope de la función
+        function notCollapsable(el){
+            let elArc = isArc(el);
+            //esto elimina muchas combinaciones, si pasa el test hay posibile emplame
+            if((elArc !== onArc) || !fuzzy_eq_point(el.pi, actual.pf, eps))
+                return true; //no colapsa
+            if(!isArc(actual)){ //segmento
+                // Aquí ya sé que están seguidos, miro si son colineales
+                if(fuzzy_eq(el.ux, actual.ux, eps) && fuzzy_eq(el.uy, actual.uy, eps)){
+                    //misma recta y empalman (ux uy ya llevan sentido), el change está a false por defecto
+                    actual = createSegment({subType : 'PP', x0: actual.pi.x, y0: actual.pi.y, x1: el.pf.x, y1: el.pf.y}); //y sigo
+                    return false;
+                }
+                return true;
+            }
+            // aquí son ambos arcos, empalme posible y ya he mirado que están seguidos pero falta radio, etc
+            // YURRE:?can only combine vertexes if total sweep will still be less than PI () Pero no divide el arco en tramos, creo...)
+            if(fuzzy_eq(el.x, actual.x, eps) && fuzzy_eq(el.y, actual.y, eps) && fuzzy_eq(el.r, actual.r, eps) && el.way===actual.way ){
+                //Como están orientados igual miro la suma de ángulos. En ambos pathways importa que el absoluto no pase de pi
+                if( Math.abs (actual.w + el.w) < Math.PI + eps/actual.r){
+                    actual = createArc(arc2PC2SVG({x:el.x, y:el.y}, el.r, actual.pi, el.pf, el.way ));
+                    return false;
+                }       
+            }
+            return true;
+        }
+
+        blocks.forEach(el => {
+            if(notCollapsable(el) === true){
+                elements.push(actual)
+                actual = blockClone(el);
+                onArc = isArc(actual);
+            }
+        })
+        //en actual está lo último acumulado, o el último, sin más, pero podría juntarse con el primero...
+        //pero puede que elements esté vacío por haberse colapsado todo en uno
+        if(pathIsClosed(path) && (elements.length > 0)){
+            if(notCollapsable(elements[0]) === false){ //La función notCollapsable NO es pura, machaca actual si colapsa
+                elements.splice(0,1,actual);    //sustituyo el primero por el colapsado y tengo que salir 
+                result.elements = elements;
+                return result;
+            }
+        }
+        //caso normal, no es cerrado o no empalma
+        elements.push(actual);
+        result.elements = elements;
+        return result;
+        }
+/// Calculate the winding number for a `point` relative to the polyline.
+///
+/// The winding number calculates the number of turns/windings around a point that the polyline
+/// path makes. For a closed polyline without self intersects there are only three
+/// possibilities:
+///
+/// * -1 (polyline winds around point clockwise)
+/// * 0 (point is outside the polyline)
+/// * 1 (polyline winds around the point counter clockwise).
+///
+/// For a self intersecting closed polyline the winding number may be less than -1 (if the
+/// polyline winds around the point more than once in the counter clockwise direction) or
+/// greater than 1 (if the polyline winds around the point more than once in the clockwise
+/// direction).
+///
+/// This function always returns 0 if polyline [PlineSource::is_closed] is false.
+///
+/// If the point lies directly on top of one of the polyline segments the result is not defined
+/// (it may return any integer). To handle the case of the point lying directly on the polyline
+/// [PlineSource::closest_point] may be used to check if the distance from the point to the
+/// polyline is zero.
+///
+
+export function pathWindingNumber(path, point){
+    if (!pathIsClosed(path) || path.elements.length < 2) {
+        return 0;
+    }
+
+    // Helper function for processing a line segment when computing the winding number.
+    let process_line_winding = (segment, point) => {
+        let result = 0;
+        if ( point.y >= segment.pi.y) {
+            if((point.y < segment.pf.y) && is_left_to_segment(segment, point))  // left and upward crossing
+                result += 1;
+        } else if((point.y >= segment.pf.y ) && !is_left_to_segment(segment, point)) // right an downward crossing
+            result -= 1;
+        return result
+    };
+
+    // Helper function for processing an arc segment when computing the winding number.
+    let process_arc_winding = (arc, point) => {
+            let is_antiClock = arc.pathway === 1;
+            let point_is_left = is_antiClock ? is_left_to_segment(arc, point) : is_left_or_equal_to_segment(arc, point);
+            let insideCircle = sqDistancePointToPoint(arc.x, arc.y, point.x, point.y) < arc.r*arc.r;
+            let result = 0;
+
+            if (arc.pi.y <= point.y) {
+                if (arc.pf.y > point.y) {     // upward crossing of arc chord
+                    if (is_antiClock) {
+                        if (point_is_left) {  // counter clockwise arc left of chord
+                            result += 1;
+                        } else {              // counter clockwise arc right of chord
+                            if (insideCircle) {
+                                result += 1;
+                            }
+                        }
+                    } else if(point_is_left){ // clockwise arc left of chord
+                        if (!insideCircle) {
+                            result += 1;
+                        }
+                        // else clockwise arc right of chord, no crossing
+                    }
+                } else {                // not crossing arc chord and chord is below, check if point is inside arc sector
+                    if (is_antiClock && !point_is_left && arc.pf.x < point.x && point.x < arc.pi.x  && insideCircle) {
+                        result += 1;
+                    } else if (!is_antiClock && point_is_left && arc.pi.x < point.x && point.x < arc.pf.x && insideCircle) {
+                        result -= 1;
+                    }
+                }
+            } else if (arc.pf.y <= point.y) {  // downward crossing of arc chord
+                if (is_antiClock) {
+                    if (!point_is_left) {      // counter clockwise arc right of chord
+                        if (!insideCircle) {
+                            result -= 1;
+                        }
+                    }
+                // else counter clockwise arc left of chord, no crossing
+                } else if (point_is_left) {    // clockwise arc left of chord
+                    if (insideCircle) {
+                        result -= 1;
+                    }
+                } else {                       // clockwise arc right of chord
+                    result -= 1;
+                }
+            } else {
+                // not crossing arc chord and chord is above, check if point is inside arc sector
+                if (is_antiClock && !point_is_left && arc.pi.x < point.x && point.x < arc.pf.x && insideCircle) {
+                    result += 1;
+                } else if (!is_antiClock && point_is_left && arc.pf.x < point.x && point.x < arc.pi.x && insideCircle) {
+                    result -= 1;
+                }
+            }
+
+            return result
+        };
+
+    //let winding = 0;
+    let winding = path.elements.reduce(( winding, el)=>
+        winding + ((el.type === 'segment')? process_line_winding(el, point) : process_arc_winding(el, point)), 0);
+     return winding;
 }
     //métodos exclusivos de path
 // export function pathConcat(p1, p2) { //de fin de this a comienzo de path

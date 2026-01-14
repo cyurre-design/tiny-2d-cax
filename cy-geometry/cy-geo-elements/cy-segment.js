@@ -1,5 +1,5 @@
 "use strict";
-import { translatePoint, pointSymmetricSegment, rotateZ , scale0, distancePointToPoint} from '../cy-geometry-library.js'
+import { translatePoint, pointSymmetricSegment, rotateZ , scale0, distancePointToPoint, geometryPrecision, fuzzy_eq_point} from '../cy-geometry-library.js'
 
 
 //Por motivos operativos se mantiene una formulación interna optimizada con el vector director y la distancia al origen.
@@ -68,3 +68,47 @@ export function segmentReverse(s) {
 export function segmentLength(s){
     return s.d;
 }
+export function segmentSplitAtPoints(s, pointsOnSeg, eps = geometryPrecision){
+        let result = [];
+        let points = pointsOnSeg;
+        if((points.length !== 0) && fuzzy_eq_point(s.pi, points[0], eps)) {
+            if(points[0].ovp !== undefined) s.pi.ovp = points[0].ovp;
+            points.shift(); //quito el primero y dejo el orginal
+        }
+        //Si solo había un punto y era pi me he cepillado el array
+        if((points.length !== 0) && fuzzy_eq_point(s.pf, points[points.length-1], eps)) {
+            points.pop(); //quito el último y dejo el original
+        }
+        points = [s.pi, ...points, s.pf];
+        for(let i=1; i < points.length; i++){
+            if(!fuzzy_eq_point(points[i-1], points[i]), eps){
+                let s = createSegment({subType:'PP', x0:points[i-1].x, y0:points[i-1].y, x1:points[i].x, y1:points[i].y });
+                if(points[i-1].ovp !== undefined) {
+                    s.ovp = points[i-1].ovp;
+                    delete points[i].ovp;
+                }
+                result.push(s);
+            }
+        }
+        return result;
+    }
+    //cambio la estructura del original, miro primero si son los vértices
+export function closestPoint (s, point, eps = geometryPrecision){
+        if(fuzzy_eq_point(s.pi, point, eps)) return {x:s.pi.x, y:s.pi.y};
+        if(fuzzy_eq_point(s.pf, point, eps)) return {x:s.pf.x, y:s.pf.y};      
+        const w = {x:point.x - s.pi.x, y: point.y - s.pi.y}; //y el producto escalar sería la proyección
+        const l = Math.hypot(w.x, w.y);
+        if(l*l > s.l2) 
+        return {x: s.pi.x + s.ux*l, y:s.pi.y + s.uy*l};
+        }
+export function segmentInsideOffset(point, offset, eps){
+        let absoff = Math.abs(offset)-eps ; 
+        if(distancePointToLine(point, s) > absoff) return false;
+        //Aquí está dentro del "tubo" +- offset de la línea
+        const m = segmentMidpoint(s); //O meterlo en la estructura
+        if(distancePointToPoint(point.x, point.y, m.x, m.y) < 0.5*s.d) return true;
+        //Quedan las esquinas redondeadas, de todas las maneras no es totalmente exacto....
+        if(sqDistancePointToPoint(point.x, point.y, s.pi.x, s.pi.y) < absoff*absoff) return true;
+        if(sqDistancePointToPoint(point.x, point.y, s.pf.x, s.pf.y) < absoff*absoff) return true;
+        return false;
+    }
