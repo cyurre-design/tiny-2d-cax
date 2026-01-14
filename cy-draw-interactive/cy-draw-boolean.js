@@ -47,7 +47,7 @@ export default class DrawBoolean extends DrawBasic{
     select = (pi) => {
         const found = this.layerDraw.hover(pi.x, pi.y, undefined, true);
         if(found === undefined) return
-        if(found[0].type !== 'path') return undefined
+        if((found[0].type !== 'path') && (found[0].type !== 'polygon'))return undefined
         this.paths.push(found[0]);
         return found[0];
     }
@@ -66,31 +66,13 @@ export default class DrawBoolean extends DrawBasic{
         const idn = newData[0].idn;  //no esperamos más que una pulsación...
         const value = newData[0].v;
         switch(idn){
-            case 'and'     : {
-                if(this.paths.length < 2 ) break;
-                this.layerDraw.dispatchEvent(
-                    new CustomEvent('boolean-op', {bubbles: true, composed:true, detail:{ mode: 'and', paths:this.paths}}));
-                this.deleteData();
-                break;
-            }
-            case 'or'  :{
-                if(this.paths.length < 2 ) break;
-                this.layerDraw.dispatchEvent(
-                    new CustomEvent('boolean-op', {bubbles: true, composed:true, detail:{ mode: 'or', paths:this.paths}}));
-                this.deleteData();
-                break;
-            }           
-            case 'not'     :{
-                if(this.paths.length !== 2 ) break;
-                this.layerDraw.dispatchEvent(
-                    new CustomEvent('boolean-op', {bubbles: true, composed:true, detail:{ mode: 'not', paths:this.paths}}));
-                this.deleteData();
-                break;
-            }
+            case 'and'     :
+            case 'or'      :
+            case 'not'     :
             case 'xor'     :{
-                if(this.paths.length !== 2 ) break;
+                if(this.paths.length < 2 ) break;
                 this.layerDraw.dispatchEvent(
-                    new CustomEvent('boolean-op', {bubbles: true, composed:true, detail:{ mode: 'xor', paths:this.paths}}));
+                    new CustomEvent('boolean-op', {bubbles: true, composed:true, detail:{ mode: idn, paths:this.paths}}));
                 this.deleteData();
                 break;
             }

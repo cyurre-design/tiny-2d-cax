@@ -1,7 +1,7 @@
 import {createHistorySystem} from "./cy-command-manager.js"
 import {linkPaths, unlinkPaths} from '../cy-geometry/cy-geometry-link-paths.js';
 import {pathBoolean} from '../cy-geometry/cy-path-boolean.js'
-
+import { polygonToPath} from '../cy-geometry/cy-geometry-basic-elements.js';
 
 let commandManager;
 export  function createCommandManager(application, blocks) {
@@ -204,14 +204,21 @@ export function commandLinkUnlink(mode, tolerance ){          //mode: link, unli
     })
     commandManager.execute(theCommand);  
 }
-
+//Como hemos abierto el camino a los polígonos, no podemos usar un replace de paths, borramos los dos y añadimos los nuevos
 export function commandBooleanOperation(path1, path2, operation, tolerance ){          //mode: link, unlink
     const theCommand = commandManager.makeCommand({
         execute(p, a) {
           this.copiaBefore = JSON.stringify(p);
-          const oldPaths = [path1, path2];
-          const newPaths = pathBoolean(path1, path2, operation).posPaths;
-          p.replaceBlocks(oldPaths, newPaths);
+          const oldPaths = [path1, path2];  //pueden ser polígonos
+          //si son polígonos los paso a paths
+          const newPaths = pathBoolean(path1.type === 'polygon' ? polygonToPath(path1) : path1,
+                                      path2.type === 'polygon' ? polygonToPath(path2) : path2,
+                                      operation).posPaths;
+          if(newPaths.length !== 0){
+            p.deleteBlock(oldPaths[0]);
+            p.deleteBlock(oldPaths[1]);
+            p.addBlocks(undefined, newPaths);
+          }
           this.copiaAfter = JSON.stringify(p);
           p.draw();
     },

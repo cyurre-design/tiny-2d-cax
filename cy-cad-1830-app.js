@@ -15,8 +15,6 @@ import { loadProject, saveProject, saveSvg, saveCNC } from "./obsoletos/cy-file-
 
 import {findAllCuts, blockTranslate, blockRotate, blockScale, blockSymmetryX, blockSymmetryY, blockSymmetryL, fuzzy_eq, fuzzy_eq_point} from './cy-geometry/cy-geometry-library.js'
 import {createDrawElement } from './cy-geometry/cy-geometry-basic-elements.js';
-import { visitGlobalSelfIntersects, visitLocalIntersects } from './cy-geometry/cy-cuts-full-paths.js';  
-
 
 //Commands
 import {createCommandManager, commandLayerCreate, commandLayerDelete, commandLayerSetStyle, 
@@ -366,7 +364,9 @@ class cyCad1830App extends HTMLElement {
     /**@listens boolean-op  para hacer operaciones con paths */
     // Para las and y or se admiten n paths, pero para not y xor solo 2
     this.addEventListener('boolean-op', e=>{
+ 
       //Aquí se debería hacer el comando propiamente dicho y guardar info de deshacer
+      //En realidad hay comandos como el or y and que admiten más de dos parámetros, a decidir qué hacer
       commandBooleanOperation(e.detail.paths[0], e.detail.paths[1], e.detail.mode);
       });
 

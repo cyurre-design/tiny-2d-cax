@@ -39,7 +39,15 @@ export function getRelevantPoints(b){
         default         : return [];
     }
 }
-
+export function polygonToPath(polygon){
+    const elements = [];
+    const l = polygon.segments.length - 1;
+    for(let i=0; i < l; i++){
+        elements.push(createSegment({subType:'PP', x0:polygon.segments[i].x0, y0:polygon.segments[i].y0, x1:polygon.segments[i+1].x0, y1:polygon.segments[i+1].y0}));
+    }
+    elements.push(createSegment({subType:'PP', x0:polygon.segments[l].x0, y0:polygon.segments[l].y0, x1:polygon.segments[0].x0, y1:polygon.segments[0].y0}));
+    return createDrawElement('path', {elements:elements});
+}
 export function createDrawElement(type, data ) {
     let element; //para tratarlo después del switch
     switch (type) {
