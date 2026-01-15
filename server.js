@@ -7,10 +7,25 @@ var express = require(nodepath + "express");
 //main app
 var main = express();
 
-var fs = require("fs");
+const fs = require('node:fs');
 const { resolve } = require("path");
 
 var sys = require("util");
+
+//*********************************************************************************
+//******************     FONTS ****************************************************
+//*********************************************************************************
+main.get('/useFont', function(request,response){
+    let fontName = request.query.fontName;
+    response.send(fs.readFileSync(`./files/fonts/${fontName}.ttf`));
+});
+
+main.get('/getFontNames', function(request,response){
+    let fonts = fs.readdirSync('./files/fonts').filter(f=>f.endsWith('.ttf')).map(f=>f.slice(0,-4)) ;
+    response.send(JSON.stringify(fonts));
+});
+
+
 
 
 /* 
@@ -31,7 +46,7 @@ parser.on('data', (line)=>console.log(line)); // se chequearía el ready viendo 
 //var xml2js = require('C:/program files/nodejs/node_modules/xml2js');
 //var parseString = new xml2js.Parser({ explicitArray: false }).parseString;
 main.use(express.static(__dirname));
-main.use('/nodemodules', express.static(nodepath));
+main.use('/nodemodules', express.static("C:/nodejs/node_modules/"));
 //main.use('/scripts', express.static("../libraryhmi/scripts"));
 //main.use('/fg-components', express.static(__dirname));
 
@@ -103,37 +118,11 @@ main.get('/GRBL/:command', function(request,response){
 
 
 //main.use('/',function (request,response,next) { console.log(request.query); next();}),
-//main.use('/DataLogger',DataLogger);
+
 //*********************************************************************************
 //******************     FAKE *****************************************************
 //*********************************************************************************
 
-//*********************************************************************************
-//******************     DL *****************************************************
-//*********************************************************************************
-/*
-DataLogger.get("/getFile", function (request, response) {
-    response.writeHead(200, { 'Content-Type': ' application/json' });
-    let filename = request.query.file;
-    console.log('getFile');
-    console.log(request.query);
-    if(path.extname(filename) === '.xml')   //ya extenderremos a csv, etc...
-    {
-        let raw = fs.readFileSync('DL_Data/' + filename);
-        parseString(raw, function (err, result) {
-            if(err)
-                console.error(err);
-            else{
-                console.log(result.XML.DATE_AND_TIME);  
-                console.log(result.XML.RESULTS);                    
-                response.write(JSON.stringify(result));
-                response.end();
-                console.log('sent file');
-            }
-        });
-    }
-});
-*/
 
 //*********************************************************************************
 //******************     MAIN *****************************************************
