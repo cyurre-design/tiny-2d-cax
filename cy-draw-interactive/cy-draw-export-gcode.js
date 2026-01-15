@@ -19,8 +19,6 @@ export default class DrawExportGcode extends DrawBasic{
         this.paths.push(...this.truePaths); //son los punteros, creo
         this.arrows = this.paths.map( p => this.createArrow(p)); //mismos índices
         this.order = Array.from({ length: this.paths.length}, (v, i) => i );
-//        this.data.startPoints = this.paths.map( p => p.elements[0].pi); //mismos índices
-//        this.data.invert = this.paths.map(p => false); //chapucilla 
 
         this.startChange = false;
         this.invertMode = false;
@@ -56,8 +54,8 @@ export default class DrawExportGcode extends DrawBasic{
     //Al hacer click 
     getPath = (pi) => {
         let found = this.layerDraw.hover(pi.x, pi.y, undefined, false);
-        if(found === undefined) return
-        if(found[0].type !== 'path') return undefined
+        if(found === undefined) return undefined;
+        if(found[0].type !== 'path') return undefined;
         const pathIx = this.truePaths.findIndex(p => (p === found[0]))
         return pathIx < 0 ? undefined : pathIx;
     }
@@ -110,9 +108,10 @@ export default class DrawExportGcode extends DrawBasic{
                 break;
             case 'start'    :
                 this.deleteFlags();
+                this.startChange = true;
                 break;
             case 'save'  :  
-            //primero comprueno que todos tienen su orden
+            //primero compruebo que todos tienen su orden
                 this.data.paths = this.paths;
                 let maxIx = Math.max(...this.order);
                 for(let i = 0; i < this.data.paths.length; i++){
@@ -120,7 +119,7 @@ export default class DrawExportGcode extends DrawBasic{
                 }
                 this.data.paths.sort( (a,b) => this.order[this.truePaths.indexOf(a)] - this.order[this.truePaths.indexOf(b)] );
                 this.layerDraw.dispatchEvent(new CustomEvent('generate-iso', { bubbles: true , composed:true, detail:this.data}));
-                //this.deleteData();
+
                 break;
             case 'order': 
                 this.deleteFlags();
