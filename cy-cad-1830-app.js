@@ -69,65 +69,7 @@ const templateMainMenu =`
         <md-menu-item id="save-svg"><div slot="headline">Export Svg</div></md-menu-item>
         <!--md-menu-item id="print"><div slot="headline">PRINT</div></md-menu-item-->
     </md-menu>
-    <md-filled-button id="support-menu-anchor">SUPPORT</md-filled-button>
-    <md-menu has-overflow positioning="popover" id="support-menu" anchor="support-menu-anchor">
-        <!--md-menu-item id="point" ><div slot="headline">POINT</div></md-menu-item-->
-        <md-sub-menu>
-          <md-menu-item slot="item"><div slot="headline">LINE</div></md-menu-item>
-          <md-menu quick slot="menu" has-overflow positioning="popover" id="scale-menu">
-            <md-menu-item id="line-PP" ><div slot="headline">2 POINTS</div></md-menu-item>
-            <md-menu-item id="line-PXA" ><div slot="headline">X+ALFA</div></md-menu-item>
-            <md-menu-item id="line-PYA" ><div slot="headline">Y+ALFA</div></md-menu-item>
-            <md-menu-item id="line-PDA" ><div slot="headline">D+ALFA</div></md-menu-item>
-            <md-menu-item id="line-TPB" ><div slot="headline">TANG&POINT</div></md-menu-item>
-            <md-menu-item id="line-TBB" ><div slot="headline">TANG&BLOCK</div></md-menu-item>
-            <md-menu-item id="line-NP" ><div slot="headline">PERP</div></md-menu-item>
-          </md-menu>
-        </md-sub-menu>        
 
-        <md-sub-menu>
-          <md-menu-item slot="item"><div slot="headline">ARC</div></md-menu-item>
-          <md-menu quick slot="menu" has-overflow positioning="popover" id="scale-menu">
-            <md-menu-item id="arc-CPA" ><div slot="headline">C+1P+A</div></md-menu-item>
-            <md-menu-item id="arc-3P" ><div slot="headline">3 POINTS</div></md-menu-item>
-            <md-menu-item id="arc-2PR" ><div slot="headline">2 POINTS + R</div></md-menu-item>
-          </md-menu>
-        </md-sub-menu>        
-
-        <md-sub-menu>
-          <md-menu-item slot="item"><div slot="headline">CIRCLE</div></md-menu-item>
-          <md-menu quick slot="menu" has-overflow positioning="popover" id="circle-menu">
-            <md-menu-item id="circle-CP"><div  slot="headline">C + P</div></md-menu-item>
-            <md-menu-item id="circle-3P" ><div slot="headline">3 POINTS</div></md-menu-item>
-            <md-menu-item id="circle-2PR" ><div slot="headline">2 POINTS + R</div></md-menu-item>
-            <md-menu-item id="circle-CR" ><div slot="headline">C + R</div></md-menu-item>
-          </md-menu>
-        </md-sub-menu>
-
-        <md-menu-item id="path" ><div slot="headline">PATH</div></md-menu-item>
-        <md-menu-item id="poly"><div slot="headline">POLYGON</div></md-menu-item>
-        <md-menu-item id="gcode" ><div slot="headline">GCODE</div></md-menu-item>
-        <md-menu-item id="text" ><div slot="headline">TEXT</div></md-menu-item>
-        <md-menu-item id="biarc" ><div slot="headline">BIARC</div></md-menu-item>
-    </md-menu>
-    <md-filled-button id="transform-menu-anchor">TRANSFORM</md-filled-button>
-    <md-menu has-overflow positioning="popover" id="transform-menu" anchor="transform-menu-anchor">
-        <md-menu-item id="cut"><div slot="headline">CUT</div></md-menu-item>        
-        <md-menu-item id="link"><div slot="headline">LINK-UNLINK</div></md-menu-item>        
-        <md-menu-item id="translate"><div slot="headline">TRANSLATE</div></md-menu-item>    
-        <md-menu-item id="origin"><div slot="headline" >SET ORIGIN</div></md-menu-item>
-        <md-menu-item id="rotate"><div slot="headline" >ROTATE</div></md-menu-item>
-        <md-menu-item id="scale"><div slot="headline">SCALE</div></md-menu-item>
-        <md-sub-menu>
-          <md-menu-item slot="item"><div slot="headline">SYMMETRY</div></md-menu-item>
-          <md-menu slot="menu" has-overflow positioning="popover" id="simmetry-menu">
-            <md-menu-item id="symmetry-X"><div slot="headline">SIM-X</div></md-menu-item>
-            <md-menu-item id="symmetry-Y"><div slot="headline">SIM-Y</div></md-menu-item>
-            <md-menu-item id="symmetry-L"><div slot="headline">SIM-L</div></md-menu-item>
-          </md-menu>
-        </md-sub-menu>
-        <md-menu-item id="boolean"><div slot="headline">BOOLEAN</div></md-menu-item>
-    </md-menu>
     <md-filled-button id="settings-menu-anchor">SETTINGS</md-filled-button>
       <md-menu has-overflow positioning="popover" id="settings-menu" anchor="settings-menu-anchor">
         <md-menu-item id="settings-layer-style"><div slot="headline">Layers</div></md-menu-item>        
@@ -139,9 +81,8 @@ const templateMainMenu =`
 //tools y settings fijos
 const templateMeasure = `
 <div class="row" id='menu-measure'>
-MEASURE
-<input type="button" id='measure-block' value="BLOCK" class="_33"/>
-<input type="button" id='measure-p2p' value="P2P" class="_33"/>
+<input type="button" id='measure-block' value="MEAS. BLOCK" class="_50"/>
+<input type="button" id='measure-p2p' value="MEAS. P2P" class="_50"/>
 </div>`
 const templateZoom = `
 <div class="row" id='menu-zoom'>
@@ -158,17 +99,19 @@ const templateSelectInputData =`
 <div>
     
     <div id="menu-select" class="column">
-        <div>SELECT<span>Tolerance</span><input id="data-penWidth" type="number" value="1" max="5" min="0.5" step="0.5"/></div>
-        <div class="row">
-        <!--input type="button" class="_25" id="select-sel" value = "SEL"/-->
+      <div class="row">
+        <span class="_50">Select Tolerance</span><input class="_33" id="data-penWidth" type="number" value="1" max="5" min="0.5" step="0.5"/>
+      </div>
+      <div class="row">
+        <input type="button" class="_25" id="select-sel" value = "SEL"/>
         <input type="button" class="_25" id="select-all" value = "ALL"/>
         <input type="button" class="_25" id="select-invert" value = "INV"/>
         <input type="button" class="_25" id="select-del" value = "DEL"/>
       </div>
-      <div class="row">
+      <!--div class="row">
         <input type="button" class="_25" id="select-copy" value = "COPY"/>
         <input type="button" class="_25" id="select-paste" value = "PASTE"/>
-      </div>
+      </div-->
     </div>
 </div>
 `
@@ -178,6 +121,69 @@ const templateUndo = `
     <input type="button" id="redo" class="_50" value="REDO" />
 </div>
 `
+// const templateDraw = `<div id='drawing'>
+//   <div class="row">
+//     <input type="button" id="line" class="_25" value="LINE" />
+//     <input type="button" id="arc" class="_25" value="ARC" />
+//     <input type="button" id="circle" class="_25" value="CIRCLE" />
+//     <input type="button" id="path" class="_25" value="PATH" />
+//   </div>
+//   <div class="row">
+//     <input type="button" id="poly" class="_25" value="POLY" />
+//     <input type="button" id="gcode" class="_25" value="GCODE" />
+//     <input type="button" id="text" class="_25" value="TEXT" />
+//   </div>
+// </div>`
+const templateDrawOptions = `
+<div id='drawing-options'>
+    <div id="segments" class="column">
+      <div class="row">
+        <input type="button" id="line-PP" class="_25" value="L-P-P" />
+        <input type="button" id="line-PXA" class="_25" value="L-X-A" />
+        <input type="button" id="line-PYA" class="_25" value="L-Y-A" />
+        <input type="button" id="line-PDA" class="_25" value="L-D-A" />
+      </div>
+      <div class="row">
+        <input type="button" id="line-TPB" class="_25" value="L-P-B" />
+        <input type="button" id="line-TBB" class="_25" value="L-B-B" />
+        <input type="button" id="line-NP" class="_25" value="L-PERP" />
+      </div>
+    </div>
+    <div class="row" id="arcs">
+      <input type="button" id="arc-CPA" class="_33" value="A-O-P-A" />
+      <input type="button" id="arc-3P" class="_33" value="A-P-P-P" />
+      <input type="button" id="arc-2PR" class="_33" value="A-P-P-R" />
+    </div>
+    <div class="row" id="circles">
+      <input type="button" id="circle-CP" class="_25" value="C-O-P" />
+      <input type="button" id="circle-3P" class="_25" value ="C-P-P-P" />
+      <input type="button" id="circle-2PR" class="_25" value="C-P-P-R" />
+      <input type="button" id="circle-CR" class="_25" value="C-O-R" />  
+    </div>
+
+</div>`
+
+const templateTransform = `<div id='transform'>
+  <div class="row">
+    <input type="button" id="translate" class="_33" value="TRANSLATE" />
+    <input type="button" id="rotate" class="_33" value="ROTATE" />
+    <input type="button" id="scale" class="_33" value="SCALE" />
+  </div>
+  <div class="row">
+    <input type="button" id="symmetry-X" class="_33" value="SYM-X" />
+    <input type="button" id="symmetry-Y" class="_33" value="SYM-Y" />
+    <input type="button" id="symmetry-L" class="_33" value="SYM-L" />
+  </div>
+  <div class="row">
+    <input type="button" id="cut" class="_33" value="CUT" />
+    <input type="button" id="link-unlink" class="_33" value="LINK/UNLINK" />
+    <input type="button" id="origin" class="_33" value="ORIGIN" />
+  </div>
+  <div class="row">
+    <input type="button" id="boolean" class="_33" value="BOOLEAN" />
+  </div>
+</div>`
+
 const template = `
   <div id="full-screen" tabindex='1' class='column'>
     <div id="main-menu" class="row">${templateMainMenu}</div>
@@ -187,6 +193,8 @@ const template = `
       ${templateMeasure}
       ${templateUndo}
       ${templateSelectInputData} 
+      ${templateTransform}
+      ${templateDrawOptions}
       <cy-input-data-basic id="input-data"></cy-input-data-basic>
     </div>
     <cy-canvas-viewer id="viewer" tabindex="0"></cy-canvas-viewer></div>
@@ -207,7 +215,6 @@ const style = `
     font-size: 36px;
     background-color: lightblue;
 }
-
   #show-layers{
     width:100%;
     background-color: beige;
@@ -280,7 +287,7 @@ class cyCad1830App extends HTMLElement {
     this.manager =  createCommandManager( this.viewer.layerDraw, this ); // 
 
        //--------------MENUS
-    const menus = ['file', 'support', 'transform', 'settings' ]
+    const menus = ['file', 'settings' ]
     menus.forEach(m => this[m+'MenuEl'] = this.dom.querySelector(`#${m}-menu`));
     menus.forEach(m => {
         const el = this.dom.querySelector(`#${m}-menu-anchor`);
@@ -342,7 +349,7 @@ class cyCad1830App extends HTMLElement {
       const blocks = createDrawElement(e.detail.type, e.detail.data);
       commandBlockCreate(blocks);
   });
-//--------------------- ORIGIN  --------------------------------
+//--------------------- ORIGIN   COMANDO --------------------------------
 /**
  * el origen es un comanod chingo que afecta a la totalidad de la base de datos, incluidos los trees rbush
  * la alternativa es mantener un offset en cada elemento creado y tenerlo en cuenta al pintar, etc...
@@ -355,12 +362,14 @@ class cyCad1830App extends HTMLElement {
       const dx = e.detail.data.x0, dy =e.detail.data.y0
       commandChangeOrigin( dx, dy);
     });
+//--------------------- LINK-UNLINK COMANDO --------------------------------
     /**@listens link-unlink cuando se ejecuta de verdad el comando link o unlink definido de forma interactiva */
     //Los comandos en realidad no se ejecutan al accionar el menú sino cuando se dan por concluidas las partes interactivas
     this.addEventListener('link-unlink', e=>{
       //Aquí se debería hacer el comando link o unlink
       commandLinkUnlink( e.detail.mode, e.detail.data.tol);
       });
+//--------------------- BOOLEAN  COMANDOS ------------------------
     /**@listens boolean-op  para hacer operaciones con paths */
     // Para las and y or se admiten n paths, pero para not y xor solo 2
     this.addEventListener('boolean-op', e=>{
@@ -368,10 +377,8 @@ class cyCad1830App extends HTMLElement {
       //Aquí se debería hacer el comando propiamente dicho y guardar info de deshacer
       //En realidad hay comandos como el or y and que admiten más de dos parámetros, a decidir qué hacer
       commandBooleanOperation(e.detail.paths[0], e.detail.paths[1], e.detail.mode);
-      });
-
-       
-//--------------------- TRANSFORMACIONES   ------------------------  
+      });   
+//--------------------- TRANSFORMACIONES   COMANDOS ------------------------  
   this.addEventListener('geometry-transform',  (evt)=>{
       evt.stopPropagation();
       let op = evt.detail.command, mode = evt.detail.mode || '', data = evt.detail.data;
@@ -403,7 +410,6 @@ class cyCad1830App extends HTMLElement {
                 this.manager.redo();
             }
         })
-
 //----------------- SEL, ALL, INV, DEL -------- BOTONES
   /**select
    * Esto no está en el menú sino en la zona vertical
@@ -458,6 +464,109 @@ class cyCad1830App extends HTMLElement {
       this.registerInputApplications( new DrawMeasure(this.viewer.layerDraw, sub1) );
       this.mData.setActiveApplication( 'measure', sub1);
     })
+//---------------- TRANSFORM ------------------------- BOTONES 
+    this.dom.querySelector('#transform').addEventListener('click',(evt)=>{
+      this.dom.querySelectorAll('#transform input').forEach( btn => btn.classList.remove('active'));
+      evt.target.classList.add('active');
+      const [main, sub1, sub2] = evt.target.id.split('-');  
+      console.log(main, sub1, sub2);
+      switch(main){
+                case 'origin':{
+          this.registerInputApplications( new DrawOrigin(this.viewer.layerDraw, sub1) )
+          this.mData.setActiveApplication( 'transform', 'origin' );
+        }break;
+       /**
+         * El link debe unir tanto tramos sueltos como paths.
+        * @todo hacerlo interactivo pinchando bloque
+       */
+        case 'link':{
+          this.registerInputApplications( new DrawLink(this.viewer.layerDraw, sub1) )
+          this.mData.setActiveApplication( 'transform', `link`);
+          //this.viewer.layerDraw.link();
+        }
+        break;          
+        case 'symmetry':{
+          this.registerInputApplications( new DrawSymmetry(this.viewer.layerDraw, sub1) )
+          this.mData.setActiveApplication( 'transform', `symmetry${sub1}`);
+        }
+        break;
+        case 'cut':{
+          const selectedBlocks = this.viewer.layerDraw.getSelectedBlocks();
+          const cutPoints = findAllCuts(selectedBlocks);
+          commandCreateCutPoints(cutPoints); //ye un comando con undo
+        }
+        break;
+        case 'scale':{
+          this.registerInputApplications( new DrawScale(this.viewer.layerDraw, sub1))
+          this.mData.setActiveApplication( 'transform', 'scale' );
+        }
+        break;
+        case 'translate': {
+          this.registerInputApplications(  new DrawTranslate(this.viewer.layerDraw, sub1) )
+          this.mData.setActiveApplication( 'transform', 'translate' );
+        }
+        break;
+        case 'rotate':{
+          this.registerInputApplications(  new DrawRotate(this.viewer.layerDraw, sub1) )
+          this.mData.setActiveApplication( 'transform', 'rotate' );
+        }
+        break;
+        case 'boolean':{
+          this.registerInputApplications(  new DrawBoolean(this.viewer.layerDraw, sub1) )
+          this.mData.setActiveApplication( 'transform', 'boolean' );
+        }
+        break;        
+      }})
+//------------------------- DRAW  BOTONES ----------------------
+    this.dom.querySelector('#drawing-options').addEventListener('click',(evt)=>{
+      this.dom.querySelectorAll('#drawing-options input').forEach( btn => btn.classList.remove('active'));
+      evt.target.classList.add('active');
+      const [main, sub1, sub2] = evt.target.id.split('-');  
+      console.log(main, sub1, sub2);
+      switch(main){
+        case 'point':  break;
+        case 'line' :{
+          switch(sub1){ //agrupo acciones comunes
+            case 'NP':  this.registerInputApplications(this.drawingApp = new DrawNormal(this.viewer.layerDraw, sub1));    break;
+            case 'PP':
+            case 'PXA':
+            case 'PYA':
+            case 'PDA': this.registerInputApplications( new DrawSegment(this.viewer.layerDraw, sub1) );   break;
+            case 'TPB': this.registerInputApplications( new DrawSegmentPB(this.viewer.layerDraw, sub1)); break;
+            case 'TBB': this.registerInputApplications( new DrawSegmentBB(this.viewer.layerDraw, sub1)); break;
+          }
+          this.mData.setActiveApplication( 'segment', sub1 );
+        }
+        break;
+        case 'circle' :{
+          this.registerInputApplications(  new DrawCircle(this.viewer.layerDraw, sub1))
+          this.mData.setActiveApplication( 'circle', sub1 );
+        }
+        break;
+        case 'arc' :{
+          this.registerInputApplications( new DrawArc(this.viewer.layerDraw, sub1) )        
+          this.mData.setActiveApplication( 'arc', sub1 );
+        }
+        break;
+        case 'path':{
+          this.registerInputApplications( new DrawPath(this.viewer.layerDraw, sub1) )        
+          this.mData.setActiveApplication( 'path', sub1 );
+        } break;
+        case 'poly' :{ //quito el menú de tipo y lo pongo en el selector de input-data
+          this.registerInputApplications( new DrawPolygon(this.viewer.layerDraw, sub1) );
+          this.mData.setActiveApplication( 'polygon', sub1 );
+        } break;
+        case 'gcode' : {
+          this.registerInputApplications( new DrawGcode(this.viewer.layerDraw, '') )
+          this.mData.setActiveApplication( 'gcode', sub1 );
+        } break;
+        case 'text' : {
+          this.registerInputApplications( new DrawText(this.viewer.layerDraw, '') )
+          this.mData.setActiveApplication( 'text', sub1 );
+        } break;
+        default:break;
+      }
+      });
 
 //-----------------CREAR CAPAS INICIALES
     //Estas capas las generamos de oficio
@@ -469,7 +578,7 @@ class cyCad1830App extends HTMLElement {
       const layerData = commandLayerCreate()
     });   
 
-    } //END of connectedcallback
+  } //END of connectedcallback
 
     /**para poder llamarla desde la gestión de comandos desde donde solo queremos acceso al modelo y la app (esta) */
     translateOrigin = (dx, dy) => {
@@ -565,97 +674,8 @@ class cyCad1830App extends HTMLElement {
             }break;
           }
         }break;
-//---------------------------------------------------------
-//---------   TRANSFORMACIONES ---------------------------
-//---------------------------------------------------------
-        case 'origin':{
-          this.registerInputApplications( new DrawOrigin(this.viewer.layerDraw, sub1) )
-          this.mData.setActiveApplication( 'transform', 'origin' );
-        }break;
-       /**
-         * El link debe unir tanto tramos sueltos como paths.
-        * @todo hacerlo interactivo pinchando bloque
-       */
-        case 'link':{
-          this.registerInputApplications( new DrawLink(this.viewer.layerDraw, sub1) )
-          this.mData.setActiveApplication( 'transform', `link`);
-          //this.viewer.layerDraw.link();
+
         }
-        break;          
-        case 'symmetry':{
-          this.registerInputApplications( new DrawSymmetry(this.viewer.layerDraw, sub1) )
-          this.mData.setActiveApplication( 'transform', `symmetry${sub1}`);
-        }
-        break;
-        case 'cut':{
-          const selectedBlocks = this.viewer.layerDraw.getSelectedBlocks();
-          const cutPoints = findAllCuts(selectedBlocks);
-          commandCreateCutPoints(cutPoints); //ye un comando con undo
-        }
-        break;
-        case 'scale':{
-          this.registerInputApplications( new DrawScale(this.viewer.layerDraw, sub1))
-          this.mData.setActiveApplication( 'transform', 'scale' );
-        }
-        break;
-        case 'translate': {
-          this.registerInputApplications(  new DrawTranslate(this.viewer.layerDraw, sub1) )
-          this.mData.setActiveApplication( 'transform', 'translate' );
-        }
-        break;
-        case 'rotate':{
-          this.registerInputApplications(  new DrawRotate(this.viewer.layerDraw, sub1) )
-          this.mData.setActiveApplication( 'transform', 'rotate' );
-        }
-        break;
-        case 'boolean':{
-          this.registerInputApplications(  new DrawBoolean(this.viewer.layerDraw, sub1) )
-          this.mData.setActiveApplication( 'transform', 'boolean' );
-        }
-        break;        
-        //Los de support y transform los dejo en plano por no hacer más profundo el árbol
-        case 'point':  break;
-        case 'line' :{
-          switch(sub1){ //agrupo acciones comunes
-            case 'NP':  this.registerInputApplications(this.drawingApp = new DrawNormal(this.viewer.layerDraw, sub1));    break;
-            case 'PP':
-            case 'PXA':
-            case 'PYA':
-            case 'PDA': this.registerInputApplications( new DrawSegment(this.viewer.layerDraw, sub1) );   break;
-            case 'TPB': this.registerInputApplications( new DrawSegmentPB(this.viewer.layerDraw, sub1)); break;
-            case 'TBB': this.registerInputApplications( new DrawSegmentBB(this.viewer.layerDraw, sub1)); break;
-          }
-          this.mData.setActiveApplication( 'segment', sub1 );
-        }
-        break;
-        case 'circle' :{
-          this.registerInputApplications(  new DrawCircle(this.viewer.layerDraw, sub1))
-          this.mData.setActiveApplication( 'circle', sub1 );
-        }
-        break;
-        case 'arc' :{
-          this.registerInputApplications( new DrawArc(this.viewer.layerDraw, sub1) )        
-          this.mData.setActiveApplication( 'arc', sub1 );
-        }
-        break;
-        case 'path':{
-          this.registerInputApplications( new DrawPath(this.viewer.layerDraw, sub1) )        
-          this.mData.setActiveApplication( 'path', sub1 );
-        } break;
-        case 'poly' :{ //quito el menú de tipo y lo pongo en el selector de input-data
-          this.registerInputApplications( new DrawPolygon(this.viewer.layerDraw, sub1) );
-          this.mData.setActiveApplication( 'polygon', sub1 );
-        } break;
-        case 'gcode' : {
-          this.registerInputApplications( new DrawGcode(this.viewer.layerDraw, '') )
-          this.mData.setActiveApplication( 'gcode', sub1 );
-        } break;
-        case 'text' : {
-          this.registerInputApplications( new DrawText(this.viewer.layerDraw, '') )
-          this.mData.setActiveApplication( 'text', sub1 );
-        } break;
-        default:break;
-      }
     } 
     //Se supone que aquí se llama al desconectar la página, pero en laa aplicaciones no parece que pase
     disconnectedCallback() {
