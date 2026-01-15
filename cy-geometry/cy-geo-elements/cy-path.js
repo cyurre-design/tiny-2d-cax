@@ -109,7 +109,7 @@ export function pathOrientation(path){
 //ATTON, No toco el original en la función, eso queda para la aplicación, si quiere
 export function pathSetStartPoint(path, point){
     const startIx = path.elements.findIndex(el => fuzzy_eq_point(point, el.pi))
-    if(startIx === -1 ) return undefined;
+    if(startIx === -1 ) return path;    //lo deja como está
     //Aquí hay que ordenarlo pero sin cambiar el sentido, de hecho no cambia el bbox ni nada
     return createPath({elements:path.elements.slice(startIx).concat(path.elements.slice(0,startIx))})
 }
