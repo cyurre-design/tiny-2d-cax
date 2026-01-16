@@ -160,7 +160,12 @@ const templateDrawOptions = `
       <input type="button" id="circle-2PR" class="_25" value="C-P-P-R" />
       <input type="button" id="circle-CR" class="_25" value="C-O-R" />  
     </div>
-
+    <div class="row">
+      <input type="button" id="path" class="_25" value="PATH" />
+      <input type="button" id="poly" class="_25" value="POLY" />
+      <input type="button" id="gcode" class="_25" value="GCODE" />
+      <input type="button" id="text" class="_25" value="TEXT" />
+    </div>
 </div>`
 
 const templateTransform = `<div id='transform'>
