@@ -1,0 +1,7 @@
+*.pdf
+*.png
+*.nc
+./files/*.json
+./files/*.nc
+./obsoletos
+./documentacion

@@ -1,7 +1,7 @@
 "use strict";
 
-import Channel from "../obsoletos/fg-iso-code-read.js";
-import { createDrawElement } from '../cy-geometry/cy-geometry-basic-elements.js';
+import Channel from "../parsers/fg-iso-code-read.js";
+import { createDrawElement } from '../geometry/fg-geometry-drawn-elements.js';
 //YURRE: La semántica de las configuraciones es muy específica de ISO, está mejor aquí
 //Y al menos las "normales" deberían estar codificadas (por ejemplo en ascii :) )
 //configuración para lectura/escrituraISO:
@@ -48,89 +48,94 @@ export function isoToGeometry(isoProg, config = configM){
     //se podrían pasara solo los profiles, etc... a discutir
     //No testeo que viene todo porque viene de un filtro nuestro que es donde debe dar error
 function _convertIsoToGeometry(iso) {  //array de blocks con profile
-    let geo= {layers:[{name: "profile", paths:[], circles:[], blocks:[]}], errors:[]};         //una sola capa de nombre iso, ya se apañará luego
+    let geo= {layers:[{name: "profile", paths:[], circles:[]}], errors:[]};         //una sola capa de nombre iso, ya se apañará luego
     let elements = [];
     let geoElements = 0;
+    let box = {xmin:Infinity,ymin:Infinity,xmax:-Infinity,ymax:-Infinity};
+    function checkBox(x,y){
+        box.xmin = Math.min(x, box.xmin);
+        box.xmax = Math.max(x, box.xmax);
+        box.ymin = Math.min(y, box.ymin);
+        box.ymax = Math.max(y, box.ymax);
+    }
 
     iso.forEach(b => {
         let prf = b.profile;
         if (prf !== undefined) { //hay que no hacen nada
-            //let misc = {conditional: b.conditional, label: b.label, info: b.info, infoPostMov: b.infoPostMov,comments: b.comments, initPoint: b.initPoint};
+            let misc = {conditional: b.conditional, label: b.label, info: b.info, infoPostMov: b.infoPostMov,comments: b.comments, initPoint: b.initPoint};
             switch (prf.type) {
-                case 'point': //NO voy a guardar misceláneas ni F ni nada, no merece la pena, solo extremos la geometría
-                    //elements.push(createDrawElement('point', {x0: prf.x, y0: prf.y}, misc));
+                case 'point': //
+                    elements.push(createDrawElement('Point', {x: prf.x, y: prf.y}, misc));
                     break;
 
-                case 'move':    //G0, guardar el path creado hasta ahora y crear uno nuevo
+                case 'move':
                     if (geoElements !== 0) {
-                        if(geoElements > 1)
-                            geo.layers[0].paths.push(createDrawElement('path', {elements: elements}));
-                        else
-                            geo.layers[0].blocks.push(elements[0]);
+                        geo.layers[0].paths.push(createDrawElement('Path', {elements: elements}, misc));
                         elements = [];
                         geoElements = 0;
                     }
-                    //elements.push(createDrawElement('move', {x0: prf.xi, y0: prf.yi, x1: prf.xf, y1: prf.yf}, misc));
+                    elements.push(createDrawElement('Move', {x1: prf.xi, y1: prf.yi, x2: prf.xf, y2: prf.yf}, misc));
                     //geoElements++;//si o no???
                     break;
 
                 case 'line':
-                    elements.push(createDrawElement('segment', {subType: 'PP', x0: prf.xi, y0: prf.yi, x1: prf.xf, y1: prf.yf}));
+                    elements.push(createDrawElement('Line', {x1: prf.xi, y1: prf.yi, x2: prf.xf, y2: prf.yf}, misc));
                     geoElements++;
                     break;
 
                 case 'arc_clock':
                 case 'arc_antiClock':
+                    let r = Math.sqrt((prf.xi - prf.x0) * (prf.xi - prf.x0) + (prf.yi - prf.y0) * (prf.yi - prf.y0));
                     let arcWay = (prf.type === 'arc_clock') ? 'clock' : 'antiClock';
-                    elements.push(createDrawElement('arc', {subType:'way', cx: prf.x0, cy: prf.y0, x0: prf.xi, y0: prf.yi, x1: prf.xf, y1: prf.yf, way: arcWay}));
+                    elements.push(createDrawElement('Arc', {cx: prf.x0, cy: prf.y0, r: r, pi: {x: prf.xi, y: prf.yi}, pf: {x: prf.xf, y: prf.yf}, way: arcWay}, misc));
                     geoElements++;
                     break;
 
                 case 'arc_radius_clock':
                 case 'arc_radius_antiClock':
                     let arcRadiusWay = (prf.type === 'arc_radius_clock') ? 'clock' : 'antiClock';
-                    elements.push(createDrawElement('arc', {subType:'2PR', x0: prf.xi, y0: prf.yi, x1: prf.xf, y1: prf.yf, r: prf.r, way: arcRadiusWay, largeArcFlag: prf.largeArcFlag}));
+                    elements.push(createDrawElement('Arc2PointsAndRadius', {xi: prf.xi, yi: prf.yi, xf: prf.xf, yf: prf.yf, r: prf.r, way: arcRadiusWay, largeArcFlag: prf.largeArcFlag}, misc));
                     geoElements++;
                     break;
 
                 case 'arc_3Points':
-                    elements.push(createDrawElement('arc',{subType:'3P', x0: prf.xi, y0: prf.yi, xm: prf.xm, ym: prf.ym, x1: prf.xf, y1: prf.yf}));
+                    elements.push(createDrawElement('Arc3Points', {pi: {x: prf.xi, y: prf.yi}, pm: {x: prf.xm, y: prf.ym}, pf: {x: prf.xf, y: prf.yf}}, misc));
                     geoElements++;
                     break;
 
                 //TODO ESTA SIN PROBAR G08
-                // case 'arc_tangent':
-                //     if (elements.length < 1) {//no debería pasar nunca, claro, es error
-                //         geo.errors.push('G08: no previus block');
-                //         break;
-                //     }
-                //     let last = elements.slice(-1)[0]; //no modifica el array, cojo el bloque recién metido
-                //     if (last.type === 'segment') {
-                //         elements.push(createDrawElement('ArcTangentToLine', {p0: last.pi, pi: {x: prf.xi, y: prf.yi}, pf: {x: prf.xf, y: prf.yf}}, misc));
-                //     } else if(last.type === 'arc') {
-                //         elements.push(createDrawElement('ArcTangentToArc', {p0: last.p0, pathway: last.pathway, pi: {x: prf.xi, y: prf.yi}, pf: {x: prf.xf, y: prf.yf}}, misc));
-                //     } else {
-                //         geo.errors.push('G08: unknow previus block');
-                //     }
-                //     geoElements++;
-                //     break;
+                case 'arc_tangent':
+                    if (elements.length < 1) {//no debería pasar nunca, claro, es error
+                        geo.errors.push('G08: no previus block');
+                        break;
+                    }
+                    let last = elements.slice(-1)[0]; //no modifica el array, cojo el bloque recién metido
+                    if (last.type === 'segment') {
+                        elements.push(createDrawElement('ArcTangentToLine', {p0: last.pi, pi: {x: prf.xi, y: prf.yi}, pf: {x: prf.xf, y: prf.yf}}, misc));
+                    } else if(last.type === 'arc') {
+                        elements.push(createDrawElement('ArcTangentToArc', {p0: last.p0, pathway: last.pathway, pi: {x: prf.xi, y: prf.yi}, pf: {x: prf.xf, y: prf.yf}}, misc));
+                    } else {
+                        geo.errors.push('G08: unknow previus block');
+                    }
+                    geoElements++;
+                    break;
 
-                // case 'arc_round': //este no se resuelve ahora, pero debe entrar en el apartado de pendientes, igual que los chaflanes
-                //     elements.push(createDrawElement('round', {r: prf.r}, misc));
-                //     geoElements++;
-                //     break;
-                // case 'chamfer':
-                //     elements.push(createDrawElement('chamfer', {r: prf.r}, misc));
-                //     geoElements++;
-                //     break;
-                // case 'tangentialEntry'    :
-                //     elements.push(createDrawElement('tangentialEntry', {r: prf.r}, misc));
-                //     geoElements++;
-                //     break;
-                // case 'tangentialExit'    :
-                //     elements.push(createDrawElement('tangentialExit', {r: prf.r}, misc));
-                //     geoElements++;
-                //     break;
+                case 'arc_round': //este no se resuelve ahora, pero debe entrar en el apartado de pendientes, igual que los chaflanes
+                    elements.push(createDrawElement('round', {r: prf.r}, misc));
+                    geoElements++;
+                    break;
+                case 'chamfer':
+                    elements.push(createDrawElement('chamfer', {r: prf.r}, misc));
+                    geoElements++;
+                    break;
+                case 'tangentialEntry'    :
+                    elements.push(createDrawElement('tangentialEntry', {r: prf.r}, misc));
+                    geoElements++;
+                    break;
+                case 'tangentialExit'    :
+                    elements.push(createDrawElement('tangentialExit', {r: prf.r}, misc));
+                    geoElements++;
+                    break;
                 default: geo.errors.push('Unknow block');
                 break;
             }
@@ -138,9 +143,21 @@ function _convertIsoToGeometry(iso) {  //array de blocks con profile
     });
 
     if (elements.length) {
-        geo.layers[0].paths.push(createDrawElement('path', {elements: elements}));
+        geo.layers[0].paths.push(createDrawElement('Path', {elements: elements}));
     }
-     return (geo);
+    geo.layers[0].paths.forEach(p=>p.elements.forEach(el=>{
+        switch(el.type){
+            case 'arc':
+                checkBox(el.pm.x, el.pm.y); //fallthrough
+            case 'segment':
+                checkBox(el.pi.x, el.pi.y);
+                checkBox(el.pf.x, el.pf.y);
+                break;
+            default:break;
+        }
+    }))
+    geo.box = box;
+    return (geo);
 }
     //YURRE: para casa, paso cabecera, pre y post, que parece mucho más fácil de getsionar.
     // tal vez podría haber un pre y un post para los patrones...
@@ -153,9 +170,6 @@ function myRound(x) {
     return (Math.round(x * 10000) / 10000);
 }
 //Ya he quitado los moves y los puntos, solo geometría
-//Las entradas tangenciales, chaflanes, rounds... son cosas del CanvasCaptureMediaStreamTrack, no de la geometría
-//Deben estar en el ciclo que toque
-
 function yy_pathToIso(path={elements:[]}){
     let {_I, _J} = processConfig(configM);
     let {formatX, formatY} = strFormatCota(configM, false);
@@ -304,32 +318,32 @@ function processConfig(config){
         //     return (Math.round((x * 100000 / 25.4 )) / 100000);
         // }
         // const myRound = (config.units===70)?myRoundToInches:myRound;
-        // function formatLine(config, miscelanea, moveTxt, pretty=false){
-        //     let line = '';
+        function formatLine(config, miscelanea, moveTxt, pretty=false){
+            let line = '';
 
-        //     //la información adicional del bloque se añade en función de la configuración:
-        //     //none: no se añade información adicional
-        //     if((config.infoAux === undefined)||(config.infoAux === 'none'))
-        //         miscelanea = undefined;
-        //     //onlyMov: solo se añade en bloques de movimiento
-        //     else if((config.infoAux === 'onlyMov')&&(moveTxt.length === 0))
-        //         miscelanea = undefined;
-        //     //full: se añade toda la información
+            //la información adicional del bloque se añade en función de la configuración:
+            //none: no se añade información adicional
+            if((config.infoAux === undefined)||(config.infoAux === 'none'))
+                miscelanea = undefined;
+            //onlyMov: solo se añade en bloques de movimiento
+            else if((config.infoAux === 'onlyMov')&&(moveTxt.length === 0))
+                miscelanea = undefined;
+            //full: se añade toda la información
             
-        //     if(miscelanea !== undefined){
-        //         //comienzo de línea, si queremos, podemos poner aquí que el condicional o la etiqueta ocupen posición si no hay
-        //         //Por defecto, no formateamos?
-        //         line = `${miscelanea.conditional?miscelanea.conditional+' ':''}${miscelanea.label?miscelanea.label+' ':''}`;
-        //         line = line + moveTxt;
-        //         //line += `${miscelanea.info.length!==0?`${miscelanea.info.join(' ')}`:''}`;    //anidamiento de interpolated strings
-        //         line += `${miscelanea.infoPostMov.length!==0?miscelanea.infoPostMov :''}`
-        //         if(miscelanea.comments.length === 0) return(line.length===0?'':line+'\n');
-        //         if(pretty && line.length !== 0)
-        //             line = line.padEnd(50);
-        //         return( line + miscelanea.comments + '\n');
-        //     }
-        //     return(moveTxt.length===0?'':moveTxt+'\n'); //Si solo hay código...
-        // }
+            if(miscelanea !== undefined){
+                //comienzo de línea, si queremos, podemos poner aquí que el condicional o la etiqueta ocupen posición si no hay
+                //Por defecto, no formateamos?
+                line = `${miscelanea.conditional?miscelanea.conditional+' ':''}${miscelanea.label?miscelanea.label+' ':''}`;
+                line = line + moveTxt;
+                //line += `${miscelanea.info.length!==0?`${miscelanea.info.join(' ')}`:''}`;    //anidamiento de interpolated strings
+                line += `${miscelanea.infoPostMov.length!==0?miscelanea.infoPostMov :''}`
+                if(miscelanea.comments.length === 0) return(line.length===0?'':line+'\n');
+                if(pretty && line.length !== 0)
+                    line = line.padEnd(50);
+                return( line + miscelanea.comments + '\n');
+            }
+            return(moveTxt.length===0?'':moveTxt+'\n'); //Si solo hay código...
+        }
         
 
 

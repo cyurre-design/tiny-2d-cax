@@ -1,0 +1,2285 @@
+{
+  "project": {
+    "name": "unnamed",
+    "timestamp": 1766321621345
+  },
+  "model": {
+    "layers": [
+      {
+        "lyId": "L1",
+        "name": "Layer1",
+        "layerStyle": {
+          "pathColor": "green",
+          "pathWidth": 2,
+          "selectedColor": "yellow",
+          "selectedWidth": 3,
+          "printColor": "black",
+          "printWidth": 2,
+          "pointDimension": 3
+        },
+        "visible": true,
+        "erasable": true,
+        "nextBlockId": 1,
+        "blocks": []
+      },
+      {
+        "lyId": "L2",
+        "name": "profile",
+        "layerStyle": {
+          "pathColor": "green",
+          "pathWidth": 2,
+          "selectedColor": "yellow",
+          "selectedWidth": 3,
+          "printColor": "black",
+          "printWidth": 2,
+          "pointDimension": 3
+        },
+        "visible": true,
+        "erasable": true,
+        "nextBlockId": 129,
+        "blocks": [
+          {
+            "type": "path",
+            "elements": [
+              {
+                "type": "segment",
+                "x0": 52,
+                "y0": 0,
+                "x1": 47,
+                "y1": 0,
+                "pi": {
+                  "x": 52,
+                  "y": 0
+                },
+                "pf": {
+                  "x": 47,
+                  "y": 0
+                },
+                "d": 5,
+                "ux": -1,
+                "uy": 0,
+                "alfa": 180,
+                "c": 0,
+                "bbox": {
+                  "x0": 47,
+                  "y0": 0,
+                  "x1": 52,
+                  "y1": 0
+                }
+              },
+              {
+                "type": "segment",
+                "x0": 47,
+                "y0": 0,
+                "x1": 47,
+                "y1": 2,
+                "pi": {
+                  "x": 47,
+                  "y": 0
+                },
+                "pf": {
+                  "x": 47,
+                  "y": 2
+                },
+                "d": 2,
+                "ux": 0,
+                "uy": 1,
+                "alfa": 90,
+                "c": -47,
+                "bbox": {
+                  "x0": 47,
+                  "y0": 0,
+                  "x1": 47,
+                  "y1": 2
+                }
+              },
+              {
+                "type": "segment",
+                "x0": 47,
+                "y0": 2,
+                "x1": 42,
+                "y1": 2,
+                "pi": {
+                  "x": 47,
+                  "y": 2
+                },
+                "pf": {
+                  "x": 42,
+                  "y": 2
+                },
+                "d": 5,
+                "ux": -1,
+                "uy": 0,
+                "alfa": 180,
+                "c": -2,
+                "bbox": {
+                  "x0": 42,
+                  "y0": 2,
+                  "x1": 47,
+                  "y1": 2
+                }
+              },
+              {
+                "type": "segment",
+                "x0": 42,
+                "y0": 2,
+                "x1": 42,
+                "y1": 0,
+                "pi": {
+                  "x": 42,
+                  "y": 2
+                },
+                "pf": {
+                  "x": 42,
+                  "y": 0
+                },
+                "d": 2,
+                "ux": 0,
+                "uy": -1,
+                "alfa": -90,
+                "c": 42,
+                "bbox": {
+                  "x0": 42,
+                  "y0": 0,
+                  "x1": 42,
+                  "y1": 2
+                }
+              },
+              {
+                "type": "segment",
+                "x0": 42,
+                "y0": 0,
+                "x1": 36,
+                "y1": 0,
+                "pi": {
+                  "x": 42,
+                  "y": 0
+                },
+                "pf": {
+                  "x": 36,
+                  "y": 0
+                },
+                "d": 6,
+                "ux": -1,
+                "uy": 0,
+                "alfa": 180,
+                "c": 0,
+                "bbox": {
+                  "x0": 36,
+                  "y0": 0,
+                  "x1": 42,
+                  "y1": 0
+                }
+              },
+              {
+                "type": "segment",
+                "x0": 36,
+                "y0": 0,
+                "x1": 36,
+                "y1": 2,
+                "pi": {
+                  "x": 36,
+                  "y": 0
+                },
+                "pf": {
+                  "x": 36,
+                  "y": 2
+                },
+                "d": 2,
+                "ux": 0,
+                "uy": 1,
+                "alfa": 90,
+                "c": -36,
+                "bbox": {
+                  "x0": 36,
+                  "y0": 0,
+                  "x1": 36,
+                  "y1": 2
+                }
+              },
+              {
+                "type": "segment",
+                "x0": 36,
+                "y0": 2,
+                "x1": 33,
+                "y1": 2,
+                "pi": {
+                  "x": 36,
+                  "y": 2
+                },
+                "pf": {
+                  "x": 33,
+                  "y": 2
+                },
+                "d": 3,
+                "ux": -1,
+                "uy": 0,
+                "alfa": 180,
+                "c": -2,
+                "bbox": {
+                  "x0": 33,
+                  "y0": 2,
+                  "x1": 36,
+                  "y1": 2
+                }
+              },
+              {
+                "type": "segment",
+                "x0": 33,
+                "y0": 2,
+                "x1": 33,
+                "y1": 0,
+                "pi": {
+                  "x": 33,
+                  "y": 2
+                },
+                "pf": {
+                  "x": 33,
+                  "y": 0
+                },
+                "d": 2,
+                "ux": 0,
+                "uy": -1,
+                "alfa": -90,
+                "c": 33,
+                "bbox": {
+                  "x0": 33,
+                  "y0": 0,
+                  "x1": 33,
+                  "y1": 2
+                }
+              },
+              {
+                "type": "segment",
+                "x0": 33,
+                "y0": 0,
+                "x1": 27,
+                "y1": 0,
+                "pi": {
+                  "x": 33,
+                  "y": 0
+                },
+                "pf": {
+                  "x": 27,
+                  "y": 0
+                },
+                "d": 6,
+                "ux": -1,
+                "uy": 0,
+                "alfa": 180,
+                "c": 0,
+                "bbox": {
+                  "x0": 27,
+                  "y0": 0,
+                  "x1": 33,
+                  "y1": 0
+                }
+              },
+              {
+                "type": "segment",
+                "x0": 27,
+                "y0": 0,
+                "x1": 27,
+                "y1": 2,
+                "pi": {
+                  "x": 27,
+                  "y": 0
+                },
+                "pf": {
+                  "x": 27,
+                  "y": 2
+                },
+                "d": 2,
+                "ux": 0,
+                "uy": 1,
+                "alfa": 90,
+                "c": -27,
+                "bbox": {
+                  "x0": 27,
+                  "y0": 0,
+                  "x1": 27,
+                  "y1": 2
+                }
+              },
+              {
+                "type": "segment",
+                "x0": 27,
+                "y0": 2,
+                "x1": 22,
+                "y1": 2,
+                "pi": {
+                  "x": 27,
+                  "y": 2
+                },
+                "pf": {
+                  "x": 22,
+                  "y": 2
+                },
+                "d": 5,
+                "ux": -1,
+                "uy": 0,
+                "alfa": 180,
+                "c": -2,
+                "bbox": {
+                  "x0": 22,
+                  "y0": 2,
+                  "x1": 27,
+                  "y1": 2
+                }
+              },
+              {
+                "type": "segment",
+                "x0": 22,
+                "y0": 2,
+                "x1": 22,
+                "y1": 0,
+                "pi": {
+                  "x": 22,
+                  "y": 2
+                },
+                "pf": {
+                  "x": 22,
+                  "y": 0
+                },
+                "d": 2,
+                "ux": 0,
+                "uy": -1,
+                "alfa": -90,
+                "c": 22,
+                "bbox": {
+                  "x0": 22,
+                  "y0": 0,
+                  "x1": 22,
+                  "y1": 2
+                }
+              },
+              {
+                "type": "segment",
+                "x0": 22,
+                "y0": 0,
+                "x1": 17,
+                "y1": 0,
+                "pi": {
+                  "x": 22,
+                  "y": 0
+                },
+                "pf": {
+                  "x": 17,
+                  "y": 0
+                },
+                "d": 5,
+                "ux": -1,
+                "uy": 0,
+                "alfa": 180,
+                "c": 0,
+                "bbox": {
+                  "x0": 17,
+                  "y0": 0,
+                  "x1": 22,
+                  "y1": 0
+                }
+              },
+              {
+                "type": "arc",
+                "pi": {
+                  "x": 17,
+                  "y": 0
+                },
+                "pf": {
+                  "x": 0,
+                  "y": 40
+                },
+                "cx": 59.97069455616691,
+                "cy": 41.87504518637094,
+                "x1": 17,
+                "y1": 0,
+                "x2": 0,
+                "y2": 40,
+                "way": "clock",
+                "r": 60,
+                "fS": 1,
+                "fA": 0,
+                "ai": -2.3691072006825635,
+                "da": -0.7412296109335461,
+                "bbox": {
+                  "x0": 0,
+                  "y0": 0,
+                  "x1": 17,
+                  "y1": 40
+                },
+                "data": {
+                  "id": "B57",
+                  "lyId": "L2",
+                  "canvasPath": {},
+                  "points": [
+                    {
+                      "x0": 59.97069455616691,
+                      "y0": 41.87504518637094,
+                      "type": "point",
+                      "data": {
+                        "lyId": "L2",
+                        "id": "P58",
+                        "canvasPath": {},
+                        "tree": {
+                          "minX": 59.97069455616691,
+                          "maxX": 59.97069455616691,
+                          "minY": 41.87504518637094,
+                          "maxY": 41.87504518637094
+                        }
+                      }
+                    },
+                    {
+                      "x0": 17,
+                      "y0": 0,
+                      "type": "point",
+                      "data": {
+                        "lyId": "L2",
+                        "id": "P59",
+                        "canvasPath": {},
+                        "tree": {
+                          "minX": 17,
+                          "maxX": 17,
+                          "minY": 0,
+                          "maxY": 0
+                        }
+                      }
+                    },
+                    {
+                      "x0": 0,
+                      "y0": 40,
+                      "type": "point",
+                      "data": {
+                        "lyId": "L2",
+                        "id": "P60",
+                        "canvasPath": {},
+                        "tree": {
+                          "minX": 0,
+                          "maxX": 0,
+                          "minY": 40,
+                          "maxY": 40
+                        }
+                      }
+                    }
+                  ],
+                  "tree": {
+                    "minX": 0,
+                    "minY": 0,
+                    "maxX": 17,
+                    "maxY": 40,
+                    "id": "B57",
+                    "lyId": "L2"
+                  }
+                }
+              },
+              {
+                "type": "segment",
+                "x0": 0,
+                "y0": 40,
+                "x1": 3,
+                "y1": 40,
+                "pi": {
+                  "x": 0,
+                  "y": 40
+                },
+                "pf": {
+                  "x": 3,
+                  "y": 40
+                },
+                "d": 3,
+                "ux": 1,
+                "uy": 0,
+                "alfa": 0,
+                "c": 40,
+                "bbox": {
+                  "x0": 0,
+                  "y0": 40,
+                  "x1": 3,
+                  "y1": 40
+                }
+              },
+              {
+                "type": "segment",
+                "x0": 3,
+                "y0": 40,
+                "x1": 3,
+                "y1": 35,
+                "pi": {
+                  "x": 3,
+                  "y": 40
+                },
+                "pf": {
+                  "x": 3,
+                  "y": 35
+                },
+                "d": 5,
+                "ux": 0,
+                "uy": -1,
+                "alfa": -90,
+                "c": 3,
+                "bbox": {
+                  "x0": 3,
+                  "y0": 35,
+                  "x1": 3,
+                  "y1": 40
+                }
+              },
+              {
+                "type": "segment",
+                "x0": 3,
+                "y0": 35,
+                "x1": 5,
+                "y1": 35,
+                "pi": {
+                  "x": 3,
+                  "y": 35
+                },
+                "pf": {
+                  "x": 5,
+                  "y": 35
+                },
+                "d": 2,
+                "ux": 1,
+                "uy": 0,
+                "alfa": 0,
+                "c": 35,
+                "bbox": {
+                  "x0": 3,
+                  "y0": 35,
+                  "x1": 5,
+                  "y1": 35
+                }
+              },
+              {
+                "type": "arc",
+                "pi": {
+                  "x": 5,
+                  "y": 35
+                },
+                "pf": {
+                  "x": 19.398884942700718,
+                  "y": 4.152747125533074
+                },
+                "cx": 64.33445015845166,
+                "cy": 43.91195962705271,
+                "x1": 5,
+                "y1": 35,
+                "x2": 19.398884942700718,
+                "y2": 4.152747125533074,
+                "way": "antiClock",
+                "r": 60,
+                "fS": 0,
+                "fA": 0,
+                "ai": -2.9925083453188175,
+                "da": 0.5752720524269606,
+                "bbox": {
+                  "x0": 5,
+                  "y0": 4.152747125533074,
+                  "x1": 19.398884942700718,
+                  "y1": 35
+                }
+              },
+              {
+                "type": "segment",
+                "x0": 19.398884942700718,
+                "y0": 4.152747125533074,
+                "x1": 49.822534984506014,
+                "y1": 4.392303425074847,
+                "pi": {
+                  "x": 19.398884942700718,
+                  "y": 4.152747125533074
+                },
+                "pf": {
+                  "x": 49.822534984506014,
+                  "y": 4.392303425074847
+                },
+                "d": 30.424593162224692,
+                "ux": 0.9999690013794312,
+                "uy": 0.007873771664404939,
+                "alfa": 0.4511385467872794,
+                "c": 3.9998760055177236,
+                "bbox": {
+                  "x0": 19.398884942700718,
+                  "y0": 4.152747125533074,
+                  "x1": 49.822534984506014,
+                  "y1": 4.392303425074847
+                }
+              },
+              {
+                "type": "arc",
+                "pi": {
+                  "x": 49.822534984506014,
+                  "y": 4.392303425074847
+                },
+                "pf": {
+                  "x": 64,
+                  "y": 35
+                },
+                "cx": 4.663357262028576,
+                "cy": 43.89734952591743,
+                "x1": 49.822534984506014,
+                "y1": 4.392303425074847,
+                "x2": 64,
+                "y2": 35,
+                "way": "antiClock",
+                "r": 60,
+                "fS": 0,
+                "fA": 0,
+                "ai": -0.7187141729715357,
+                "da": 0.5698760931746545,
+                "bbox": {
+                  "x0": 49.822534984506014,
+                  "y0": 4.392303425074847,
+                  "x1": 64,
+                  "y1": 35
+                }
+              },
+              {
+                "type": "segment",
+                "x0": 64,
+                "y0": 35,
+                "x1": 66,
+                "y1": 35,
+                "pi": {
+                  "x": 64,
+                  "y": 35
+                },
+                "pf": {
+                  "x": 66,
+                  "y": 35
+                },
+                "d": 2,
+                "ux": 1,
+                "uy": 0,
+                "alfa": 0,
+                "c": 35,
+                "bbox": {
+                  "x0": 64,
+                  "y0": 35,
+                  "x1": 66,
+                  "y1": 35
+                }
+              },
+              {
+                "type": "segment",
+                "x0": 66,
+                "y0": 35,
+                "x1": 66,
+                "y1": 40,
+                "pi": {
+                  "x": 66,
+                  "y": 35
+                },
+                "pf": {
+                  "x": 66,
+                  "y": 40
+                },
+                "d": 5,
+                "ux": 0,
+                "uy": 1,
+                "alfa": 90,
+                "c": -66,
+                "bbox": {
+                  "x0": 66,
+                  "y0": 35,
+                  "x1": 66,
+                  "y1": 40
+                }
+              },
+              {
+                "type": "segment",
+                "x0": 66,
+                "y0": 40,
+                "x1": 69,
+                "y1": 40,
+                "pi": {
+                  "x": 66,
+                  "y": 40
+                },
+                "pf": {
+                  "x": 69,
+                  "y": 40
+                },
+                "d": 3,
+                "ux": 1,
+                "uy": 0,
+                "alfa": 0,
+                "c": 40,
+                "bbox": {
+                  "x0": 66,
+                  "y0": 40,
+                  "x1": 69,
+                  "y1": 40
+                }
+              },
+              {
+                "type": "arc",
+                "pi": {
+                  "x": 69,
+                  "y": 40
+                },
+                "pf": {
+                  "x": 52,
+                  "y": 0
+                },
+                "cx": 9.029305443833088,
+                "cy": 41.87504518637094,
+                "x1": 69,
+                "y1": 40,
+                "x2": 52,
+                "y2": 0,
+                "way": "clock",
+                "r": 60,
+                "fS": 1,
+                "fA": 0,
+                "ai": -0.03125584197368354,
+                "da": -0.7412296109335461,
+                "bbox": {
+                  "x0": 52,
+                  "y0": 0,
+                  "x1": 69,
+                  "y1": 40
+                },
+                "data": {
+                  "id": "B69",
+                  "lyId": "L2",
+                  "canvasPath": {},
+                  "points": [
+                    {
+                      "x0": 9.029305443833088,
+                      "y0": 41.87504518637094,
+                      "type": "point",
+                      "data": {
+                        "lyId": "L2",
+                        "id": "P70",
+                        "canvasPath": {},
+                        "tree": {
+                          "minX": 9.029305443833088,
+                          "maxX": 9.029305443833088,
+                          "minY": 41.87504518637094,
+                          "maxY": 41.87504518637094
+                        }
+                      }
+                    },
+                    {
+                      "x0": 69,
+                      "y0": 40,
+                      "type": "point",
+                      "data": {
+                        "lyId": "L2",
+                        "id": "P71",
+                        "canvasPath": {},
+                        "tree": {
+                          "minX": 69,
+                          "maxX": 69,
+                          "minY": 40,
+                          "maxY": 40
+                        }
+                      }
+                    },
+                    {
+                      "x0": 52,
+                      "y0": 0,
+                      "type": "point",
+                      "data": {
+                        "lyId": "L2",
+                        "id": "P72",
+                        "canvasPath": {},
+                        "tree": {
+                          "minX": 52,
+                          "maxX": 52,
+                          "minY": 0,
+                          "maxY": 0
+                        }
+                      }
+                    }
+                  ],
+                  "tree": {
+                    "minX": 52,
+                    "minY": 0,
+                    "maxX": 69,
+                    "maxY": 40,
+                    "id": "B69",
+                    "lyId": "L2"
+                  }
+                }
+              }
+            ],
+            "pi": {
+              "x": 52,
+              "y": 0
+            },
+            "pf": {
+              "x": 52,
+              "y": 0
+            },
+            "bbox": {
+              "x0": 0,
+              "y0": 0,
+              "x1": 69,
+              "y1": 40
+            },
+            "data": {
+              "id": "B76",
+              "lyId": "L2",
+              "canvasPath": {},
+              "points": [
+                {
+                  "x0": 52,
+                  "y0": 0,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P77",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 52,
+                      "maxX": 52,
+                      "minY": 0,
+                      "maxY": 0
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 47,
+                  "y0": 0,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P78",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 47,
+                      "maxX": 47,
+                      "minY": 0,
+                      "maxY": 0
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 47,
+                  "y0": 0,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P79",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 47,
+                      "maxX": 47,
+                      "minY": 0,
+                      "maxY": 0
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 47,
+                  "y0": 2,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P80",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 47,
+                      "maxX": 47,
+                      "minY": 2,
+                      "maxY": 2
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 47,
+                  "y0": 2,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P81",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 47,
+                      "maxX": 47,
+                      "minY": 2,
+                      "maxY": 2
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 42,
+                  "y0": 2,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P82",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 42,
+                      "maxX": 42,
+                      "minY": 2,
+                      "maxY": 2
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 42,
+                  "y0": 2,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P83",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 42,
+                      "maxX": 42,
+                      "minY": 2,
+                      "maxY": 2
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 42,
+                  "y0": 0,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P84",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 42,
+                      "maxX": 42,
+                      "minY": 0,
+                      "maxY": 0
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 42,
+                  "y0": 0,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P85",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 42,
+                      "maxX": 42,
+                      "minY": 0,
+                      "maxY": 0
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 36,
+                  "y0": 0,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P86",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 36,
+                      "maxX": 36,
+                      "minY": 0,
+                      "maxY": 0
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 36,
+                  "y0": 0,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P87",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 36,
+                      "maxX": 36,
+                      "minY": 0,
+                      "maxY": 0
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 36,
+                  "y0": 2,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P88",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 36,
+                      "maxX": 36,
+                      "minY": 2,
+                      "maxY": 2
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 36,
+                  "y0": 2,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P89",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 36,
+                      "maxX": 36,
+                      "minY": 2,
+                      "maxY": 2
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 33,
+                  "y0": 2,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P90",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 33,
+                      "maxX": 33,
+                      "minY": 2,
+                      "maxY": 2
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 33,
+                  "y0": 2,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P91",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 33,
+                      "maxX": 33,
+                      "minY": 2,
+                      "maxY": 2
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 33,
+                  "y0": 0,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P92",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 33,
+                      "maxX": 33,
+                      "minY": 0,
+                      "maxY": 0
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 33,
+                  "y0": 0,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P93",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 33,
+                      "maxX": 33,
+                      "minY": 0,
+                      "maxY": 0
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 27,
+                  "y0": 0,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P94",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 27,
+                      "maxX": 27,
+                      "minY": 0,
+                      "maxY": 0
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 27,
+                  "y0": 0,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P95",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 27,
+                      "maxX": 27,
+                      "minY": 0,
+                      "maxY": 0
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 27,
+                  "y0": 2,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P96",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 27,
+                      "maxX": 27,
+                      "minY": 2,
+                      "maxY": 2
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 27,
+                  "y0": 2,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P97",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 27,
+                      "maxX": 27,
+                      "minY": 2,
+                      "maxY": 2
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 22,
+                  "y0": 2,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P98",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 22,
+                      "maxX": 22,
+                      "minY": 2,
+                      "maxY": 2
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 22,
+                  "y0": 2,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P99",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 22,
+                      "maxX": 22,
+                      "minY": 2,
+                      "maxY": 2
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 22,
+                  "y0": 0,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P100",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 22,
+                      "maxX": 22,
+                      "minY": 0,
+                      "maxY": 0
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 22,
+                  "y0": 0,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P101",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 22,
+                      "maxX": 22,
+                      "minY": 0,
+                      "maxY": 0
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 17,
+                  "y0": 0,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P102",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 17,
+                      "maxX": 17,
+                      "minY": 0,
+                      "maxY": 0
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 59.97069455616691,
+                  "y0": 41.87504518637094,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P103",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 59.97069455616691,
+                      "maxX": 59.97069455616691,
+                      "minY": 41.87504518637094,
+                      "maxY": 41.87504518637094
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 17,
+                  "y0": 0,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P104",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 17,
+                      "maxX": 17,
+                      "minY": 0,
+                      "maxY": 0
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 0,
+                  "y0": 40,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P105",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 0,
+                      "maxX": 0,
+                      "minY": 40,
+                      "maxY": 40
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 0,
+                  "y0": 40,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P106",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 0,
+                      "maxX": 0,
+                      "minY": 40,
+                      "maxY": 40
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 3,
+                  "y0": 40,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P107",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 3,
+                      "maxX": 3,
+                      "minY": 40,
+                      "maxY": 40
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 3,
+                  "y0": 40,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P108",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 3,
+                      "maxX": 3,
+                      "minY": 40,
+                      "maxY": 40
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 3,
+                  "y0": 35,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P109",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 3,
+                      "maxX": 3,
+                      "minY": 35,
+                      "maxY": 35
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 3,
+                  "y0": 35,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P110",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 3,
+                      "maxX": 3,
+                      "minY": 35,
+                      "maxY": 35
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 5,
+                  "y0": 35,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P111",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 5,
+                      "maxX": 5,
+                      "minY": 35,
+                      "maxY": 35
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 64.33445015845166,
+                  "y0": 43.91195962705271,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P112",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 64.33445015845166,
+                      "maxX": 64.33445015845166,
+                      "minY": 43.91195962705271,
+                      "maxY": 43.91195962705271
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 5,
+                  "y0": 35,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P113",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 5,
+                      "maxX": 5,
+                      "minY": 35,
+                      "maxY": 35
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 19.398884942700718,
+                  "y0": 4.152747125533074,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P114",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 19.398884942700718,
+                      "maxX": 19.398884942700718,
+                      "minY": 4.152747125533074,
+                      "maxY": 4.152747125533074
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 19.398884942700718,
+                  "y0": 4.152747125533074,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P115",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 19.398884942700718,
+                      "maxX": 19.398884942700718,
+                      "minY": 4.152747125533074,
+                      "maxY": 4.152747125533074
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 49.822534984506014,
+                  "y0": 4.392303425074847,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P116",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 49.822534984506014,
+                      "maxX": 49.822534984506014,
+                      "minY": 4.392303425074847,
+                      "maxY": 4.392303425074847
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 4.663357262028576,
+                  "y0": 43.89734952591743,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P117",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 4.663357262028576,
+                      "maxX": 4.663357262028576,
+                      "minY": 43.89734952591743,
+                      "maxY": 43.89734952591743
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 49.822534984506014,
+                  "y0": 4.392303425074847,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P118",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 49.822534984506014,
+                      "maxX": 49.822534984506014,
+                      "minY": 4.392303425074847,
+                      "maxY": 4.392303425074847
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 64,
+                  "y0": 35,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P119",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 64,
+                      "maxX": 64,
+                      "minY": 35,
+                      "maxY": 35
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 64,
+                  "y0": 35,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P120",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 64,
+                      "maxX": 64,
+                      "minY": 35,
+                      "maxY": 35
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 66,
+                  "y0": 35,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P121",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 66,
+                      "maxX": 66,
+                      "minY": 35,
+                      "maxY": 35
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 66,
+                  "y0": 35,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P122",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 66,
+                      "maxX": 66,
+                      "minY": 35,
+                      "maxY": 35
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 66,
+                  "y0": 40,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P123",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 66,
+                      "maxX": 66,
+                      "minY": 40,
+                      "maxY": 40
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 66,
+                  "y0": 40,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P124",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 66,
+                      "maxX": 66,
+                      "minY": 40,
+                      "maxY": 40
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 69,
+                  "y0": 40,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P125",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 69,
+                      "maxX": 69,
+                      "minY": 40,
+                      "maxY": 40
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 9.029305443833088,
+                  "y0": 41.87504518637094,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P126",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 9.029305443833088,
+                      "maxX": 9.029305443833088,
+                      "minY": 41.87504518637094,
+                      "maxY": 41.87504518637094
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 69,
+                  "y0": 40,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P127",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 69,
+                      "maxX": 69,
+                      "minY": 40,
+                      "maxY": 40
+                    }
+                  },
+                  "canvasPath": {}
+                },
+                {
+                  "x0": 52,
+                  "y0": 0,
+                  "type": "point",
+                  "data": {
+                    "lyId": "L2",
+                    "id": "P128",
+                    "canvasPath": {},
+                    "tree": {
+                      "minX": 52,
+                      "maxX": 52,
+                      "minY": 0,
+                      "maxY": 0
+                    }
+                  },
+                  "canvasPath": {}
+                }
+              ],
+              "tree": {
+                "minX": 0,
+                "minY": 0,
+                "maxX": 69,
+                "maxY": 40,
+                "id": "B76",
+                "lyId": "L2"
+              }
+            },
+            "hover": false
+          }
+        ]
+      }
+    ],
+    "nextLayerId": 3,
+    "_activeLayerId": "L2",
+    "cutPoints": [
+      {
+        "type": "cut-point",
+        "x0": 34.5,
+        "y0": 91.0714599452585,
+        "data": {
+          "canvasPath": {},
+          "id": "CP1",
+          "tree": {
+            "minX": 34.5,
+            "maxX": 34.5,
+            "minY": 91.0714599452585,
+            "maxY": 91.0714599452585
+          }
+        }
+      },
+      {
+        "type": "cut-point",
+        "x0": 34.5,
+        "y0": -7.321369572516616,
+        "data": {
+          "canvasPath": {},
+          "id": "CP2",
+          "tree": {
+            "minX": 34.5,
+            "maxX": 34.5,
+            "minY": -7.321369572516616,
+            "maxY": -7.321369572516616
+          }
+        }
+      },
+      {
+        "type": "cut-point",
+        "x0": 19.398884942700718,
+        "y0": 4.152747125533074,
+        "data": {
+          "canvasPath": {},
+          "id": "CP3",
+          "tree": {
+            "minX": 19.398884942700718,
+            "maxX": 19.398884942700718,
+            "minY": 4.152747125533074,
+            "maxY": 4.152747125533074
+          }
+        }
+      },
+      {
+        "type": "cut-point",
+        "x0": 49.822534984506014,
+        "y0": 4.392303425074847,
+        "data": {
+          "canvasPath": {},
+          "id": "CP4",
+          "tree": {
+            "minX": 49.822534984506014,
+            "maxX": 49.822534984506014,
+            "minY": 4.392303425074847,
+            "maxY": 4.392303425074847
+          }
+        }
+      }
+    ],
+    "nextPointId": 5,
+    "pointsTree": {
+      "children": [
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "minX": 0,
+                  "maxX": 0,
+                  "minY": 40,
+                  "maxY": 40
+                },
+                {
+                  "minX": 0,
+                  "maxX": 0,
+                  "minY": 40,
+                  "maxY": 40
+                },
+                {
+                  "minX": 3,
+                  "maxX": 3,
+                  "minY": 35,
+                  "maxY": 35
+                },
+                {
+                  "minX": 3,
+                  "maxX": 3,
+                  "minY": 35,
+                  "maxY": 35
+                },
+                {
+                  "minX": 3,
+                  "maxX": 3,
+                  "minY": 40,
+                  "maxY": 40
+                },
+                {
+                  "minX": 3,
+                  "maxX": 3,
+                  "minY": 40,
+                  "maxY": 40
+                },
+                {
+                  "minX": 4.663357262028576,
+                  "maxX": 4.663357262028576,
+                  "minY": 43.89734952591743,
+                  "maxY": 43.89734952591743
+                },
+                {
+                  "minX": 9.029305443833088,
+                  "maxX": 9.029305443833088,
+                  "minY": 41.87504518637094,
+                  "maxY": 41.87504518637094
+                }
+              ],
+              "height": 1,
+              "leaf": true,
+              "minX": 0,
+              "minY": 35,
+              "maxX": 9.029305443833088,
+              "maxY": 43.89734952591743
+            },
+            {
+              "children": [
+                {
+                  "minX": 47,
+                  "maxX": 47,
+                  "minY": 0,
+                  "maxY": 0
+                },
+                {
+                  "minX": 47,
+                  "maxX": 47,
+                  "minY": 0,
+                  "maxY": 0
+                },
+                {
+                  "minX": 47,
+                  "maxX": 47,
+                  "minY": 2,
+                  "maxY": 2
+                },
+                {
+                  "minX": 47,
+                  "maxX": 47,
+                  "minY": 2,
+                  "maxY": 2
+                },
+                {
+                  "minX": 52,
+                  "maxX": 52,
+                  "minY": 0,
+                  "maxY": 0
+                },
+                {
+                  "minX": 49.822534984506014,
+                  "maxX": 49.822534984506014,
+                  "minY": 4.392303425074847,
+                  "maxY": 4.392303425074847
+                },
+                {
+                  "minX": 49.822534984506014,
+                  "maxX": 49.822534984506014,
+                  "minY": 4.392303425074847,
+                  "maxY": 4.392303425074847
+                },
+                {
+                  "minX": 52,
+                  "maxX": 52,
+                  "minY": 0,
+                  "maxY": 0
+                }
+              ],
+              "height": 1,
+              "leaf": true,
+              "minX": 47,
+              "minY": 0,
+              "maxX": 52,
+              "maxY": 4.392303425074847
+            },
+            {
+              "children": [
+                {
+                  "minX": 42,
+                  "maxX": 42,
+                  "minY": 0,
+                  "maxY": 0
+                },
+                {
+                  "minX": 42,
+                  "maxX": 42,
+                  "minY": 0,
+                  "maxY": 0
+                },
+                {
+                  "minX": 42,
+                  "maxX": 42,
+                  "minY": 2,
+                  "maxY": 2
+                },
+                {
+                  "minX": 42,
+                  "maxX": 42,
+                  "minY": 2,
+                  "maxY": 2
+                }
+              ],
+              "height": 1,
+              "leaf": true,
+              "minX": 42,
+              "minY": 0,
+              "maxX": 42,
+              "maxY": 2
+            },
+            {
+              "children": [
+                {
+                  "minX": 36,
+                  "maxX": 36,
+                  "minY": 0,
+                  "maxY": 0
+                },
+                {
+                  "minX": 36,
+                  "maxX": 36,
+                  "minY": 0,
+                  "maxY": 0
+                },
+                {
+                  "minX": 36,
+                  "maxX": 36,
+                  "minY": 2,
+                  "maxY": 2
+                },
+                {
+                  "minX": 36,
+                  "maxX": 36,
+                  "minY": 2,
+                  "maxY": 2
+                }
+              ],
+              "height": 1,
+              "leaf": true,
+              "minX": 36,
+              "minY": 0,
+              "maxX": 36,
+              "maxY": 2
+            },
+            {
+              "children": [
+                {
+                  "minX": 33,
+                  "maxX": 33,
+                  "minY": 0,
+                  "maxY": 0
+                },
+                {
+                  "minX": 33,
+                  "maxX": 33,
+                  "minY": 0,
+                  "maxY": 0
+                },
+                {
+                  "minX": 33,
+                  "maxX": 33,
+                  "minY": 2,
+                  "maxY": 2
+                },
+                {
+                  "minX": 33,
+                  "maxX": 33,
+                  "minY": 2,
+                  "maxY": 2
+                }
+              ],
+              "height": 1,
+              "leaf": true,
+              "minX": 33,
+              "minY": 0,
+              "maxX": 33,
+              "maxY": 2
+            },
+            {
+              "children": [
+                {
+                  "minX": 27,
+                  "maxX": 27,
+                  "minY": 0,
+                  "maxY": 0
+                },
+                {
+                  "minX": 27,
+                  "maxX": 27,
+                  "minY": 0,
+                  "maxY": 0
+                },
+                {
+                  "minX": 27,
+                  "maxX": 27,
+                  "minY": 2,
+                  "maxY": 2
+                },
+                {
+                  "minX": 27,
+                  "maxX": 27,
+                  "minY": 2,
+                  "maxY": 2
+                }
+              ],
+              "height": 1,
+              "leaf": true,
+              "minX": 27,
+              "minY": 0,
+              "maxX": 27,
+              "maxY": 2
+            },
+            {
+              "children": [
+                {
+                  "minX": 19.398884942700718,
+                  "maxX": 19.398884942700718,
+                  "minY": 4.152747125533074,
+                  "maxY": 4.152747125533074
+                },
+                {
+                  "minX": 22,
+                  "maxX": 22,
+                  "minY": 0,
+                  "maxY": 0
+                },
+                {
+                  "minX": 22,
+                  "maxX": 22,
+                  "minY": 0,
+                  "maxY": 0
+                },
+                {
+                  "minX": 22,
+                  "maxX": 22,
+                  "minY": 2,
+                  "maxY": 2
+                },
+                {
+                  "minX": 22,
+                  "maxX": 22,
+                  "minY": 2,
+                  "maxY": 2
+                },
+                {
+                  "minX": 19.398884942700718,
+                  "maxX": 19.398884942700718,
+                  "minY": 4.152747125533074,
+                  "maxY": 4.152747125533074
+                },
+                {
+                  "minX": 19.398884942700718,
+                  "maxX": 19.398884942700718,
+                  "minY": 4.152747125533074,
+                  "maxY": 4.152747125533074
+                }
+              ],
+              "height": 1,
+              "leaf": true,
+              "minX": 19.398884942700718,
+              "minY": 0,
+              "maxX": 22,
+              "maxY": 4.152747125533074
+            },
+            {
+              "children": [
+                {
+                  "minX": 5,
+                  "maxX": 5,
+                  "minY": 35,
+                  "maxY": 35
+                },
+                {
+                  "minX": 5,
+                  "maxX": 5,
+                  "minY": 35,
+                  "maxY": 35
+                },
+                {
+                  "minX": 17,
+                  "maxX": 17,
+                  "minY": 0,
+                  "maxY": 0
+                },
+                {
+                  "minX": 17,
+                  "maxX": 17,
+                  "minY": 0,
+                  "maxY": 0
+                }
+              ],
+              "height": 1,
+              "leaf": true,
+              "minX": 5,
+              "minY": 0,
+              "maxX": 17,
+              "maxY": 35
+            }
+          ],
+          "height": 2,
+          "leaf": false,
+          "minX": 0,
+          "minY": 0,
+          "maxX": 52,
+          "maxY": 43.89734952591743
+        },
+        {
+          "children": [
+            {
+              "children": [
+                {
+                  "minX": 34.5,
+                  "maxX": 34.5,
+                  "minY": 91.0714599452585,
+                  "maxY": 91.0714599452585
+                },
+                {
+                  "minX": 34.5,
+                  "maxX": 34.5,
+                  "minY": -7.321369572516616,
+                  "maxY": -7.321369572516616
+                }
+              ],
+              "height": 1,
+              "leaf": true,
+              "minX": 34.5,
+              "minY": -7.321369572516616,
+              "maxX": 34.5,
+              "maxY": 91.0714599452585
+            },
+            {
+              "children": [
+                {
+                  "minX": 49.822534984506014,
+                  "maxX": 49.822534984506014,
+                  "minY": 4.392303425074847,
+                  "maxY": 4.392303425074847
+                },
+                {
+                  "minX": 64,
+                  "maxX": 64,
+                  "minY": 35,
+                  "maxY": 35
+                },
+                {
+                  "minX": 64,
+                  "maxX": 64,
+                  "minY": 35,
+                  "maxY": 35
+                },
+                {
+                  "minX": 66,
+                  "maxX": 66,
+                  "minY": 35,
+                  "maxY": 35
+                },
+                {
+                  "minX": 66,
+                  "maxX": 66,
+                  "minY": 35,
+                  "maxY": 35
+                }
+              ],
+              "height": 1,
+              "leaf": true,
+              "minX": 49.822534984506014,
+              "minY": 4.392303425074847,
+              "maxX": 66,
+              "maxY": 35
+            },
+            {
+              "children": [
+                {
+                  "minX": 66,
+                  "maxX": 66,
+                  "minY": 40,
+                  "maxY": 40
+                },
+                {
+                  "minX": 66,
+                  "maxX": 66,
+                  "minY": 40,
+                  "maxY": 40
+                },
+                {
+                  "minX": 69,
+                  "maxX": 69,
+                  "minY": 40,
+                  "maxY": 40
+                },
+                {
+                  "minX": 59.97069455616691,
+                  "maxX": 59.97069455616691,
+                  "minY": 41.87504518637094,
+                  "maxY": 41.87504518637094
+                },
+                {
+                  "minX": 64.33445015845166,
+                  "maxX": 64.33445015845166,
+                  "minY": 43.91195962705271,
+                  "maxY": 43.91195962705271
+                },
+                {
+                  "minX": 69,
+                  "maxX": 69,
+                  "minY": 40,
+                  "maxY": 40
+                }
+              ],
+              "height": 1,
+              "leaf": true,
+              "minX": 59.97069455616691,
+              "minY": 40,
+              "maxX": 69,
+              "maxY": 43.91195962705271
+            }
+          ],
+          "height": 2,
+          "leaf": false,
+          "minX": 34.5,
+          "minY": -7.321369572516616,
+          "maxX": 69,
+          "maxY": 91.0714599452585
+        }
+      ],
+      "height": 3,
+      "leaf": false,
+      "minX": 0,
+      "minY": -7.321369572516616,
+      "maxX": 69,
+      "maxY": 91.0714599452585
+    },
+    "blocksTree": {
+      "children": [
+        {
+          "minX": 0,
+          "minY": 0,
+          "maxX": 69,
+          "maxY": 40,
+          "id": "B76",
+          "lyId": "L2"
+        }
+      ],
+      "height": 1,
+      "leaf": true,
+      "minX": 0,
+      "minY": 0,
+      "maxX": 69,
+      "maxY": 40
+    }
+  }
+}

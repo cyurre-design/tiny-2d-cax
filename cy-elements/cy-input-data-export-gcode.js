@@ -9,7 +9,7 @@ export default class CyInputDataExportGcode extends HTMLElement {
     //Aunque los html ya están inicializados, hay que pasar la info al componente que dibuja
     set subType(type) {
         this.type = 'p' //por mantener coherencia y estandarización de tipo-subtipo-propiedad
-        inputDataSubtype(this, `data-path-${this.type}`);
+        inputDataSubtype(this, `data-export-gcode-${this.type}`);
         this.dom.querySelector('#data-export-gcode-header').dispatchEvent(new Event("change", { bubbles: true }));
         this.dom.querySelector('#data-export-gcode-footer').dispatchEvent(new Event("change", { bubbles: true }));
         this.dom.querySelector('#data-export-gcode-post').dispatchEvent(new Event("change", { bubbles: true }));
