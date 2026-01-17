@@ -9,7 +9,7 @@ import "./cy-layer-list.js"
 //Aunque no se llame directamente hace falta importarlo porque la ejecución define el elemento!!!!
 import CyInputDataBasic from './cy-elements/cy-input-data-basic.js';
 
-import { loadProject, saveProject, saveSvg, saveCNC } from "./obsoletos/cy-file-save-load.js";
+import { loadProject, saveProject, saveSvg, saveCNC } from "./cy-file-save-load.js";
 
 //From geometry
 
@@ -50,7 +50,8 @@ import DrawMeasure from "./cy-draw-interactive/cy-draw-measure.js"
 
 //Parsers
 import {convertDxfToGeometry} from "./parsers/cy-parser-dxf-geometry-objects.js"
-import {isoToGeometry } from "./parsers/cy-parser-iso-geometry.js"
+//import {isoToGeometry } from "./parsers/cy-parser-iso-geometry.js"
+import {gcodeToGeometry} from "./parsers/cy-parser-gcode-tiny.js"
 import {svgToGeometry} from "./parsers/cy-parser-svg.js"
 import {pathsToIso, setGCodeDefaults} from "./parsers/cy-parser-geometry-to-iso.js"
 
@@ -304,10 +305,11 @@ class cyCad1830App extends HTMLElement {
       //console.log('mdata inicializado')
       this.mData = this.dom.querySelector('#input-data');
       this.mData.initialData(defaultConfig)
+      //drawing-event recibe info de la aplicación de dibujo interactivo
       this.viewer.addEventListener('drawing-event', (e) => this.mData.update(e.detail));
       //------------------- GESTION interactive drawing y lado izquierdo
       this.registerInputApplications(new DrawBasic(this.viewer.layerDraw, ''))
-      //Tratamiento homogéneo de botones, inputs y teclas 
+      //Tratamiento homogéneo de botones, inputs y teclas, se envía todo a data, pero se podría filtrar
       const events =   ['input-data', 'input-click', 'input-key'];
       events.forEach( eType =>  
         this.mData.addEventListener(eType, (e) => {
@@ -346,6 +348,8 @@ class cyCad1830App extends HTMLElement {
       }
 
     })
+
+//Los comandos se originan a la recepción de eventos específicos
 //--------------------- CREACION DE BLOQUES ------------------
   /**@listens new-block Aquí es donde se recibe la petición de insertar geometría
    * tras terminar la parte interactiva !!! */
@@ -403,7 +407,8 @@ class cyCad1830App extends HTMLElement {
       commandBlockTransform(blocks, opData)
         //this.layerDraw.symmetrySelected(evt.detail.mode, evt.detail.data));
   })
-        
+
+  // Gestión de botones de la parte izquierda y gestión del menú
 //-----------------UNDO, REDO -------- BOTONES
   /**undo-redo
    * 
@@ -449,7 +454,7 @@ class cyCad1830App extends HTMLElement {
       }
     })
 //----------------- ZOOM  ------------------------------ BOTONES
-  /**sacado del menu al lateral por comodidad */
+  /** En realidad la gestión normal es con ratón, excepto el fit y home. El set home se usa poco */
     this.dom.querySelector('#menu-zoom').addEventListener('click', (evt) => {
         this.viewer.clearCursors();
         this.viewer.canvasHandler.setZoomMode();               
@@ -589,7 +594,8 @@ class cyCad1830App extends HTMLElement {
     translateOrigin = (dx, dy) => {
       this.viewer.canvasHandler.view("fgPane", {x:dx, y:dy});  //rehace los cálculos del handler
     }
-
+    //Gestión del menú de save/load. Distingo entre abrir proyecto (json) y abrir geometría (iso, svg, dxf)
+    //y además entre guardar proyecto (json) y exportar geometría (iso, svg) y entre project y geometry(load)
     handleMenus = (e) => {
       //Nos ponemos una nomenclatura razonable para poner orden en los ids
       //menu, submenu, etc... separados por guiones
@@ -607,12 +613,9 @@ class cyCad1830App extends HTMLElement {
               this.viewer.layerDraw.deserialize( data.model, clear); //Falta restaurar historia
             }
             else if((type === 'nc') || (type === 'pxy')){
-              const geo = isoToGeometry(file.text); //Hay que pasarle la configuración de máquina...por defecto fresadora
-              geo.geometry.layers.forEach(ly => {
-                const id = this.viewer.layerDraw.addLayer(ly.name); //debe poner el activeLayer
-                this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.getLayer(id)));
-                this.viewer.layerDraw.addBlocks(undefined, ly.paths);
-              })
+              //Me cepillo el lector de iso original y pongo el ligero, que ya lo iré aumentando si hace falta...
+              const geo = gcodeToGeometry(file.text);
+              this.viewer.layerDraw.addBlocks(undefined, geo);
               this.viewer.fit();
               this.viewer.layerDraw.draw();
             } else if(type === 'svg'){
@@ -644,7 +647,6 @@ class cyCad1830App extends HTMLElement {
               const projectData = {
               project: { name: "unnamed", timestamp: Date.now()},
               model: this.viewer.layerDraw
-              //manager: this.manager
               // serializamos los comandos registrados
               //commands: Array.from(commandRegistry.entries()).map(([name, fn]) => ({ name, source: fn.toString(), })),
               };
@@ -663,7 +665,6 @@ class cyCad1830App extends HTMLElement {
                 setGCodeDefaults(evt.detail)
                 saveCNC(null, pathsToIso(evt.detail.paths))
               })
- //                  saveCNC(null, pathsToIso(data));
             }break;
             case 'svg':{   
               let data = this.viewer.layerDraw.getSelectedBlocks().filter( b => b.type === 'path');;

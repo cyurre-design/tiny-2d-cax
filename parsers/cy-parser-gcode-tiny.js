@@ -1,6 +1,5 @@
 'use strict'
 
-//import { geometryPrecision} from '../cy-geometry/cy-geometry-library.js'
 import { createDrawElement} from '../cy-geometry/cy-geometry-basic-elements.js'
 
 const cmdRegEx = /([MTSXYZGIJKR])([-+]?[0-9]*\.?[0-9]+)/gi
@@ -11,7 +10,8 @@ export function  gcodeToGeometry(gcode){
 
     function parsePath(lines){  //recibo un string, que puede incluir cr,lf, etc... que son whitespace
     const paths = [];
-    let actualPath = createDrawElement('path',[]);  //global en el contexto de la función svgToGeometry
+    const elements = [];
+    //si creo el path al comienzo, el push no genera el bbox...
     //globales, determinan el funcionamiento en incremental o absoluto y corte o no corte en laser
     let inc = false;        //por defecto en absolutas
     let moving = true;      //por defecto G0
@@ -34,7 +34,6 @@ export function  gcodeToGeometry(gcode){
         commands = commands.map(cmd=>cmd.trim());
        
         //Analizo la línea
-        //_X='', _Y='', _I='', _J='', _R='', _M='', _F='', _S='', _G = [];
         let _X=NaN, _Y=NaN, _I=NaN, _J=NaN, _R = NaN, _M=NaN, _F=NaN, _S=NaN, _G = [];
         for(let ix = 0; ix < commands.length; ix++){
             const command = commands[ix];
@@ -52,15 +51,16 @@ export function  gcodeToGeometry(gcode){
             }
         }
         
-        //miramos si hay G91, el resto son puramente de ejecución, aquí lo queremos para pintar
+        //miramos si hay G0,G1,G2,G3,G91, el resto son puramente de ejecución, aquí lo queremos para pintar
         let gix = _G.findLastIndex(g => g===90 || g===91);
         if(gix > -1) inc = _G[gix] === 90 ? false : true;
         //Le doy prioridad a lo último que encuentre,
         gix = _G.findLastIndex(g => g===0 || g===1 || g===2 || g===3);
         if((gix > -1) && (_G[gix] === 0)){ //genero un nuevo path
-            if(actualPath.elements.length > 0)
-                paths.push(actualPath );
-            actualPath = createDrawElement('path',[]);
+            if(elements.length > 0){
+                paths.push(createDrawElement('path', {elements:elements}));
+                elements.length = 0;
+            }
             moving = true;
         } else if(_G[gix] < 4){ //estoy moviendo con corte
             moving = false;
@@ -68,8 +68,7 @@ export function  gcodeToGeometry(gcode){
         }
         //solo guardo la última cota, No voy a dar error en X duplicadas, es un prototipo, aunque sería trivial
         //solo genero bloque si hay geometría, es para pintar
-        let flag = false;
-        
+        let flag = false;    
         if(!isNaN(_X)) {
             X = inc? X+_X : _X;
             flag = true;
@@ -78,7 +77,7 @@ export function  gcodeToGeometry(gcode){
             Y = inc? Y+_Y : _Y;
             flag = true;
         }
-        if(movingType ===2 || movingType ===3){
+        if(flag && (movingType ===2 || movingType ===3)){   //si no hay X o Y ni miro
             //I,J van en pareja, si existe uno, el otro existe o se pone a 0, no es modal
             if(isNaN(_I) && isNaN(_J) && isNaN(_R)){ console.log("G2/G3 sin I,J ni R"); }
             else if(!isNaN(_R)){
@@ -97,18 +96,19 @@ export function  gcodeToGeometry(gcode){
                 }
             }
         }
+
         if((flag) && (!moving))
         {
             switch(movingType){
              case 1:
-                actualPath.elements.push(createDrawElement('segment', {subType:'PP', x0:cpx, y0:cpy, x1: X, y1: Y}));
+                elements.push(createDrawElement('segment', {subType:'PP', x0:cpx, y0:cpy, x1: X, y1: Y}));
                 break;
                 case 2: 
                 case 3: //I y J son siempre offsets y creo que no les afecta el estar en incremental o absoluto
-                if(R !== NaN){
-                    actualPath.elements.push(createDrawElement('arc', {subType:'2PR', x0:cpx, y0:cpy, x1: X, y1: Y, r: R, way: movingType===2 ? 'clock': 'antiClock'}));
+                if(!isNaN(_R)){
+                    elements.push(createDrawElement('arc', {subType:'2PR', x0:cpx, y0:cpy, x1: X, y1: Y, r: R, way: movingType===2 ? 'clock': 'antiClock'}));
                 } else {
-                    actualPath.elements.push(createDrawElement('arc', {subType:'way', x0:cpx + I, y0:cpy + J, x1: X, y1: Y, way: movingType===2 ? 'clock': 'antiClock'}));
+                    elements.push(createDrawElement('arc', {subType:'way', cx:cpx + I, cy:cpy + J, x0: cpx, y0: cpy, x1: X, y1: Y, way: movingType===2 ? 'clock': 'antiClock'}));
                 }
                 console.log("G2", X, Y, _I, _J); break;
              default: break;
@@ -118,8 +118,8 @@ export function  gcodeToGeometry(gcode){
             //pero la posición se incrementa
         cpx = X, cpy = Y;
         }
-        if(actualPath.elements.length > 0)
-            paths.push(actualPath );
+        if(elements.length > 0)
+            paths.push(createDrawElement('path', {elements:elements}));
         return paths;
     }
     //Aquí llega un churro tipo file
