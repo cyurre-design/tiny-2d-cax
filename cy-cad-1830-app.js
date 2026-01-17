@@ -86,11 +86,11 @@ const templateMeasure = `
 </div>`
 const templateZoom = `
 <div class="row" id='menu-zoom'>
-<input type="button" id='zoom-sethome' value="SH" class="_20"/>
+<input type="button" id='zoom-sethome' value="SET H." class="_20"/>
 <!--input type="button" id='zoom-box' value="BOX" class="_20"/-->
 <input type="button" id='zoom-home' value="HOME" class="_20"/>
-<input type="button" id='zoom-in' value=" + " class="_20"/>
-<input type="button" id='zoom-out' value=" - " class="_20"/>
+<input type="button" id='zoom-in' value=" Z+ " class="_20"/>
+<input type="button" id='zoom-out' value=" Z- " class="_20"/>
 <input type="button" id='zoom-fit' value="FIT" class="_20"/>
 </div>`
 //Esto aparecería en los comandos de transform por ejemplo
