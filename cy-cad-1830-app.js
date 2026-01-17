@@ -611,6 +611,8 @@ class cyCad1830App extends HTMLElement {
               const data = JSON.parse(file.text );
             // Restaurar modelo
               this.viewer.layerDraw.deserialize( data.model, clear); //Falta restaurar historia
+              this.viewer.fit();
+              this.viewer.layerDraw.draw();
             }
             else if((type === 'nc') || (type === 'pxy')){
               //Me cepillo el lector de iso original y pongo el ligero, que ya lo iré aumentando si hace falta...
