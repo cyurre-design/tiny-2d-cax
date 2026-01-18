@@ -81,18 +81,24 @@ const templateMainMenu =`
 `
 //tools y settings fijos
 const templateMeasure = `
-<div class="row" id='menu-measure'>
-<input type="button" id='measure-block' value="MEAS. BLOCK" class="_50"/>
-<input type="button" id='measure-p2p' value="MEAS. P2P" class="_50"/>
+<div class="column" id='menu-measure'>
+  <div class="row">MEASURE</div>
+  <div class="row">
+  <input type="button" id='measure-block' value="MEAS. BLOCK" class="_50"/>
+  <input type="button" id='measure-p2p' value="MEAS. P2P" class="_50"/>
+</div>
 </div>`
 const templateZoom = `
-<div class="row" id='menu-zoom'>
-<input type="button" id='zoom-sethome' value="SET H." class="_20"/>
-<!--input type="button" id='zoom-box' value="BOX" class="_20"/-->
-<input type="button" id='zoom-home' value="HOME" class="_20"/>
-<input type="button" id='zoom-in' value=" Z+ " class="_20"/>
-<input type="button" id='zoom-out' value=" Z- " class="_20"/>
-<input type="button" id='zoom-fit' value="FIT" class="_20"/>
+<div class="column" id='menu-zoom'>
+  <div class="row">ZOOM</div>
+  <div class="row">
+    <input type="button" id='zoom-sethome' value="SET H." class="_20"/>
+    <!--input type="button" id='zoom-box' value="BOX" class="_20"/-->
+    <input type="button" id='zoom-home' value="HOME" class="_20"/>
+    <input type="button" id='zoom-in' value=" Z+ " class="_20"/>
+    <input type="button" id='zoom-out' value=" Z- " class="_20"/>
+    <input type="button" id='zoom-fit' value="FIT" class="_20"/>
+  </div>
 </div>`
 //Esto aparecería en los comandos de transform por ejemplo
 //Aprovecho y pongo aquí el width de selección, por ejemplo
@@ -117,9 +123,12 @@ const templateSelectInputData =`
 </div>
 `
 const templateUndo = `
-<div id='undo-redo' class="row">
+<div id='undo-redo' class="column">
+  <div class="row">UNDO / REDO</div>
+  <div class="row">
     <input type="button" id="undo" class="_50" value="UNDO" />
     <input type="button" id="redo" class="_50" value="REDO" />
+  </div>
 </div>
 `
 // const templateDraw = `<div id='drawing'>
@@ -137,7 +146,9 @@ const templateUndo = `
 // </div>`
 const templateDrawOptions = `
 <div id='drawing-options'>
+  <div class="row">DRAWING OPTIONS</div>
     <div id="segments" class="column">
+      <div class="row">LINES</div>
       <div class="row">
         <input type="button" id="line-PP" class="_25" value="L-P-P" />
         <input type="button" id="line-PXA" class="_25" value="L-X-A" />
@@ -151,17 +162,20 @@ const templateDrawOptions = `
       </div>
     </div>
     <div class="row" id="arcs">
+    <div class="row">ARCS</div>
       <input type="button" id="arc-CPA" class="_33" value="A-O-P-A" />
       <input type="button" id="arc-3P" class="_33" value="A-P-P-P" />
       <input type="button" id="arc-2PR" class="_33" value="A-P-P-R" />
     </div>
     <div class="row" id="circles">
+    <div class="row">CIRCLES</div>
       <input type="button" id="circle-CP" class="_25" value="C-O-P" />
       <input type="button" id="circle-3P" class="_25" value ="C-P-P-P" />
       <input type="button" id="circle-2PR" class="_25" value="C-P-P-R" />
       <input type="button" id="circle-CR" class="_25" value="C-O-R" />  
     </div>
     <div class="row">
+    <div class="row">OTHER</div>
       <input type="button" id="path" class="_25" value="PATH" />
       <input type="button" id="poly" class="_25" value="POLY" />
       <input type="button" id="gcode" class="_25" value="GCODE" />
@@ -170,6 +184,7 @@ const templateDrawOptions = `
 </div>`
 
 const templateTransform = `<div id='transform'>
+  <div class="row">GEOMETRIC TRANSFORMS</div>
   <div class="row">
     <input type="button" id="translate" class="_33" value="TRANSLATE" />
     <input type="button" id="rotate" class="_33" value="ROTATE" />
@@ -257,11 +272,27 @@ const style = `
     stroke: green; /*valor por defecto*/
     background-position:center;*/
 }
-#settings-menu-anchor{
-     justify-content: flex-end;
-}
+#transform{
+    border: 1px solid black;
+    margin: 2px;
+    padding: 2px;
+    background-color: #dddddd;
+    }
+#drawing-options{
+    border: 1px solid black;
+    margin: 2px;
+    padding: 2px;
+    background-color: #dddddd;
+}  
+    #menu-zoom, #menu-measure, #undo-redo, #menu-select{
+    border: 1px solid black;
+    margin: 2px;  
+    padding: 2px;
+    background-color: #dddddd;
+    }
     </style>
 `
+
   //Almacenamiento de los datos manuales entre entradas y salidas de menus.
   //Pongo defaults (podrían ser de un JSON, TODO)
   //Uso la nomenclatura de variables de los componentes
@@ -348,7 +379,11 @@ class cyCad1830App extends HTMLElement {
       }
 
     })
-
+  this.addEventListener('quit-application', (e)=>{
+    this.viewer.interactiveDrawing.quit();
+        //this.registerInputApplications(new DrawBasic(this.viewer.layerDraw, ''))
+    this.mData.setActiveApplication('none');
+  })
 //Los comandos se originan a la recepción de eventos específicos
 //--------------------- CREACION DE BLOQUES ------------------
   /**@listens new-block Aquí es donde se recibe la petición de insertar geometría
@@ -629,7 +664,6 @@ class cyCad1830App extends HTMLElement {
               })
               this.viewer.fit();
               this.viewer.layerDraw.draw();
-
             } else if(type === 'dxf'){
               const layers = convertDxfToGeometry(file.text); //devuelve array de layers y cada una con sus bloques...
               layers.forEach(ly => {
