@@ -18,10 +18,13 @@ function pathsToGeometry(data){
         console.log('arco');
         return([data[5],data[6]]);
     }
-    function parsePath(d){  //recibo un string, que puede incluir cr,lf, etc... que son whirespace
+    function parsePath(d){  //recibo un string, que puede incluir cr,lf, etc... que son whitespace
+        //además, los signos '-' sirven de separadores...
         d = d.replaceAll(wspComa,' ');
-        d = d.replaceAll(/([MLQTCSAZVHmlqtcsazvh])[^ ]/g,'$1 '); //tipos pegados como M123
-        //d = d.replaceAll(/[ ]+/g,' ');  //quito repeeticiones de espacio
+        d = d.replaceAll(/-/g,' -'); //los negativos son separadores
+        d = d.replaceAll(/([MLQTCSAZVHmlqtcsazvh])/g,' $1 '); //tipos pegados como M123
+        //d = d.replaceAll(/([MLQTCSAZVHmlqtcsazvh])/g,'$1 '); //tipos pegados como M123
+        d = d.replaceAll(/[ ]+/g,' ');  //quito repeeticiones de espacio
         let commands = d.match(cmdRegEx);
         commands = commands.map(cmd=>cmd.trim());
         commands = commands.map(cmd=>cmd.split(' '));
@@ -38,12 +41,8 @@ function pathsToGeometry(data){
                     paths.push(createDrawElement('path', {elements:elements}));
                     elements = []; //reseteo
                 }
-                if(inc){
-                    cpx += parseFloat(cmd.shift()); cpy += parseFloat(cmd.shift());
-                }
-                else{
-                    cpx = parseFloat(cmd.shift()); cpy = parseFloat(cmd.shift());
-                }
+                cpx = inc ? cpx + parseFloat(cmd.shift()) : parseFloat(cmd.shift());
+                cpy = inc ? cpy + parseFloat(cmd.shift()) : parseFloat(cmd.shift());
                 pathInitialX = cpx, pathInitialY = cpy;
             //El move puede tener cotas por detrás que son una polylínea, reuso el case
             //fallthrough, no break
@@ -97,7 +96,7 @@ function pathsToGeometry(data){
                 ctrl[0] += cpx; ctrl[1] += cpy; //control point 2, el 1 se calcula con este y cpx,cpy
                 ctrl[2] += cpx; ctrl[3] += cpy; //final point
                 }
-                elements.push(createDrawElement('bezier', {subType:'C', x0:cpx, y0:cpy, cp1x:2*rx - ctrl[0], cp1y:2*ry - ctrl[1] , x1:ctrl[4] , y1:ctrl[5]}));
+                elements.push(createDrawElement('bezier', {subType:'C', x0:cpx, y0:cpy, cp1x:2*rx - ctrl[0], cp1y:2*ry - ctrl[1] , cp2x:ctrl[0], cp2y:ctrl[1] , x1:ctrl[2] , y1:ctrl[3]}));
                 [cpx,cpy] = [ctrl[2], ctrl[3]];
             }
             break;
@@ -110,7 +109,7 @@ function pathsToGeometry(data){
                     ctrl[0] += cpx; ctrl[1] += cpy; //control point
                     ctrl[2] += cpx; ctrl[3] += cpy; //final point
                 }
-                elements.push( createDrawElement('bezier', {subType:'Q', x0:cpx, y0:cpy, cp1:{x:2*rx - ctrl[0], y:2*ry - ctrl[1]} , x1:ctrl[2] , y1:ctrl[3]}));  //a ver cómo lo distinguimos en el constructor por la longitud de lo pasado
+                elements.push( createDrawElement('bezier', {subType:'Q', x0:cpx, y0:cpy, cp1x:2*rx - ctrl[0], cp1y:2*ry - ctrl[1] , x1:ctrl[2] , y1:ctrl[3]}));  //a ver cómo lo distinguimos en el constructor por la longitud de lo pasado
                 [cpx,cpy] = [ctrl[2], ctrl[3]];
             }
             break;
@@ -124,7 +123,7 @@ function pathsToGeometry(data){
                 if(inc){
                 ctrl[0] += cpx; ctrl[1] += cpy; //final point, el control point se calcula con el p. anterior
                 }
-                elements.push( createDrawElement('bezier', {x0:cpx, y0:cpy, cp1:{x:2*rx - ctrl[0], y:2*ry - ctrl[1]} , x1:ctrl[2] , y1:ctrl[3]}));  //a ver cómo lo distinguimos en el constructor
+                elements.push( createDrawElement('bezier', {x0:cpx, y0:cpy, cp1x:2*rx - ctrl[0], cp1y:2*ry - ctrl[1] , x1:ctrl[2] , y1:ctrl[3]}));  //a ver cómo lo distinguimos en el constructor
                 [cpx,cpy] = [ctrl[0], ctrl[1]];
             }
             break;
