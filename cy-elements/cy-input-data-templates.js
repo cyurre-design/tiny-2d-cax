@@ -21,6 +21,8 @@ export function TYy0(t) { return(
 `Y<input id="data-${t}-y0"  class="_33" type="number" value="0" step="0.5"/>`)}
 export function TR(t) { return(
 `R<input id="data-${t}-r" type="number" value="0" step="0.5"/>`)}
+export function TL(t) { return(
+`L<input id="data-${t}-l" type="number" value="0" step="0.5"/>`)}
 export function TX2Y2(t) { return(
 `X2<input id="data-${t}-x2" class="_33" type="number" value="0" step="0.5"/>
 Y2<input id="data-${t}-y2" class="_33" type="number" value="0" step="0.5"/>`)}

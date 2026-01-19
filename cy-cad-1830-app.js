@@ -163,9 +163,10 @@ const templateDrawOptions = `
     </div>
     <div class="row" id="arcs">
     <div class="row">ARCS</div>
-      <input type="button" id="arc-CPA" class="_33" value="A-O-P-A" />
-      <input type="button" id="arc-3P" class="_33" value="A-P-P-P" />
-      <input type="button" id="arc-2PR" class="_33" value="A-P-P-R" />
+      <input type="button" id="arc-CPA" class="_25" value="A-O-P-A" />
+      <input type="button" id="arc-3P" class="_25" value="A-P-P-P" />
+      <input type="button" id="arc-2PR" class="_25" value="A-P-P-R" />
+      <input type="button" id="arc-2PL" class="_25" value="A-P-P-L" />
     </div>
     <div class="row" id="circles">
     <div class="row">CIRCLES</div>

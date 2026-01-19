@@ -23,6 +23,12 @@ export default class DrawArc extends DrawBasic{
                 this.dataSent = [['x0','y0'],['x1','y1']];
                 this.dataReceived = ['x0','x1','y0','y1','r','way'];
              } break;
+            case '2PL': {
+                this.moveFn = [[this.h, this.m0, this.sendDataBasic], [this.h, this.m1, this.sendDataBasic, this.draw]];
+                this.clickFn = [[this.p0], [this.m1, this.newBlock, this.deleteData]];
+                this.dataSent = [['x0','y0'],['x1','y1']];
+                this.dataReceived = ['x0','x1','y0','y1','l','way'];
+             } break;
             case '2PC': {
                 this.moveFn = [[this.h, this.m0, this.sendDataBasic],[this.h, this.mm, this.sendDataBasic, this.draw], [this.m1, this.sendDataBasic, this.draw]];
                 this.clickFn = [[this.p0], [pm],[this.m1, this.newBlock, this.deleteData]];
@@ -41,7 +47,7 @@ export default class DrawArc extends DrawBasic{
     //según el caso puede venir r y/o way, el caso r es estándar y lo trata el basic
     updateData = (data)=>{
         const el = this.updateDataBasic(data).find(el=>el.idn==='way');
-        if(el !== undefined && this.subMode === '2PR')
+        if(el !== undefined && (this.subMode === '2PR' || this.subMode === '2PL'))
             this.data.way = el.v;
     }
     pm = (p) => {this.data.xm = p.x; this.data.ym = p.y; this.status = 2;};

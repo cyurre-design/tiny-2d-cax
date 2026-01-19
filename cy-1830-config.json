@@ -11,6 +11,7 @@
       "segment-pya-a": 30,
       "arc-cpa-a": 30,
       "arc-2pr-r" : 50,
+      "arc-2pl-l" : 50,
       "transform-rotate-a": 45,
       "transform-scale-sn" : 50,
       "transform-scale-sd" : 100

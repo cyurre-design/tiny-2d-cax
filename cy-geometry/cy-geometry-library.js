@@ -284,17 +284,18 @@ export function centerFrom2PR(data){
     const ux = dx/d, uy = dy/d; //unitario, el centro estará en la normal en el punto medio
     const h = Math.sqrt(data.r*data.r - 0.25*d*d);
     const sols = [{x0:xm + h*uy, y0:ym - h*ux},{x0:xm - h*uy, y0:ym + h*ux}];
+    return sols
     //Por definición, el p2 debe estar en el arco, lo que termina de definir todo
     //const data = Object.assign({},sols[0]);
-    const sol = data.way==='clock'?sols[0]:sols[1];
-    const newdata = {    
-        cx: sol.x0,
-        cy: sol.y0,
-        x1: data.x1,
-        y1: data.y1,
-        r: data.r
-    }
-    return newdata;
+    // const sol = data.way==='clock'?sols[0]:sols[1];
+    // const newdata = {    
+    //     cx: sol.x0,
+    //     cy: sol.y0,
+    //     x1: data.x1,
+    //     y1: data.y1,
+    //     r: data.r
+    // }
+    // return newdata;
 }
 //Formato svg? ecuaciones están en la w3c: https://svgwg.org/svg2-draft/implnote.html#ArcImplementationNotes
 //Pero fi===0 por ser un circulo y rx === ry
@@ -327,22 +328,11 @@ export function arc3P2SVG(p1, p2, p3){
     const newData = arc2PC2SVG({x:data.cx, y:data.cy}, data.r ,p1, p3, way);
     return newData;
 }
-//TODO usar centerfrom2pr
-export function arc2PR2SVG(p1, p2, r, way='clock'){
-    const dx = p2.x - p1.x, dy = p2.y - p1.y;   //vector resta
-    const xm = 0.5*(p2.x + p1.x), ym = 0.5*(p2.y + p1.y);   //punto medio
-    const d = Math.hypot(dx,dy);
-    if(d > 2*r) return undefined;
-    const ux = dx/d, uy = dy/d; //unitario, el centro estará en la normal en el punto medio
-    const h = Math.sqrt(r*r - 0.25*d*d);
-    //Hay dos soluciones con -uy,ux y uy,ux, la primera es a derechas, la cojo porque 
-    //si se quiere se le da la vuelta, podría ser un parámetro
-    const sols = [{x0:xm + h*uy, y0:ym - h*ux},{x0:xm - h*uy, y0:ym + h*ux}];
-    //Por definición, el p2 debe estar en el arco, lo que termina de definir todo
-    //const data = Object.assign({},sols[0]);
+export function arc2PR2SVG(p1, p2, r, way='clock'){  
+    const sols = centerFrom2PR( {x0:p1.x, y0:p1.y, x1:p2.x, y1:p2.y, r:r} );
+    if(!sols) return undefined;
     const sol = way==='clock'?sols[0]:sols[1];
     const data = arc2PC2SVG({x:sol.x0, y:sol.y0}, r, p1, p2, way)
-
     return data;
 }
 //a en grados !!
@@ -392,6 +382,48 @@ export function arcDxf(data){
     
     return {cx: cx, cy:cy, r:r, ai:ai, da: delta, fA:fA, fS:0, way:'antiCLock', x1:x1, y1:y1, x2:x2, y2:y2};
 }
+// calcula el arco a partir de dos puntos y la longitud del arco, no hay fórmula cerrada, usamos Newton-Raphson
+export function arc2PL(p1, p2, arcLength, way='clock'){
+    /** fórmula de Newton, preguntado a chatgpt */
+    function radiusFromCordAndArcLength(d, L, tol = 1e-9, maxIter = 50) {
+        // Ecuación: f(R) = 2R * sin(L/(2R)) - d = 0
+        function f(R) {
+            return 2 * R * Math.sin(L / (2 * R)) - d;
+        }
+        // Derivada: f'(R)
+        function fprime(R) {
+            let t = L / (2 * R);
+            return 2 * Math.sin(t) - (L / R) * Math.cos(t);
+        } 
+        if((0.5*d < L/Math.PI) || (d > L)) return undefined
+        // Estimación inicial
+        //El algoritmo es sensible a la estimación inicial, deberíamos buscar una mejor forma
+        //Como mínimo el radio es d/2 (arco de 180º), y como mucho L/π (arco casi plano)
+        //uso un valor de r intemedio en que la sagita es medio radio. 
+        let R = L - Math.sqrt(L*L - d*d);
+        //let R = d / 2 + 0.0001; // evitar división por cero
+        for (let i = 0; i < maxIter; i++) {
+            let fR = f(R);
+            let fRprime = fprime(R);
+            if (Math.abs(fRprime) < 1e-12) break; // evitar division por cero
+            let Rnext = R - fR / fRprime;
+            if (Math.abs(Rnext - R) < tol) {
+                return Rnext; // convergencia
+            }
+            R = Rnext;
+        }
+        return R; // mejor aproximación encontrada
+    }
+    const d = Math.hypot(p2.x - p1.x, p2.y - p1.y );
+    const r = radiusFromCordAndArcLength(d, arcLength);
+    console.log(r);
+    if(r === undefined) return undefined;
+    const sols = centerFrom2PR( {x0:p1.x, y0:p1.y, x1:p2.x, y1:p2.y, r:r} );
+    if(!sols) return undefined;
+    const sol = way==='clock'?sols[0]:sols[1];
+    return arc2PC2SVG({x:sol.x0, y:sol.y0}, r, p1, p2, way)
+}
+
 export function pointWithinArcSweep(arc, p, eps = geometryPrecision){
         //Habría que afinar con eps pero implica pasar a alfa = atan2(eps/r) o algo así... TODO
         let a = Math.atan2(p.y - arc.cy, p.x - arc.cx)

@@ -1,7 +1,7 @@
 
 "use strict";
 import {geometryPrecision, fuzzy_eq, fuzzy_eq_zero, centerFrom2PR, circleFrom3Points, arc3P2SVG, arc2PR2SVG, arcCPA, arcWay, arcDxf} from './cy-geometry-library.js'
-import { translatePoint } from './cy-geometry-library.js'
+import { translatePoint, arc2PL } from './cy-geometry-library.js'
 
 import {createSegment} from './cy-geo-elements/cy-segment.js'
 import {createCircle} from './cy-geo-elements/cy-circle.js'
@@ -115,11 +115,12 @@ export function createDrawElement(type, data ) {
                 }
                 break;
                 case '2PR':{ //TODO EPSILON  
-                    const newdata = centerFrom2PR(data); 
-                    if(!newdata)
+                    const sols = centerFrom2PR(data); 
+                    if(!sols)
                         element = createSegment({x0:data.x0, y0:data.y0, x1:data.x1, y1:data.y1});
-                    else
-                        element = createCircle(newdata);
+                    const sol = data.way==='clock'?sols[0]:sols[1];
+                    const newdata = { cx: sol.x0, cy: sol.y0, x1: data.x1, y1: data.y1, r: data.r                    }
+                    element = createCircle(newdata);
                     }
                 break;
             }
@@ -189,6 +190,14 @@ export function createDrawElement(type, data ) {
                 case 'way':{//https://www.w3.org/TR/SVG/implnote.html
                     const newdata = arcWay(data);
                     element = createArc( newdata);
+                    }
+                    break;
+                case '2PL':{ //llegan p0, p1 y longitud de arco
+                    const arc = arc2PL({x:data.x0,y:data.y0}, {x:data.x1,y:data.y1}, data.l, data.way);
+                    if(!arc)
+                        element = createSegment({x0:data.x0,y0:data.y0,x1:data.x1,y1:data.y1});
+                    else
+                        element = createArc(arc);
                     }
                     break;
                 case 'SVG':{ //aquí solo vienen los de svg con inicial y final, r y flags
