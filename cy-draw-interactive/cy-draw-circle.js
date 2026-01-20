@@ -19,10 +19,10 @@ export default class DrawCircle extends DrawBasic{
                 this.dataReceived =['x0','y0','x1','y1']
             } break;
             case '2PR': {
-                this.moveFn = [[this.h], [this.m1, this.draw]];
+                this.moveFn = [[this.h, this.m0, this.sendDataBasic], [this.m1, this.sendDataBasic, this.draw]];
                 this.clickFn= [[this.p0], [this.p1, this.newBlock, this.deleteData]];
                 this.dataSent = [['x0','y0'],['x1','y1']];
-                this.dataReceived = ['x0', 'y0', 'x1','y1', 'r']
+                this.dataReceived = ['x0', 'y0', 'x1','y1', 'r', 'way']
              } break;
             case 'CR': {
                 this.moveFn = [[this.h, this.m0, this.sendDataBasic, this.draw]];
@@ -36,9 +36,11 @@ export default class DrawCircle extends DrawBasic{
         this.deleteDataBasic(['cx', 'cy', 'x0','x1','x2','y0','y1','y2']);
     }
     updateData = (data)=>{
-        const el = this.updateDataBasic(data).find(el=>el.idn==='way');
-        if(el!== undefined && this.subMode === '2PR')
-            this.data.way = el.v;
+        const newData = this.updateDataBasic(data);
+        const idn = newData[0].idn;  //vendrá en cada evento de change en mdata
+        if((idn === 'way') && (this.subMode === '2PR')){
+            this.data.way = newData[0].v;
+        }   
     }
 
     p1  = (p) => {this.data.x1 = p.x; this.data.y1 = p.y; this.status = 2;};

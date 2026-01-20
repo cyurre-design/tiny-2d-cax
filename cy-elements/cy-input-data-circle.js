@@ -13,8 +13,10 @@ export default class CyInputDataCircle extends HTMLElement {
         ['circle-cp', 'circle-cr', 'circle-3p', 'circle-2pr'].forEach( el => this.dom.querySelector('#'+el).style.display = "none")
         this.dom.querySelector('#circle-'+ this.type).style.display="block";
         inputDataSubtype(this, `data-circle-${this.type}`);
-        if(this.type === '2pr') 
+        if(this.type === '2pr') {
             this.dom.querySelector('#data-circle-2pr-r').dispatchEvent(new Event("change", { bubbles: true }));
+            this.dom.querySelector('#data-circle-2pr-way').dispatchEvent(new Event("change", { bubbles: true }));
+        }
         if(this.type === 'cr') 
             this.dom.querySelector('#data-circle-cr-r').dispatchEvent(new Event("change", { bubbles: true }));
     }
