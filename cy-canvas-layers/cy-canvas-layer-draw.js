@@ -507,6 +507,13 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
             //Borro los puntos asociados, se borran por referencia, así que guardo lo que meto al tree (también se pueden borrar con una fon de comparación)
             b.data.points.forEach( p => this.pointsTree.remove(p.data.tree));
         })
+        //los cutpoints también hay que moverlos y no los tengo asociados a capas...@todo
+        const newPoints = this.cutPoints.map( p => ({type: 'cut-point', x0:p.x0+dx, y0: p.y0 + dy}));
+        this.cutPoints.forEach( p => {
+            this.pointsTree.remove(p.data.tree);
+        })
+        this.cutPoints = [];
+        this.addCutPoints(newPoints);  
         //No reiniciamos el contador de Id... porque la podemos liar...
         layer.blocks = [];
         this.addBlocks(this._activeLayerId, newBlocks);
