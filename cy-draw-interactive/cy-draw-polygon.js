@@ -1,7 +1,7 @@
 import DrawBasic from './cy-draw-basic.js'
 import { createDrawElement } from '../cy-geometry/cy-geometry-basic-elements.js';
 //el tipo y edges provienen del menu de input-data
-export default class DrawPolygon extends DrawBasic{
+export class DrawPolygon extends DrawBasic{
     constructor(layerDraw) {
         super(layerDraw, 'polygon', ''); //podríamos usarlo para vértice o lado...
         this.moveFn         = [[this.h, this.m0, this.sendDataBasic], [this.h, this.m1, this.sendDataBasic, this.draw]];

@@ -1,7 +1,7 @@
 import DrawBasic from './cy-draw-basic.js'
 import { createDrawElement } from '../cy-geometry/cy-geometry-basic-elements.js';
 import {blockLength, distancePointToPoint} from  '../cy-geometry/cy-geometry-library.js';
-export default class DrawMeasure extends DrawBasic {
+export class DrawMeasure extends DrawBasic {
     constructor(layerDraw, submode){
         super(layerDraw, 'measure', submode);
         this.data.subType = 'PP';   //sirve para generar el segmento de ayuda

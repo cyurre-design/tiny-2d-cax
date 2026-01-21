@@ -2,7 +2,7 @@ import DrawBasic from './cy-draw-basic.js'
 import { createDrawElement } from '../cy-geometry/cy-geometry-basic-elements.js';
 import { distancePointToPoint, segmentsTangentToCircleAndCircle } from '../cy-geometry/cy-geometry-library.js';
 
-export default class DrawSegmentBB extends DrawBasic {
+export class DrawSegmentBB extends DrawBasic {
     constructor(layerDraw, submode){
         super(layerDraw, 'segment-TBB', submode);
         this.block = undefined;

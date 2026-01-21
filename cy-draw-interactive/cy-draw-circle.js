@@ -1,7 +1,7 @@
 import DrawBasic from './cy-draw-basic.js'
 import { createDrawElement } from '../cy-geometry/cy-geometry-basic-elements.js';
 //el tipo y edges provienen del menu de input-data
-export default class DrawCircle extends DrawBasic{
+export class DrawCircle extends DrawBasic{
     constructor(layerDraw, mode) {
         super(layerDraw, 'circle', mode);
         this.data = {subType:this.subMode};

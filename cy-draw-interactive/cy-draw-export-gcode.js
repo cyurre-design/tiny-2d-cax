@@ -9,7 +9,7 @@ import { pathSetStartPoint, pathReverse } from '../cy-geometry/cy-geo-elements/c
  * se vaya a generar el iso. Así podemo hacer un perfil interior a izquierdas y otro exteerior a
  * derechas con la misma geometría...o así
  */
-export default class DrawExportGcode extends DrawBasic{
+export class DrawExportGcode extends DrawBasic{
     constructor(layerDraw, mode) {
         super(layerDraw, 'file', mode);
         this.data = {subType:'exportISO'};

@@ -1,7 +1,7 @@
 import {blockScale} from '../cy-geometry/cy-geometry-library.js';
 import DrawBasic from './cy-draw-basic.js'
 //El translate está definido con clone, cada vez que muevo se crea.... pero a la larga es más comprensible
-export default class DrawScale extends DrawBasic{
+export class DrawScale extends DrawBasic{
     constructor(layerDraw, subMode){
         super(layerDraw, 'scale', subMode);
         this.blocksToScale = [];

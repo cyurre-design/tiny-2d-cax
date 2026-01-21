@@ -1,7 +1,7 @@
 import {blockTranslate} from '../cy-geometry/cy-geometry-library.js';
 import DrawBasic from './cy-draw-basic.js'
 //El translate está definido con clone, cada vez que muevo se crea.... pero a la larga es más comprensible
-export default class DrawTranslate extends DrawBasic{
+export class DrawTranslate extends DrawBasic{
     constructor(layerDraw, subMode){
         super(layerDraw, 'translate', subMode);
         this.moveFn         = [[this.h, this.m0, this.sendDataBasic], [this.h, this.m1, this.sendDataBasic, this.move], []];

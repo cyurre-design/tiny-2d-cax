@@ -23,30 +23,11 @@ import {createCommandManager, commandLayerCreate, commandLayerDelete, commandLay
       commandLinkUnlink, commandBooleanOperation} from './cy-commands/cy-command-definitions.js';
 
 //For Drawing Interactively
-
-import DrawBasic from "./cy-draw-interactive/cy-draw-basic.js"
-
-import DrawTranslate from "./cy-draw-interactive/cy-draw-translate.js"
-import DrawRotate from "./cy-draw-interactive/cy-draw-rotate.js"
-import DrawScale from "./cy-draw-interactive/cy-draw-scale.js"
-import DrawSymmetry from "./cy-draw-interactive/cy-draw-symmetry.js"
-import DrawSelection from "./cy-draw-interactive/cy-draw-selection.js"
-import DrawOrigin from "./cy-draw-interactive/cy-draw-origin.js"
-import DrawLink from "./cy-draw-interactive/cy-draw-link.js"
-import DrawBoolean from "./cy-draw-interactive/cy-draw-boolean.js"
-
-import DrawNormal from "./cy-draw-interactive/cy-draw-normal.js"
-import DrawSegmentPB from "./cy-draw-interactive/cy-draw-segment-PB.js"
-import DrawSegmentBB from "./cy-draw-interactive/cy-draw-segment-BB.js"
-import DrawSegment from "./cy-draw-interactive/cy-draw-segment.js"
-import DrawPolygon from "./cy-draw-interactive/cy-draw-polygon.js"
-import DrawCircle from "./cy-draw-interactive/cy-draw-circle.js"
-import DrawArc from "./cy-draw-interactive/cy-draw-arc.js"
-import DrawPath from "./cy-draw-interactive/cy-draw-path.js"
-import DrawGcode from "./cy-draw-interactive/cy-draw-gcode.js"
-import DrawExportGcode from "./cy-draw-interactive/cy-draw-export-gcode.js"
-import DrawText from "./cy-draw-interactive/cy-draw-text.js"
-import DrawMeasure from "./cy-draw-interactive/cy-draw-measure.js"
+import { DrawArc, DrawBoolean, DrawCircle, DrawExportGcode, DrawGcode, DrawLink,
+        DrawMeasure, DrawNormal, DrawOrigin, DrawPath, DrawPocket, DrawPolygon, DrawRotate,
+        DrawScale, DrawSegment, DrawSegmentBB, DrawSegmentPB, DrawSelection, DrawSymmetry,
+        DrawText, DrawTranslate
+        } from "./cy-draw-interactive/cy-drawing-interactive.js"
 
 //Parsers
 import {convertDxfToGeometry} from "./parsers/cy-parser-dxf-geometry-objects.js"
@@ -203,6 +184,7 @@ const templateTransform = `<div id='transform'>
   </div>
   <div class="row">
     <input type="button" id="boolean" class="_33" value="BOOLEAN" />
+    <input type="button" id="boolean" class="_33" value="POCKET" />
   </div>
 </div>`
 
@@ -340,7 +322,7 @@ class cyCad1830App extends HTMLElement {
       //drawing-event recibe info de la aplicación de dibujo interactivo
       this.viewer.addEventListener('drawing-event', (e) => this.mData.update(e.detail));
       //------------------- GESTION interactive drawing y lado izquierdo
-      this.registerInputApplications(new DrawBasic(this.viewer.layerDraw, ''))
+      this.registerInputApplications(new DrawSelection(this.viewer.layerDraw, ''))
       //Tratamiento homogéneo de botones, inputs y teclas, se envía todo a data, pero se podría filtrar
       const events =   ['input-data', 'input-click', 'input-key'];
       events.forEach( eType =>  
@@ -558,8 +540,15 @@ class cyCad1830App extends HTMLElement {
         }
         break;
         case 'boolean':{
+          this.dom.querySelector('#select-all').dispatchEvent(new CustomEvent('click', {bubbles:true, composed:true}));
           this.registerInputApplications(  new DrawBoolean(this.viewer.layerDraw, sub1) )
           this.mData.setActiveApplication( 'transform', 'boolean' );
+        }
+        break;        
+        case 'pocket':{
+          this.dom.querySelector('#select-all').dispatchEvent(new CustomEvent('click', {bubbles:true, composed:true}));
+          this.registerInputApplications(  new DrawPocket(this.viewer.layerDraw, sub1) )
+          this.mData.setActiveApplication( 'transform', 'pocket' );
         }
         break;        
       }})

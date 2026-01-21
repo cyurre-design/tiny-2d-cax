@@ -1,7 +1,7 @@
 import DrawBasic from './cy-draw-basic.js'
 import { createDrawElement } from '../cy-geometry/cy-geometry-basic-elements.js';
 
-export default class DrawLink extends DrawBasic{
+export class DrawLink extends DrawBasic{
     constructor(layerDraw, mode) {
         super(layerDraw, 'link', mode);
 

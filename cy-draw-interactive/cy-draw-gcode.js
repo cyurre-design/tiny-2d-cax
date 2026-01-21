@@ -2,7 +2,7 @@ import DrawBasic from './cy-draw-basic.js'
 import { createDrawElement } from '../cy-geometry/cy-geometry-basic-elements.js';
 import {gcodeToGeometry} from '../parsers/cy-parser-gcode-tiny.js'
 
-export default class DrawGcode extends DrawBasic{
+export class DrawGcode extends DrawBasic{
     constructor(layerDraw, mode) {
         super(layerDraw, 'path', mode);
         this.data = {subType:'ISO'};

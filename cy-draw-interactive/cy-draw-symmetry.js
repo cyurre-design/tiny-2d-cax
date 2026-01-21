@@ -1,7 +1,7 @@
 import DrawBasic from './cy-draw-basic.js'
 import { createDrawElement } from '../cy-geometry/cy-geometry-basic-elements.js';
 
-export default class DrawSymmetry extends DrawBasic{
+export class DrawSymmetry extends DrawBasic{
     constructor(layerDraw, mode) {
         super(layerDraw, 'symmetry', mode);
         this.data = {subType:mode};    

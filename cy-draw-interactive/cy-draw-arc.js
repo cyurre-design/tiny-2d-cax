@@ -1,7 +1,7 @@
    import DrawBasic from './cy-draw-basic.js'
    import { createDrawElement } from '../cy-geometry/cy-geometry-basic-elements.js';
 
-export default class DrawArc extends DrawBasic{
+export class DrawArc extends DrawBasic{
     constructor(layerDraw, mode) {
         super(layerDraw, 'arc', mode); //podríamos usarlo para vértice o lado...
         switch(mode){

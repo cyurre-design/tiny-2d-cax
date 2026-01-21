@@ -1,6 +1,6 @@
 import DrawBasic from './cy-draw-basic.js'
     
-export default class DrawOrigin extends DrawBasic{
+export class DrawOrigin extends DrawBasic{
     constructor(layerDraw, mode) {
         super(layerDraw, 'origin', mode);
         this.data = {subType:mode};    

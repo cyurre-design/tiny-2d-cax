@@ -2,7 +2,7 @@ import DrawBasic from './cy-draw-basic.js'
 import { createDrawElement } from '../cy-geometry/cy-geometry-basic-elements.js';
 import {pointProyectedToSegment, cutSegmentToCircle, distancePointToPoint } from '../cy-geometry/cy-geometry-library.js';
 
-export default class DrawNormal extends DrawBasic {
+export class DrawNormal extends DrawBasic {
     constructor(layerDraw, submode){
         super(layerDraw, 'segment-normal', submode);
         this.block = undefined;

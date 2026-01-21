@@ -1,7 +1,7 @@
 import DrawBasic from './cy-draw-basic.js'
 import { createDrawElement } from '../cy-geometry/cy-geometry-basic-elements.js';
 
-export default class DrawSelection extends DrawBasic{
+export class DrawSelection extends DrawBasic{
     constructor(layerDraw, mode) {
         super(layerDraw, 'select', mode);
 

@@ -1,7 +1,7 @@
 import DrawBasic from './cy-draw-basic.js'
 import { createDrawElement } from '../cy-geometry/cy-geometry-basic-elements.js';
 
-export default class DrawPath extends DrawBasic{
+export class DrawPath extends DrawBasic{
     constructor(layerDraw, mode) {
         super(layerDraw, 'path', mode);
         this.data = {subType:'PP'};

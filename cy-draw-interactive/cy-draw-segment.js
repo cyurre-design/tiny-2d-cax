@@ -1,7 +1,7 @@
 import DrawBasic from './cy-draw-basic.js'
 import { createDrawElement } from '../cy-geometry/cy-geometry-basic-elements.js';
 
-export default class DrawSegment extends DrawBasic {
+export class DrawSegment extends DrawBasic {
     constructor(layerDraw, submode){
         super(layerDraw, 'segment', submode);
         this.data.subType = submode;

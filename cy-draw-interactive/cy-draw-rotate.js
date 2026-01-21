@@ -1,7 +1,7 @@
 import {blockRotate} from '../cy-geometry/cy-geometry-library.js';
 import DrawBasic from './cy-draw-basic.js'
 //El translate está definido con clone, cada vez que muevo se crea.... pero a la larga es más comprensible
-export default class DrawRotate extends DrawBasic{
+export class DrawRotate extends DrawBasic{
     constructor(layerDraw, subMode){
         super(layerDraw, 'rotate', subMode);
         this.blocksToRotate = [];

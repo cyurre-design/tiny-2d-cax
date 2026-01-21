@@ -5,7 +5,7 @@ import "../opentype.js"
 import {textToGeometry, transformTextGeometry} from "../parsers/cy-text-to-geometry.js"
 import { scalePixels2mm } from '../cy-canvas-layers/cy-canvas-handler.js';
 
-export default class DrawText extends DrawBasic{
+export class DrawText extends DrawBasic{
     constructor(layerDraw) {
         super(layerDraw, 'text', ''); //podríamos usarlo para vértice o lado...
         this.moveFn         = [[this.draw], []];
