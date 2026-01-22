@@ -1,5 +1,5 @@
 "use strict";
-import {checkBbox, is_left_to_segment, is_left_or_equal_to_segment, fuzzy_eq_point,
+import {geometryPrecision, checkBbox, is_left_to_segment, is_left_or_equal_to_segment, fuzzy_eq, fuzzy_eq_point,
     blockClone, blockTranslate, blockRotate, blockScale, 
     blockSymmetryX, blockSymmetryY, blockSymmetryL, blockReverse, blockLength } from '../cy-geometry-library.js'
 
@@ -120,7 +120,7 @@ export function pathSetStartPoint(path, point){
 export function pathRemoveRedundant(path, options={pos_equal_eps: geometryPrecision, invert_area: false}) {
         let eps = options.pos_equal_eps;
         let blocks = path.elements.filter(block=> !fuzzy_eq_point(block.pi, block.pf, eps)); //quito los elementos de l=0
-        let result = createPath([]);
+        let result = createPath({elements:[]});
         //result.isClosed = path.isClosed;
         if(blocks.length < 2) {
             if(blocks.length > 0) result.elements.push(blockClone(blocks[0])) ; //después de filtrar solo ha quedado 0 o 1

@@ -12,7 +12,8 @@ export default class CyInputDataTransform extends HTMLElement {
     set subType(type) {
         this.type = type.toLowerCase();
         ['transform-origin', 'transform-scale', 'transform-translate', 'transform-rotate',
-            'transform-symmetryx', 'transform-symmetryy', 'transform-symmetryl', 'transform-link', 'transform-boolean' ].forEach( el =>
+            'transform-symmetryx', 'transform-symmetryy', 'transform-symmetryl', 'transform-link',
+            'transform-boolean', 'transform-pocket' ].forEach( el =>
                 this.dom.querySelector('#'+el).style.display = "none")
         this.dom.querySelector('#transform-'+ this.type).style.display="block";
         inputDataSubtype(this, `data-transform-${this.type}`);
@@ -25,6 +26,10 @@ export default class CyInputDataTransform extends HTMLElement {
         }
         if(this.type === 'link'){
             this.dom.querySelector('#data-transform-link-tol').dispatchEvent(new Event("change", { bubbles: true }));
+        }
+        if(this.type === 'pocket'){
+             this.dom.querySelector('#data-transform-pocket-co').dispatchEvent(new Event("change", { bubbles: true }));
+             this.dom.querySelector('#data-transform-pocket-io').dispatchEvent(new Event("change", { bubbles: true }));
         }
     }
     createStyle() {
@@ -56,6 +61,12 @@ export default class CyInputDataTransform extends HTMLElement {
         t = `transform-boolean`;
         h += `<div id=${t} style="display:none;">
                 <div class="row">${TOR(t) + TAND(t) + TNOT(t) + TXOR(t)}</div>
+            </div>`
+        t = `transform-pocket`;
+        h += `<div id=${t} style="display:none;">
+                <div class="row">CONTOUR OFFSET<input class="_25" id="data-${t}-co" type="number" value="0" step="0.1"/></div>
+                <div class="row">INSIDE OFFSET<input class="_25" id="data-${t}-io" type="number" value="0" step="0.1"/></div>
+                <div class="row">${TENTER(t)+TESC(t)}</div>
             </div>`
         return h;
     }

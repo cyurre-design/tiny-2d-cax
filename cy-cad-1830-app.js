@@ -20,7 +20,7 @@ import {createDrawElement } from './cy-geometry/cy-geometry-basic-elements.js';
 import {createCommandManager, commandLayerCreate, commandLayerDelete, commandLayerSetStyle, 
       commandBlockCreate, commandBlockDelete, commandBlockTransform, commandCreateCutPoints,
       commandChangeOrigin,
-      commandLinkUnlink, commandBooleanOperation} from './cy-commands/cy-command-definitions.js';
+      commandLinkUnlink, commandBooleanOperation, commandPocket} from './cy-commands/cy-command-definitions.js';
 
 //For Drawing Interactively
 import { DrawArc, DrawBoolean, DrawCircle, DrawExportGcode, DrawGcode, DrawLink,
@@ -184,7 +184,7 @@ const templateTransform = `<div id='transform'>
   </div>
   <div class="row">
     <input type="button" id="boolean" class="_33" value="BOOLEAN" />
-    <input type="button" id="boolean" class="_33" value="POCKET" />
+    <input type="button" id="pocket" class="_33" value="POCKET" />
   </div>
 </div>`
 
@@ -405,6 +405,22 @@ class cyCad1830App extends HTMLElement {
       //En realidad hay comandos como el or y and que admiten más de dos parámetros, a decidir qué hacer
       commandBooleanOperation(e.detail.paths[0], e.detail.paths[1], e.detail.mode);
       });   
+//--------------------- POCKET  COMANDOS ------------------------
+    /**@listens pocket-op  para hacer cajeras con islas */
+    // Admitimos n paths, siendo el primero el contorno exterior y los siguientes las islas
+    // Los offsets se pasan en detail.co y detail.io y se usan para pasada de acabado y contorneo de desbaste
+    // Si son 0 no se hace offset y el de contorneo tiene signo, Si es negativo es moyú y no se hacen cajeras
+    // Se debe chequear que las islas están dentro del contorno
+    // Se realiza el OR de las islas previamente.
+    // Si alguna isla está fuera del contorno se ignora
+    // Si intersecta con el contorno de da error (se puede hacer el OR de los contornos o islas previamente)
+    this.addEventListener('pocket-op', e=>{
+      commandPocket(e.detail.paths, e.detail.co, e.detail.io);
+      console.log(
+        "pocket-op received", e.detail  
+      )
+      //commandPocketOperation(e.detail.paths[0], e.detail.paths[1], e.detail.mode);
+     });
 //--------------------- TRANSFORMACIONES   COMANDOS ------------------------  
   this.addEventListener('geometry-transform',  (evt)=>{
       evt.stopPropagation();

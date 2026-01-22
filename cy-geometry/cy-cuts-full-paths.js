@@ -6,7 +6,7 @@ import {Cut} from "./cy-cut-types.js";
 import { arc_arc_intr } from "./cy-cuts-circle-circle.js";
 import {segment_arc_intr} from "./cy-cuts-segment-circle.js";
 import { line_line_intr } from "./cy-cuts-segment-segment.js";
-
+import { pathIsClosed } from "./cy-geo-elements/cy-path.js";
 ///
 /// In the case of overlapping intersects `point1` is always closest to the start of the second
 /// segment (`start_index2`) and `point2` furthest from the start of the second segment.
@@ -131,7 +131,7 @@ export function visitLocalIntersects( path, pos_equal_eps= geometryPrecision )
     //Si es closed, el constructor debe meter el shape correspondiente al final-comienzo y segments sería 2
     if(path.elements.length < 2)
         return({basic: intrs, overlapping: overlapping_intrs});
-    if((path.elements.length === 2) && (path.isClosed)){
+    if((path.elements.length === 2) && (pathIsClosed(path))){
         let shape1 = path.elements[0];
         let shape2 = path.elements[1]; //por mantener coherencia de nombres
             // check if entirely overlaps self, o sea, o bien son dos segmentos o dos arcos iguales TODO
@@ -211,7 +211,7 @@ export function visitGlobalSelfIntersects( path, pos_equal_eps = geometryPrecisi
         //YURRE: Hay dos tests que parecen contradictorios respecto a si el último vértice con el primero es intersect o no...
         //Dejo preparados ambos con el last j
         //YURRE: Intento compaginar ambos con el isClosed, más por el test que por necesidad
-        let lastj = path.isClosed? (i1 == 0? nsegments-1 : nsegments) : nsegments;
+        let lastj = pathIsClosed(path)? (i1 == 0? nsegments-1 : nsegments) : nsegments;
         //let lastj = i1 == 0? nsegments-1 : nsegments;  //para 6 elementos serían (0,2),(0,3),(0,4),     (1,3),(1,4),(1,5),(2,4),(2,5),(3,5)
         //let lastj = nsegments;                          //para 6 elementos serían (0,2),(0,3),(0,4),[0,5],(1,3),(1,4),(1,5),(2,4),(2,5),(3,5)
         for(let i2=i1+2; i2 < lastj; i2++  ){

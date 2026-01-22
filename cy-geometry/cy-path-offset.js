@@ -1,11 +1,16 @@
-import { sqDistancePointToPoint, } from "./fg-geometry-library.js";
-import { geometryPrecision, fuzzy_eq_zero , fuzzy_eq_point , distancePointToPoint} from "./fg-geometry-basic-elements.js";
-import {BArc, BSegment, BPath} from "./cy-geometry-extended-elements.js"
+import { sqDistancePointToPoint, distancePointToPoint, arc2PC2SVG} from "./cy-geometry-library.js";
+import { geometryPrecision, fuzzy_eq_zero , fuzzy_eq_point  } from "./cy-geometry-library.js";
+//import {BArc, BSegment, BPath} from "./cy-geometry-extended-elements.js"
 import {Cut} from "./cy-cut-types.js";
 import {line_line_intr} from './cy-cuts-segment-segment.js'
 import {arc_arc_intr} from './cy-cuts-circle-circle.js'
 import {segment_arc_intr} from './cy-cuts-segment-circle.js'
 import {allSelfIntersectsAsBasic, sliceAtIntersects, stitchSlices} from './cy-cuts-full-paths.js'
+import {pathIsClosed, createPath, pathRemoveRedundant} from './cy-geo-elements/cy-path.js'
+import { createSegment, segmentTranslate, segmentPointInsideOffset, segmentMidpoint } from "./cy-geo-elements/cy-segment.js";
+import { createArc, arcScale, arcPointInsideOffset, arcMidpoint} from "./cy-geo-elements/cy-arc.js";
+// Aquí cogemos los bloques y los desplazamos uno a uno. En el caso de segmentos es más bien un escalado
+// En la medida de lo posible conviene usar funciones que ya existan de librería...
 /// Create all the raw parallel offset segments of a polyline using the `offset` value given.
 function createUntrimmedRawOffsetSegments( path, offset)
 {  
@@ -13,30 +18,41 @@ function createUntrimmedRawOffsetSegments( path, offset)
     //YURRE: hay que insertar la info de collapsed y lo que haga falta
     result = path.elements.map( (shape, ix) => {
         let ns;
-        if(shape instanceof BSegment){     //YURRE: devolver segment con offset
-            ns = shape.clone();
-            ns.translate(-shape.uy * offset, shape.ux * offset);
+        if(shape.type = 'segment'){     //YURRE: devolver segment con offset
+            ns = segmentTranslate(shape, -shape.uy * offset, shape.ux * offset);
             ns.collapsed_arc = false;
-        } else {     //YURRE: En realidad no es un offset, sino un scale con respecto al centro, pero puede colapsar
+        } else { //Arco
+            //YURRE: En realidad no es un offset, sino un scale con respecto al centro, pero puede colapsar
             //Hay que tener en cuenta que según el arco vaya hacia un lado u otro el offset sería positivo o negativo
             //lo que se corresponde con hacer compensación exterior o interior.
             //Aunque el offset sea mayor que el radio hay que "proteger" las esquinas, así que existe un punto mínimo a distancia offset de las dos
             let noffset = shape.pathway === 1 ? offset : - offset;
             let newr = shape.r + noffset; //offset puede ser < 0
             if((newr < 0) || fuzzy_eq_zero(newr, geometryPrecision)){   //colapso del arco , devuelvo punto seguro , segmento de l= 0
-                let bisectriz= {x: shape.pm.x - shape.x, y: shape.pm.y - shape.y }; //bisectriz del arco apunta hacia fuera
-                let lt2 = shape.t.x*shape.t.x + shape.t.y*shape.t.y;    //longitud de la cuerda al cuadrado
-                let d = Math.sqrt(offset*offset -  0.25*lt2) / shape.r;           //distancia segura, pitágoras (/r para el normalizado posterior)
-                //El punto seguro sería a distancia d del centro en la dirección contraría a la bisectriz
-                let p = {x: shape.x - bisectriz.x*d, y: shape.y - bisectriz.y*d}
-                ns = new BSegment(p.x, p.y, p.x, p.y);
+                //Uso un punto medio de la cuerda y el centro para calcular la dirección
+                const pm = {x: 0.5*(shape.x1 + shape.x2), y:0.5 * (shape.y1 + shape.y2)}
+                let m = {x:pm.x - shape.x0, y:pm.y - shape.y0}; //apunto de mitad de la cuerda hacia el centro
+                const d = Math.hypot(m.x, m.y);
+                m = { x: m.x/d, y: m.y/d}; //vector unitario que apunta al centro desde la mitad de la cuerda
+                const p = {x: pm.x + m.x*(Math.abs(offset) - shape.r), y: pm.y + m.y*(Math.abs(offset) - shape.r)}
+
+                // let bisectriz= {x: shape.pm.x - shape.x, y: shape.pm.y - shape.y }; //bisectriz del arco apunta hacia fuera
+                // let lt2 = shape.t.x*shape.t.x + shape.t.y*shape.t.y;    //longitud de la cuerda al cuadrado
+                // let d = Math.sqrt(offset*offset -  0.25*lt2) / shape.r;           //distancia segura, pitágoras (/r para el normalizado posterior)
+                // //El punto seguro sería a distancia d del centro en la dirección contraría a la bisectriz
+                // let p = {x: shape.x - bisectriz.x*d, y: shape.y - bisectriz.y*d}
+                ns = createSegment({x0: p.x, y0: p.y, x1: p.x, y1: p.y});
                 ns.collapsed_arc = true;
             }
             else{ //escalo (r+offset)/r 
+         
                 const z = newr / shape.r;
-                let npi = {x:shape.x + (shape.pi.x - shape.x)*z, y:shape.y + (shape.pi.y - shape.y)*z}
-                let npf = {x:shape.x + (shape.pf.x - shape.x)*z, y:shape.y + (shape.pf.y - shape.y)*z}
-                ns = new BArc(shape.x, shape.y, newr, npi, npf , shape.pathway===1?'antiClock':'clock');
+                ns = arcScale(shape, shape.x0, shape.y0, z)
+                //let npi = {x:shape.x + (shape.pi.x - shape.x)*z, y:shape.y + (shape.pi.y - shape.y)*z}
+                //let npf = {x:shape.x + (shape.pf.x - shape.x)*z, y:shape.y + (shape.pf.y - shape.y)*z}
+                //
+                //ns = createArc()
+                //ns = new BArc(shape.x, shape.y, newr, npi, npf , shape.pathway===1?'antiClock':'clock');
                 ns.collapsed_arc = false;
                 }
         }
@@ -51,7 +67,10 @@ function createUntrimmedRawOffsetSegments( path, offset)
 function connect_using_arc( s1, s2, originalPath, join_params){
     let connection_arcs_ccw = join_params.connection_arcs_ccw;
     let origin = originalPath.elements[s1.origin]; //podría chequearse que era un segment
-    let ns = new BArc(origin.pf.x, origin.pf.y, Math.abs(join_params.offset), s1.pf, s2.pi, connection_arcs_ccw ? 'antiClock' : 'clock')
+    //el centro es el punto final del tramo s1 ORIGINAL (o el inicial del tramo s2)
+    //los puntos inicial y final son los de los tramos offseteados
+    let ns = createArc(arc2PC2SVG({x:origin.pf.x, y:origin.pf.y}, Math.abs(join_params.offset), s1.pf, s2.pi, connection_arcs_ccw ? 'antiClock' : 'clock'));
+    //let ns = createArc(  origin.pf.x, origin.pf.y, Math.abs(join_params.offset), s1.pf, s2.pi, connection_arcs_ccw ? 'antiClock' : 'clock')
     return ns; //Dejo la inserción para el llamador
 }
 
@@ -59,7 +78,8 @@ function connect_using_arc( s1, s2, originalPath, join_params){
 function line_line_join( s1, s2, path, join_params){
     let connection_arcs_ccw = join_params.connection_arcs_ccw;
     let pos_equal_eps = join_params.pos_equal_eps;
-    if(!(s1 instanceof BSegment) || !(s2 instanceof BSegment)) console.log('deben venir segmentos'); //Esto sobraría
+    //Paranoico
+    if((s1.type !== 'segment') || (s2.type !== 'segment')) console.log('deben venir segmentos'); //Esto sobraría
     if(s1.collapsed_arc || s2.collapsed_arc) {
         // connecting to/from collapsed arc, always connect using arc
         //YURRE: NO LO ENTIENDO PARA r < 0
@@ -69,8 +89,8 @@ function line_line_join( s1, s2, path, join_params){
         switch(res.r) {
             case Cut.NoIntersect: { //ejemplo? No lo veo, la verdad
                 // parallel lines, join with half circle
-                let ns = new BArc(0.5*(s1.pf.x + s2.pi.x), 0.5*(s1.pf.y + s2.pi.y),
-                        0.5*distancePointToPoint(s1.pf.x, s1.pf.y, s2.pi.x, s2.pi.y) , s1.pf, s2.pi, connection_arcs_ccw ? 'anticlock' : 'clock');
+                let ns = createArc(arc2PC2SVG({ x: 0.5*(s1.pf.x + s2.pi.x), y: 0.5*(s1.pf.y + s2.pi.y)},
+                        0.5*distancePointToPoint(s1.pf.x, s1.pf.y, s2.pi.x, s2.pi.y) , s1.pf, s2.pi, connection_arcs_ccw ? 'anticlock' : 'clock'));
                 return({res:[s1,ns], left:s2});
                 }
             break;
@@ -78,16 +98,16 @@ function line_line_join( s1, s2, path, join_params){
                 let point = res.point;
                 //Esto debería funcionar porque los objetos se pasan por referencia
                 //No es precisamente óptimo, pero si no hay que hacer una función de clase especial para acortar o alargar segmentos
-                let ns1 = new BSegment(s1.pi.x, s1.pi.y, point.x, point.y);
+                let ns1 = createSegment({x0: s1.pi.x, y0:s1.pi.y, x1:point.x, y1:point.y});
                 ns1.origin = s1.origin;
-                let ns2 = new BSegment( point.x, point.y, s2.pf.x, s2.pf.y);
+                let ns2 = createSegment({x0: point.x, y0: point.y, x1: s2.pf.x, y1: s2.pf.y});
                 ns2.origin=s2.origin;
                 return({res:[ns1],left:ns2});
             }
             break;
             case Cut.Overlapping: { //supongo que quiere colapsar un troxo de segmento, no parece muy habitual...
                 console.log('overlapping segments?');
-                return ({res:[BSegment(s1.pi.x, s1.pi.y, s2.pf.x, s2.pf.y)], left:s2});
+                return ({res:[ createSegment({x0:s1.pi.x, y0:s1.pi.y, x1:s2.pf.x, y1:s2.pf.y})], left:s2});
             }
             break;
             case Cut.FalseIntersect: { //puede que uno de los dos sí sea real y el otro no, pero point SI está en ambas rectas
@@ -104,7 +124,7 @@ function line_line_join( s1, s2, path, join_params){
 function line_arc_join( s1, s2, path, join_params){
     //let connection_arcs_ccw = join_params.connection_arcs_ccw;
     let pos_equal_eps = join_params.pos_equal_eps;
-    if(!(s1 instanceof BSegment) || !(s2 instanceof BArc)) console.log('deben venir segmento y arco')
+    if((s1.type !== 'segment') || (s2.type !== 'arc')) console.log('deben venir segmento y arco')
     //YURRE: Nosotros no tenemos el parámetro t y además la rutina de corte ya procesa los casos, se supone
     //Así que devolvemos, NoIntersect, TangentIntersect, OneIntersect y TwoIntersects, y nada más
     //YURRE: Cambio completo de estructura de programa, reuso el código y lo pongo en línea
@@ -126,8 +146,8 @@ function line_arc_join( s1, s2, path, join_params){
             point = res.point;
         }
         //Aquí se viene con parte del proceso hecho, si hay dos intersects solo se me pasa un punto, el cercano
-        const ns1 = new BSegment(s1.pi.x, s1.pi.y, point.x, point.y);
-        const ns2 = new BArc(s2.x, s2.y, s2.r, res.point, s2.pf, s2.pathway === 1? 'antiClock' : 'clock');
+        const ns1 = createSegment({x0:s1.pi.x, y0:s1.pi.y, x1:point.x, y1:point.y});
+        const ns2 = createArc(arc2PC2SVG( {x:s2.cx, y:s2.cy}, s2.r, res.point, s2.pf, s2.pathway === 1? 'antiClock' : 'clock'));
         ns1.origin = s1.origin;
         ns2.origin = s2.origin;
         return({res:[ns1], left:ns2})
@@ -141,7 +161,7 @@ function arc_line_join( s1, s2, path, join_params){
     //let connection_arcs_ccw = join_params.connection_arcs_ccw;
     let pos_equal_eps = join_params.pos_equal_eps;
 
-    if(!(s1 instanceof BArc) || !(s2 instanceof BSegment)) console.log('deben venir segmentos')
+    if((s1.type !== 'arc') || (s2.type !== 'segment')) console.log('deben venir segmentos')
 
     let res = segment_arc_intr(s2, s1, pos_equal_eps);
     if(res.r === Cut.NoIntersect){
@@ -156,8 +176,8 @@ function arc_line_join( s1, s2, path, join_params){
         else{
             point = res.point;
         } 
-        const ns1 = new BArc(s1.x, s1.y, s1.r, s1.pi, res.point,s1.pathway === 1? 'antiClock' : 'clock');
-        const ns2 = new BSegment( point.x, point.y, s2.pf.x, s2.pf.y);
+        const ns1 = createArc(arc2PC2SVG({x:s1.x, y:s1.y}, s1.r, s1.pi, res.point, s1.pathway === 1? 'antiClock' : 'clock'));
+        const ns2 = createSegment({ x0:point.x, y0:point.y, x1:s2.pf.x, y1:s2.pf.y});
         ns1.origin = s1.origin;
         ns2.origin = s2.origin;
         return({res:[ns1], left:ns2})
@@ -169,19 +189,19 @@ function arc_line_join( s1, s2, path, join_params){
 function arc_arc_join( s1, s2, path, join_params){
     let connection_arcs_ccw = join_params.connection_arcs_ccw;
     let pos_equal_eps = join_params.pos_equal_eps;
-    if(!(s1 instanceof BArc) || !(s2 instanceof BArc)) console.log('deben venir arcos')
+    if((s1.type !== 'arc') || (s2.type !== 'arc')) console.log('deben venir arcos')
 
     //YURRE: En vez de llamar a circle_circle_intr he hecho la arc_arc_intr que ya devuelve machacado
     let res = arc_arc_intr(s1, s2, pos_equal_eps );
     if(res.r === Cut.OverlappingArcs){
         console.log('TODO');    //El original parece no hacer nada
         if(res.sameDirection === true){
-            const ns1 = new BArc(s1.x, s1.y, s1.r, s1.pi, res.point1, s1.pathway===1?'antiClock':'clock');
-            const ns2 = new BArc(s2.x, s2.y, s2.r, res.point2, s2.pf, s2.pathway===1?'antiClock':'clock');
+            const ns1 = createArc(arc2PC2SVG({x:s1.x, y:s1.y}, s1.r, s1.pi, res.point1, s1.pathway===1?'antiClock':'clock'));
+            const ns2 = createArc(arc2PC2SVG({x:s2.x, y:s2.y}, s2.r, res.point2, s2.pf, s2.pathway===1?'antiClock':'clock'));
         }
         else{
-            const ns1 = new BArc(s1.x, s1.y, s1.r, s1.pi, res.point1, s1.pathway===1?'antiClock':'clock');
-            const ns2 = new BArc(s2.x, s2.y, s2.r, res.point2, s2.pf, s2.pathway===1?'antiClock':'clock');
+            const ns1 = createArc(arc2PC2SVG({x:s1.x, y:s1.y}, s1.r, s1.pi, res.point1, s1.pathway===1?'antiClock':'clock'));
+            const ns2 = createArc(arc2PC2SVG({x:s2.x, y:s2.y}, s2.r, res.point2, s2.pf, s2.pathway===1?'antiClock':'clock'));
         }
         return ({res:[ns1],left:ns2});
     }
@@ -198,8 +218,8 @@ function arc_arc_join( s1, s2, path, join_params){
         let dist2 = sqDistancePointToPoint(res.point2.x, res.point2.y, s1.pf.x, s1.pf.y);
         point = dist1 < dist2? res.point1 : res.point2;
     }
-    const ns1 = new BArc(s1.x, s1.y, s1.r, s1.pi, point, s1.pathway===1?'antiClock':'clock');
-    const ns2 = new BArc(s2.x, s2.y, s2.r, point, s2.pf, s2.pathway===1?'antiClock':'clock');
+    const ns1 = createArc(arc2PC2SVG({x:s1.x, y:s1.y}, s1.r, s1.pi, point, s1.pathway===1?'antiClock':'clock'));
+    const ns2 = createArc(arc2PC2SVG({x:s2.x, y:s2.y}, s2.r, point, s2.pf, s2.pathway===1?'antiClock':'clock'));
     ns1.origin = s1.origin;
     ns2.origin = s2.origin;
     return ({res:[ns1],left:ns2});
@@ -226,11 +246,11 @@ function createRawOffsetPath(path, offset, options){
 
     //YURRE: Dudas de inserción de elementos nuevos. Dónde?
     let joinOffsetShapes = (s1, s2, join_params) => {
-        if(s1 instanceof BSegment){
-            if(s2  instanceof BSegment) return  line_line_join(s1, s2, path, join_params);
+        if(s1.type === 'segment'){
+            if(s2.type === 'segment') return  line_line_join(s1, s2, path, join_params);
             else return line_arc_join(s1, s2, path, join_params);
         } else {
-            if(s2  instanceof BSegment) return  arc_line_join(s1, s2, path, join_params);
+            if(s2.type === 'segment') return  arc_line_join(s1, s2, path, join_params);
             else return arc_arc_join(s1, s2, path, join_params)
         }
         }
@@ -243,19 +263,19 @@ function createRawOffsetPath(path, offset, options){
         result = result.concat(joint.res);
         shape = joint.left;
     }
-    if(path.isClosed){ //al cerrar , además de el último tramo, puede modificarse el comienzo del primero
+    if(pathIsClosed(path)){ //al cerrar , además de el último tramo, puede modificarse el comienzo del primero
         let joint = joinOffsetShapes(shape, rawOffsetSegs[0], join_params);
         result = result.concat(joint.res);
         if(!fuzzy_eq_point(result[0].pi, joint.left.pi)){
             let old = result[0];
-            if(joint.left instanceof BSegment)
-                result[0] = new BSegment(joint.left.pi.x, joint.left.pi.y, old.pf.x, old.pf.y);
+            if(joint.left.type === 'segment')
+                result[0] = createSegment({x0:joint.left.pi.x, y0:joint.left.pi.y, x1:old.pf.x, y1:old.pf.y});
             else
-                result[0] = new BArc(old.x, old.y, old.r, joint.left.pi, old.pf, old.pathway===1?'antiClock':'clock');
+                result[0] = createArc(arc2PC2SVG({x:old.x, y:old.y}, old.r, joint.left.pi, old.pf, old.pathway===1?'antiClock':'clock'));
         }
     }
-    let res = new BPath(result);
-    return res.removeRedundant();
+    let res = createPath({elements:result});
+    return pathRemoveRedundant(res);
 }
 
 //YURRE: El sistema con punto medio y tal no convence nada, tiro de nuestra librería
@@ -266,17 +286,24 @@ function createRawOffsetPath(path, offset, options){
 // A pensar
 export function sliceIsValid(slice, path, offset, pos_equal_eps= geometryPrecision ){
     //let abs_offset = Math.abs(offset) - pos_equal_eps;
+    const midpoint = slice.type === 'segment' ? segmentMidpoint(slice) : arcMidpoint(slice);
     for(let i = 0; i < path.elements.length; i++){
         let shape = path.elements[i];
-        if(shape.insideOffset(slice.pi, offset, pos_equal_eps)) return false;
-        if(shape.insideOffset(slice.pf, offset, pos_equal_eps)) return false;
-        if(shape.insideOffset(slice.midpoint(), offset, pos_equal_eps)) return false;     
+        if(shape.type === 'segment'){
+            if(segmentPointInsideOffset(shape, slice.pi, offset, pos_equal_eps)) return false;
+            if(segmentPointInsideOffset(shape, slice.pf, offset, pos_equal_eps)) return false;
+            if(segmentPointInsideOffset(shape, midpoint, offset, pos_equal_eps)) return false;     
+        } else {
+            if(arcPointInsideOffset(shape, slice.pi, offset, pos_equal_eps)) return false;
+            if(arcPointInsideOffset(shape, slice.pf, offset, pos_equal_eps)) return false;
+            if(arcPointInsideOffset(shape, midpoint, offset, pos_equal_eps)) return false;
+        }
     }
     return true;
 }
 
 function slicesFromRawOffset( path, rawOffsetPath, offset, options){
-    if(!rawOffsetPath.isClosed) console.log( "only supports closed polylines, use slices_from_dual_raw_offsets for open polylines");
+    if(!pathIsClosed(rawOffsetPath)) console.log( "only supports closed polylines, use slices_from_dual_raw_offsets for open polylines");
 
     let result = [];
     if (rawOffsetPath.elements.length < 2) {
@@ -318,28 +345,32 @@ function slicesFromRawOffset( path, rawOffsetPath, offset, options){
     /// polylines requires more memory and computation.
     /// handle_self_intersects: bool,
     /// Fuzzy comparison epsilon used for determining if two positions are equal.
-    /// Fuzzy comparison epsilon used for determining if two positions are equal when stitching
-    /// polyline slices together.
-    /// Fuzzy comparison epsilon used when testing distance of slices to original polyline for
-    /// validity.
+    /// Fuzzy comparison epsilon used for determining if two positions are equal when stitching polyline slices together.
+    /// Fuzzy comparison epsilon used when testing distance of slices to original polyline for validity.
     
 export const defaultOffsetOptions = {handle_self_intersects:false, pos_equal_eps: geometryPrecision, slice_join_eps: geometryPrecision, offset_dist_eps: geometryPrecision};
+
+
 export function parallelOffset(path, offset, options = defaultOffsetOptions) {
     if (path.elements.length < 1) { return []; }
     
     //YURRE: Hay que meter validaciones, por ejemplo que el perfil no tenga selfintersects de ningún tipo y sea cerrada
     //Si se quiere para abiertas, se puede mirar....de momento he quitado el código (al final)
-    if(!path.isClosed) {console.log('Only prepared for closed contours'); return []};
+    if(!pathIsClosed(path)) {console.log('Only prepared for closed contours'); return []};
     if(!offset || fuzzy_eq_zero(offset)) return [path];
+    //Chequeo self-intersects, NO tienen sentido en un CAM 
+    const intersects = allSelfIntersectsAsBasic(path); //devuelve un objeto
+    if(intersects.basic.length > 0) return ({error:true, text: 'The path intersects itself!'})
     let rawOffsetPath = createRawOffsetPath(path, offset, options);
     if(rawOffsetPath.elements.length === 0) return [];
     let result = [];
-    if (path.isClosed && !options.handle_self_intersects) {
+    //Ya he mirado que era cerrado y No trato los self-intersects
+    //if (path.isClosed && !options.handle_self_intersects) {
         let slices = slicesFromRawOffset(path, rawOffsetPath, offset, options);
         slices = stitchSlices( slices, options )
-        slices = slices.map(shapes=>new BPath(shapes))
+        slices = slices.map(shapes=>createPath({elements:shapes}))
         return slices;
-    } else console.log('no implementado aún para abiertos')
+    //} else console.log('no implementado aún para abiertos')
     // {
     //     let dual_raw_offset = createRawOffsetPath(path, -offset, options);
     //     let slices = slices_from_dual_raw_offsets( path, rawOffsetPath, dual_raw_offset, index, offset, options );

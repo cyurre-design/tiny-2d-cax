@@ -14,7 +14,9 @@
       "arc-2pl-l" : 50,
       "transform-rotate-a": 45,
       "transform-scale-sn" : 50,
-      "transform-scale-sd" : 100
+      "transform-scale-sd" : 100,
+      "transform-pocket-co" : 0.1,
+      "transform-pocket-io" : 3
     },
     "layers":{
       "path-color" : "green",

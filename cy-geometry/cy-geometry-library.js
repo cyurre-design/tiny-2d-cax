@@ -400,7 +400,10 @@ export function arc2PL(p1, p2, arcLength, way='clock'){
         //El algoritmo es sensible a la estimación inicial, deberíamos buscar una mejor forma
         //Como mínimo el radio es d/2 (arco de 180º), y como mucho L/π (arco casi plano)
         //uso un valor de r intemedio en que la sagita es medio radio. 
-        let R = L - Math.sqrt(L*L - d*d);
+        //let R = L - Math.sqrt(L*L - d*d);
+        //aproximación usando la distancia de cuerda a arco
+        const s2 = 0.25*(L*L - d*d); 
+        let R = (0.25*d*d + s2) / (2*Math.sqrt(s2));
         //let R = d / 2 + 0.0001; // evitar división por cero
         for (let i = 0; i < maxIter; i++) {
             let fR = f(R);

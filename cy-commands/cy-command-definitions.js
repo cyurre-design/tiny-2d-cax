@@ -2,6 +2,7 @@ import {createHistorySystem} from "./cy-command-manager.js"
 import {linkPaths, unlinkPaths} from '../cy-geometry/cy-geometry-link-paths.js';
 import {pathBoolean} from '../cy-geometry/cy-path-boolean.js'
 import { polygonToPath} from '../cy-geometry/cy-geometry-basic-elements.js';
+import { parallelOffset } from "../cy-geometry/cy-path-offset.js";
 
 let commandManager;
 export  function createCommandManager(application, blocks) {
@@ -205,7 +206,7 @@ export function commandLinkUnlink(mode, tolerance ){          //mode: link, unli
     commandManager.execute(theCommand);  
 }
 //Como hemos abierto el camino a los polígonos, no podemos usar un replace de paths, borramos los dos y añadimos los nuevos
-export function commandBooleanOperation(path1, path2, operation, tolerance ){          //mode: link, unlink
+export function commandBooleanOperation(path1, path2, operation, tolerance ){
     const theCommand = commandManager.makeCommand({
         execute(p, a) {
           this.copiaBefore = JSON.stringify(p);
@@ -217,6 +218,33 @@ export function commandBooleanOperation(path1, path2, operation, tolerance ){   
           if(newPaths.length !== 0){
             p.deleteBlock(oldPaths[0]);
             p.deleteBlock(oldPaths[1]);
+            p.addBlocks(undefined, newPaths);
+          }
+          this.copiaAfter = JSON.stringify(p);
+          p.draw();
+    },
+    undo(p,a){
+        p.deserialize(JSON.parse(this.copiaBefore));
+        p.draw();
+    },
+    redo(p,a){
+        p.deserialize(JSON.parse(this.copiaAfter));
+        p.draw();
+    }
+    })
+    commandManager.execute(theCommand);  
+}
+//Como hemos abierto el camino a los polígonos, no podemos usar un replace de paths, borramos los dos y añadimos los nuevos
+export function commandPocket(paths, co, ci, tolerance ){
+    const theCommand = commandManager.makeCommand({
+        execute(p, a) {
+          this.copiaBefore = JSON.stringify(p);
+          const oldPaths = paths;  //pueden ser polígonos
+          //si son polígonos los paso a paths
+          let newPaths = paths.map( p => p.type === 'polygon' ? polygonToPath(p) : p)
+          newPaths = parallelOffset(newPaths[0], co, ci);
+          if(newPaths.length !== 0){
+            oldPaths.forEach(path =>  p.deleteBlock(path));
             p.addBlocks(undefined, newPaths);
           }
           this.copiaAfter = JSON.stringify(p);

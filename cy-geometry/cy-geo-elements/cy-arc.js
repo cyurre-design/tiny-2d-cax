@@ -131,7 +131,7 @@ export function arcClosestPoint(a, point, eps = geometryPrecision){
         const dpf = sqDistancePointToPoint(a.pf.x, a.pf.y, point.x, point.y);
         return( dpi < dpf? a.pi: a.pf);
         }    
-export function arcInsideOffset(a, point, offset, eps){
+export function arcPointInsideOffset(a, point, offset, eps){
         let absoff = Math.abs(offset)-eps;
         let absoff2 = absoff*absoff ; 
         let r2 = sqDistancePointToPoint(point.x, point.y, a.x, a.y);

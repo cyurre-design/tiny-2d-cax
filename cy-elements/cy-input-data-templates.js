@@ -20,7 +20,7 @@ export function TXx0(t) { return(
 export function TYy0(t) { return(
 `Y<input id="data-${t}-y0"  class="_33" type="number" value="0" step="0.5"/>`)}
 export function TR(t) { return(
-`R<input id="data-${t}-r" type="number" value="0" step="0.5"/>`)}
+`R<input id="data-${t}-r" type="number" value="0" step="0.5" min="0"/>`)}
 export function TL(t) { return(
 `L<input id="data-${t}-l" type="number" value="0" step="0.5"/>`)}
 export function TX2Y2(t) { return(

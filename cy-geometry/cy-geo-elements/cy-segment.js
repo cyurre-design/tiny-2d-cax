@@ -1,5 +1,6 @@
 "use strict";
-import { translatePoint, pointSymmetricSegment, rotateZ , scale0, distancePointToPoint, geometryPrecision, fuzzy_eq_point} from '../cy-geometry-library.js'
+import { translatePoint, distancePointToLine, pointSymmetricSegment, rotateZ , scale0,
+    sqDistancePointToPoint, distancePointToPoint, geometryPrecision, fuzzy_eq_point} from '../cy-geometry-library.js'
 
 
 //Por motivos operativos se mantiene una formulación interna optimizada con el vector director y la distancia al origen.
@@ -101,11 +102,11 @@ export function closestPoint (s, point, eps = geometryPrecision){
         if(l*l > s.l2) 
         return {x: s.pi.x + s.ux*l, y:s.pi.y + s.uy*l};
         }
-export function segmentInsideOffset(point, offset, eps){
+export function segmentPointInsideOffset(s, point, offset, eps){
         let absoff = Math.abs(offset)-eps ; 
         if(distancePointToLine(point, s) > absoff) return false;
         //Aquí está dentro del "tubo" +- offset de la línea
-        const m = segmentMidpoint(s); //O meterlo en la estructura
+        const m = segmentMidpoint(s); 
         if(distancePointToPoint(point.x, point.y, m.x, m.y) < 0.5*s.d) return true;
         //Quedan las esquinas redondeadas, de todas las maneras no es totalmente exacto....
         if(sqDistancePointToPoint(point.x, point.y, s.pi.x, s.pi.y) < absoff*absoff) return true;
