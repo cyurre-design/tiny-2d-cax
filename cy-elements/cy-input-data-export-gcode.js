@@ -18,20 +18,25 @@ export default class CyInputDataExportGcode extends HTMLElement {
     }
     createStyle() {
         let style = `<style>
+        textarea{resize:none;}
         </style>`;
         return style;
     }
     createTemplate() {
         let t = `export-gcode`;
         let h = `<div id=${t}>`;
-        h += `<div class="_20">Header</div>
-                <textarea  id="data-${t}-header" autofocus class="data _80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
-        h +=  `<div class="_20">Footer</div>
-                <textarea  id="data-${t}-footer" class="data _80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
-        h +=  `<div class="_20">Post</div>
-                <textarea  id="data-${t}-post" class="data _80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
-        h +=  `<div class="_20">Pre</div>
-                <textarea  id="data-${t}-pre" class="data _80" contenteditable="plaintext-only" maxlength="50" ></textarea>`
+        h += `<div class="row"> <div class="_20">Header</div>
+                <textarea  id="data-${t}-header" autofocus class="data _75" contenteditable="plaintext-only" maxlength="50" ></textarea>
+                </div>`
+        h +=  `<div class="row"> <div class="_20">Footer</div>
+                <textarea  id="data-${t}-footer" class="data _75" contenteditable="plaintext-only" maxlength="50" ></textarea>
+                </div>`
+        h +=  `<div class="row"> <div class="_20">Post</div>
+                <textarea  id="data-${t}-post" class="data _75" contenteditable="plaintext-only" maxlength="50" ></textarea>
+                </div>`
+        h +=  `<div class="row"> <div class="_20">Pre</div>
+                <textarea  id="data-${t}-pre" class="data _75" contenteditable="plaintext-only" maxlength="50" ></textarea>
+                </div>`
         h += `<div class = "row"> Bezier to Arc Tolerance<input type="number" min="0.01" max="1" step="0.01" value="0.1" id="data-${t}-tol"/></div>`
         h += `<div class="row">${TSAVE(t) + TINVERT(t) + TSTART(t) + TORDER(t) + TEND(t)}</div></div>`
         return h
