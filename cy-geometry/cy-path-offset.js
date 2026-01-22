@@ -6,7 +6,7 @@ import {line_line_intr} from './cy-cuts-segment-segment.js'
 import {arc_arc_intr} from './cy-cuts-circle-circle.js'
 import {segment_arc_intr} from './cy-cuts-segment-circle.js'
 import {allSelfIntersectsAsBasic, sliceAtIntersects, stitchSlices} from './cy-cuts-full-paths.js'
-import {pathIsClosed, createPath, pathRemoveRedundant} from './cy-geo-elements/cy-path.js'
+import {pathIsClosed, createPath, pathRemoveRedundant, pathOrientation, pathReverse} from './cy-geo-elements/cy-path.js'
 import { createSegment, segmentTranslate, segmentPointInsideOffset, segmentMidpoint } from "./cy-geo-elements/cy-segment.js";
 import { createArc, arcScale, arcPointInsideOffset, arcMidpoint} from "./cy-geo-elements/cy-arc.js";
 // Aquí cogemos los bloques y los desplazamos uno a uno. En el caso de segmentos es más bien un escalado
@@ -226,22 +226,20 @@ function arc_arc_join( s1, s2, path, join_params){
 }
 
 function createRawOffsetPath(path, offset, options){
-    if (path.elements.length < 1) {
-        return new BPath([]);
-    }
-    //Esta crea un clone, no modifica el path original
+    //NO testeo cosas que ya se han mirado en la entrada a parallelOffset
+    //Esta crea un clone, no modifica el path original. Se genera el offset de cada elemento, sin más
     let rawOffsetSegs = createUntrimmedRawOffsetSegments(path, offset);
     if(rawOffsetSegs.length === 0) {
-        return new BPath([]);
+        return createPath({elements:[]});
     }
     // detect single collapsed arc segment
     if(rawOffsetSegs.length === 1 && rawOffsetSegs[0].collapsed_arc) {
-        return new BPath([]);
+        return createPath({elements:[]});
     }
     //Si voy ccw y offset>0 (a derechas) , ccw='ccw', si voy ccw y offset<0 (a izquierdas), ccw='cw'
     //Si voy cw y offset>0  (a derechas) , ccw='ccw', si voy cw y offset<0  (a izquierdas), ccw='cw'
     //let ccw = path.orientation(); //'ccw' o 'cw'
-    let connection_arcs_ccw = offset > 0 ; //((ccw==='ccw') && (offset > 0)) || ((ccw==='cw') && (offset > 0)) ; //?? YURRE, debe ir según la definición de creación a derechas o izquierdas
+    let connection_arcs_ccw = offset < 0 ; //((ccw==='ccw') && (offset > 0)) || ((ccw==='cw') && (offset > 0)) ; //?? YURRE, debe ir según la definición de creación a derechas o izquierdas
     let join_params = { offset: offset, connection_arcs_ccw : connection_arcs_ccw, pos_equal_eps : options.pos_equal_eps || geometryPrecision};
 
     //YURRE: Dudas de inserción de elementos nuevos. Dónde?
@@ -351,38 +349,27 @@ function slicesFromRawOffset( path, rawOffsetPath, offset, options){
 export const defaultOffsetOptions = {handle_self_intersects:false, pos_equal_eps: geometryPrecision, slice_join_eps: geometryPrecision, offset_dist_eps: geometryPrecision};
 
 
+//YURRE: Modificaciones para simplificar los algoritmos iniciales generales para cajeras con islas "normales"
+// 1.- Definimos que el perfil exterior o cajera es antiClokwise
+// 2.- Solo tiene sentido para perfiles cerrados, Si se quieren perfiles abiertos se pueden cerrar en interactivo 
+//          y volver a abrirlos posteriormente ... 
 export function parallelOffset(path, offset, options = defaultOffsetOptions) {
     if (path.elements.length < 1) { return []; }
-    
-    //YURRE: Hay que meter validaciones, por ejemplo que el perfil no tenga selfintersects de ningún tipo y sea cerrada
-    //Si se quiere para abiertas, se puede mirar....de momento he quitado el código (al final)
-    if(!pathIsClosed(path)) {console.log('Only prepared for closed contours'); return []};
-    if(!offset || fuzzy_eq_zero(offset)) return [path];
+    if(!pathIsClosed(path))
+        return ({error:true, paths:[], text:'Only prepared for closed contours'});
+    if(!offset || fuzzy_eq_zero(offset)) return ({error:false, paths:[], text:'Offset must be !== 0'});
     //Chequeo self-intersects, NO tienen sentido en un CAM 
     const intersects = allSelfIntersectsAsBasic(path); //devuelve un objeto
-    if(intersects.basic.length > 0) return ({error:true, text: 'The path intersects itself!'})
-    let rawOffsetPath = createRawOffsetPath(path, offset, options);
-    if(rawOffsetPath.elements.length === 0) return [];
-    let result = [];
+    if(intersects.basic.length > 0) return ({error:true, paths:[], text: 'The path intersects itself!'})
+    // Aquí hay dos posibilidades, poner el ccw/cw en función del path o darle la vuelta...
+//@todo ambas opciones tienen ventajas e inconvenientes..
+    let newPath = (pathOrientation(path) !== 'clockWise') ? pathReverse(path) : path ;
+    let rawOffsetPath = createRawOffsetPath(newPath, offset, options);
+    if(rawOffsetPath.elements.length === 0)
+        return ({error:true, paths:[], text: 'Error al calcular los offsets de los paths'});
     //Ya he mirado que era cerrado y No trato los self-intersects
-    //if (path.isClosed && !options.handle_self_intersects) {
-        let slices = slicesFromRawOffset(path, rawOffsetPath, offset, options);
-        slices = stitchSlices( slices, options )
-        slices = slices.map(shapes=>createPath({elements:shapes}))
-        return slices;
-    //} else console.log('no implementado aún para abiertos')
-    // {
-    //     let dual_raw_offset = createRawOffsetPath(path, -offset, options);
-    //     let slices = slices_from_dual_raw_offsets( path, rawOffsetPath, dual_raw_offset, index, offset, options );
-    //     slices = stitchSlices( rawOffsetPath, slices, path.isClosed(), rawOffsetPath.vertex_count(), options);
-    // };
-
-    // debug_assert!(
-    //     result
-    //         .iter()
-    //         .all(|p: &O| p.remove_repeat_pos(options.pos_equal_eps).is_none()),
-    //     "bug: result should never have repeat position vertexes"
-    // );
-
-    return result;
+    let slices = slicesFromRawOffset(path, rawOffsetPath, offset, options);
+    slices = stitchSlices( slices, options )
+    slices = slices.map(shapes=>createPath({elements:shapes}))
+    return ({error:false, paths:slices, text:''});
 }
