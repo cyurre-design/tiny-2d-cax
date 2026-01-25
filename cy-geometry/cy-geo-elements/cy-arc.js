@@ -1,6 +1,7 @@
 "use strict";
 import {geometryPrecision, _2PI, sqDistancePointToPoint, translatePoint, fuzzy_eq_point,
-    pointWithinArcSweep, rotateZ, scale0, arc2PC2SVG, pointSymmetricSegment} from '../cy-geometry-library.js'
+    pointWithinArcSweep, rotateZ, scale0, arc2PC2SVG, pointSymmetricSegment,
+    normalize_radians} from '../cy-geometry-library.js'
 
 //args centro(cx, cy), radio, pi(x1,y1), pf(x2,y2), ai, da, fS, fA En realidad son redundantes, pero se calcularían en el createDraw
 //Falta tratamiento de errores
@@ -9,49 +10,37 @@ export function createArc(data = {}) {
     const p = {type : 'arc', get pi(){ return ({x:this.x1, y: this.y1})}, get pf(){ return ({x:this.x2, y: this.y2})}}
     const a = Object.assign(p, data);       
     //a.x0 = data.x0; a.y0 = data.y0;
-    a.bbox = _boundingBox(a);
-    //console.log(a.bbox);
+    a.bbox = arcBoundingBox(a);
+    console.log(a.bbox);
     return a;
     }
-    
-function _boundingBox (a, eps = geometryPrecision){
-        // if (fuzzy_eq_point(this.pi, this.pf.x, eps)) {
-        //     return new {x0:this.x0, y0:this.y0, x1:this.x0, y1:this.y0}; //No creo que aoprta nada, la verdad
-        // }
-        //Un poco lío pero sin cosenos ni atan ni ná, los numero como 0,1,2,3 por conveniencia
-        const qi = (a.x1 >= a.cx)?((a.y1 >= a.cy)?0:3):((a.y1 >= a.cy)?1:2);
-        const qf = (a.x2 >= a.cx)?((a.y2 >= a.cy)?0:3):((a.y2 >= a.cy)?1:2);
-        //los primeros 8 casos empiezan en el primer cuadrante, etc...
-        const bboxC = {x0:a.cx-a.r, y0:a.cy-a.r, x1:a.cx+a.r, y1:a.cy+a.r};
-        const bboxS = {x0:Math.min(a.x1, a.x2), y0:Math.min(a.y1, a.y2), x1:Math.max(a.x1, a.x2), y1:Math.max(a.y1, a.y2)};
 
-        switch(4*qi+qf){    
-            //ambos en el mismo cuadrante, fA implica que da la vuelta 
-            case 0b0000:
-            case 0b0101:
-            case 0b1010:
-            case 0b1111: return(a.fA === 0? bboxS : bboxC);
-            //cuadrantes 1 y 2
-            case 0b0100:
-            case 0b0001: return(a.fA === 0? Object.assign(bboxS, {y1:bboxC.y1}) : Object.assign(bboxC, {y1:bboxS.y1}));
-            //cuadrantes 2 y 3
-            case 0b0110:
-            case 0b1001: return(a.fA === 0? Object.assign(bboxS, {x0:bboxC.x0}) : Object.assign(bboxC, {x0:bboxS.x0}));
-            //cuadrantes 3 y 4
-            case 0b1011:
-            case 0b1110: return(a.fA === 0? Object.assign(bboxS, {y0:bboxC.y0}) : Object.assign(bboxC, {y0:bboxS.y0}));
-            //cuadrantes 1 y 4
-            case 0b0011:
-            case 0b1100: return(a.fA === 0? Object.assign(bboxS, {x1:bboxC.x1}) : Object.assign(bboxC, {x1:bboxS.x1}));
-            //cuadrantes 1 y 3, inicio en 1, hay un salto de 2 y el fA no marca el sentido, uso fS
-            case 0b0010: return(a.fS === 0? Object.assign(bboxS, {x0:bboxC.x0, y1:bboxC.y1}) : Object.assign(bboxS, {x1:bboxC.x1, y0:bboxC.y0}));
-            //cuadrantes del 3 al 1 (al revés)
-            case 0b1000: return(a.fS === 1? Object.assign(bboxS, {x0:bboxC.x0, y1:bboxC.y1}) : Object.assign(bboxS, {x1:bboxC.x1, y0:bboxC.y0}));
-            //cuadrantes 2 y 4, inicio en 2, hay un salto de 2 y el fA no marca el sentido, uso fS
-            case 0b0111: return(a.fS === 0? Object.assign(bboxS, {x0:bboxC.x0, y0:bboxC.y0}) : Object.assign(bboxS, {x0:bboxC.x0, y0:bboxC.y0}));
-            //cuadrantes del 4 al 2 (al revés)
-            case 0b1101: return(a.fS === 1? Object.assign(bboxS, {x0:bboxC.x0, y0:bboxC.y0}) : Object.assign(bboxS, {x0:bboxC.x0, y0:bboxC.y0}));
-        }          
+const TAU = 2 * Math.PI;
+function angleOnArc(arc, a) {
+    const s = Math.sign(arc.da);
+    const d = (a - arc.ai) * s;
+    return d >= 0 && d <= Math.abs(arc.da);
+}
+ 
+function arcBoundingBox (arc, eps = geometryPrecision){
+    //caso frontera
+    if (Math.abs(arc.da) >= TAU) 
+        return { x0: cx - r, y0: cy - r, x1: cx + r, y1: cy + r};
+  
+        //BBox del segmento de pi a pf. Si el arco no atraviesa cuadrantes, sería el bbox
+        const bbox = {x0:Math.min(arc.x1, arc.x2), y0:Math.min(arc.y1, arc.y2), x1:Math.max(arc.x1, arc.x2), y1:Math.max(arc.y1, arc.y2)};
+        const sin = [0, 1, 0, -1], cos = [1, 0, -1, 0];
+        [0, 0.5*Math.PI, Math.PI, 1.5*Math.PI].forEach( (a, ix) => {
+            if( angleOnArc(arc, a) ){
+                const x = arc.cx + arc.r * cos[ix];
+                const y = arc.cy + arc.r * sin [ix];
+                bbox.x0 = Math.min(bbox.x0, x);
+                bbox.x1 = Math.max(bbox.x1, x);
+                bbox.y0 = Math.min(bbox.y0, y);
+                bbox.y1 = Math.max(bbox.y1, y);
+            }
+        })
+        return bbox;
     }
 export function arcMidpoint(a){
     const midAngle = (a.ai + a.da/2);
