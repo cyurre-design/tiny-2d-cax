@@ -10,9 +10,9 @@ import {pathIsClosed, createPath, pathRemoveRedundant, pathOrientation, pathReve
 import { createSegment, segmentTranslate, segmentPointInsideOffset, segmentMidpoint } from "./cy-geo-elements/cy-segment.js";
 import { createArc, arcScale, arcPointInsideOffset, arcMidpoint} from "./cy-geo-elements/cy-arc.js";
 // Aquí cogemos los bloques y los desplazamos uno a uno. En el caso de arcos es más bien un escalado
-// En la medida de lo posible conviene usar funciones que ya existan de librería...
+// usamos funciones que ya existan de librería...
 // offset positivo es por fuera y suponemos que el path es antiClock, si no, habría que revisar
-/// Create all the raw parallel offset segments of a polyline using the `offset` value given.
+// Si el offset es > radio del arco, este se reduce a un punto. marcamos el flag de colapsado para tratar después
 function createUntrimmedRawOffsetSegments( path, offset)
 {  
     let result = [];
@@ -28,7 +28,7 @@ function createUntrimmedRawOffsetSegments( path, offset)
             //lo que se corresponde con hacer compensación exterior o interior.
             //Aunque el offset sea mayor que el radio hay que "proteger" las esquinas, así que existe un punto mínimo a distancia offset de las dos
             let noffset = shape.way === 'antiClock' ? offset : - offset;
-            let newr = shape.r + noffset; //offset puede ser < 0
+            let newr = shape.r + noffset; 
             if((newr < 0) || fuzzy_eq_zero(newr, geometryPrecision)){   //colapso del arco , devuelvo punto seguro , segmento de l= 0
                 //Uso un punto medio de la cuerda y el centro para calcular la dirección
                 const pm = {x: 0.5*(shape.x1 + shape.x2), y:0.5 * (shape.y1 + shape.y2)}
@@ -36,24 +36,12 @@ function createUntrimmedRawOffsetSegments( path, offset)
                 const d = Math.hypot(m.x, m.y);
                 m = { x: m.x/d, y: m.y/d}; //vector unitario que apunta al centro desde la mitad de la cuerda
                 const p = {x: pm.x + m.x*(Math.abs(offset) - shape.r), y: pm.y + m.y*(Math.abs(offset) - shape.r)}
-
-                // let bisectriz= {x: shape.pm.x - shape.x, y: shape.pm.y - shape.y }; //bisectriz del arco apunta hacia fuera
-                // let lt2 = shape.t.x*shape.t.x + shape.t.y*shape.t.y;    //longitud de la cuerda al cuadrado
-                // let d = Math.sqrt(offset*offset -  0.25*lt2) / shape.r;           //distancia segura, pitágoras (/r para el normalizado posterior)
-                // //El punto seguro sería a distancia d del centro en la dirección contraría a la bisectriz
-                // let p = {x: shape.x - bisectriz.x*d, y: shape.y - bisectriz.y*d}
                 ns = createSegment({x0: p.x, y0: p.y, x1: p.x, y1: p.y});
                 ns.collapsed_arc = true;
             }
-            else{ //escalo (r+offset)/r 
-         
+            else{ //escalo (r+offset)/r con centro de escalada en el centro del arco
                 const z = newr / shape.r;
                 ns = arcScale(shape, shape.cx, shape.cy, z)
-                //let npi = {x:shape.x + (shape.pi.x - shape.x)*z, y:shape.y + (shape.pi.y - shape.y)*z}
-                //let npf = {x:shape.x + (shape.pf.x - shape.x)*z, y:shape.y + (shape.pf.y - shape.y)*z}
-                //
-                //ns = createArc()
-                //ns = new BArc(shape.x, shape.y, newr, npi, npf , shape.way===1?'antiClock':'clock');
                 ns.collapsed_arc = false;
                 }
         }
@@ -65,42 +53,37 @@ function createUntrimmedRawOffsetSegments( path, offset)
 
 /// Connect two raw offset segments by joining them with an arc and push the vertexes to the `result` output parameter.
 // YURRE: como s1 y s2 son rawPathoffsetSegments llevan el ix del original 
-//function connect_using_arc( s1, s2, originalPath, join_params){
-    //let connection_arcs_ccw = join_params.connection_arcs_ccw;
-    //el centro es el punto final del tramo s1 ORIGINAL (o el inicial del tramo s2)
-    //los puntos inicial y final son los de los tramos offseteados
-//    let origin = originalPath.elements[s1.origin]; //podría chequearse que era un segment
-//    let ns = createArc(arc2PC2SVG({x:origin.pf.x, y:origin.pf.y}, Math.abs(join_params.offset), s1.pf, s2.pi, join_params.connection_arcs_ccw ));
-    //let ns = createArc(  origin.pf.x, origin.pf.y, Math.abs(join_params.offset), s1.pf, s2.pi, connection_arcs_ccw ? 'antiClock' : 'clock')
-//    return ns; //Dejo la inserción para el llamador
-//}
+// originalmente existía la rutina de unir mediante arco, pero casi queda más legible la creación del arco explícita
 
-/// Join two adjacent raw offset segments where both segments are lines.
+/**
+ * 
+ * @param {bloque 1} s1 
+ * @param {bloque 2} s2 
+ * @param {path original} path 
+ * @param {parámetros} join_params 
+ * @returns el bloque o bloques generados y lo que queda de mirar
+ */
 function line_line_join( s1, s2, path, join_params){
-    //let connection_arcs_ccw = join_params.connection_arcs_ccw;
     let pos_equal_eps = join_params.pos_equal_eps;
     //Paranoico
-    if((s1.type !== 'segment') || (s2.type !== 'segment')) console.log('deben venir segmentos'); //Esto sobraría
+//    if((s1.type !== 'segment') || (s2.type !== 'segment')) console.log('deben venir segmentos'); //Esto sobraría
     if(s1.collapsed_arc || s2.collapsed_arc) {
         // connecting to/from collapsed arc, always connect using arc
         //YURRE: NO LO ENTIENDO PARA r < 0
         let origin = path.elements[s1.origin];
         let ns = createArc(arc2PC2SVG({x:origin.pf.x, y:origin.pf.y}, Math.abs(join_params.offset), s1.pf, s2.pi, join_params.connection_arcs_ccw ));
         return ({res:[s1, ns], left:s2});
-        //return ({res:[s1, connect_using_arc(s1, s2, path, join_params)], left:s2});
     } else {
         let res = line_line_intr( s1, s2, pos_equal_eps);
         switch(res.r) {
-            case Cut.NoIntersect: { //ejemplo? No lo veo, la verdad
+            case Cut.NoIntersect: { //ejemplo? No termino de ver cómo se producen las paralelas...
                 // parallel lines, join with half circle
                 let ns = createArc(arc2PC2SVG({ x: 0.5*(s1.pf.x + s2.pi.x), y: 0.5*(s1.pf.y + s2.pi.y)},
                         0.5*distancePointToPoint(s1.pf.x, s1.pf.y, s2.pi.x, s2.pi.y) , s1.pf, s2.pi, join_params.connection_arcs_ccw ));
                 return({res:[s1,ns], left:s2});
                 }
-            break;
             case Cut.TrueIntersect: { //modifico el final de s1 y el comienzo de s2
                 let point = res.point;
-                //Esto debería funcionar porque los objetos se pasan por referencia
                 //No es precisamente óptimo, pero si no hay que hacer una función de clase especial para acortar o alargar segmentos
                 let ns1 = createSegment({x0: s1.pi.x, y0:s1.pi.y, x1:point.x, y1:point.y});
                 ns1.origin = s1.origin;
@@ -108,19 +91,18 @@ function line_line_join( s1, s2, path, join_params){
                 ns2.origin=s2.origin;
                 return({res:[ns1],left:ns2});
             }
-            break;
-            case Cut.Overlapping: { //supongo que quiere colapsar un troxo de segmento, no parece muy habitual...
+            case Cut.Overlapping: { //supongo que quiere colapsar un trozo de segmento, no parece muy habitual...
+                //sería cuando al compensar dos líneas paralelas salen dos segmentos que coinciden
                 console.log('overlapping segments?');
                 return ({res:[ createSegment({x0:s1.pi.x, y0:s1.pi.y, x1:s2.pf.x, y1:s2.pf.y})], left:s2});
             }
             break;
-            case Cut.FalseIntersect: { //puede que uno de los dos sí sea real y el otro no, pero point SI está en ambas rectas
-                //En el paper aparecen estos casos, que parecen raros y que el arco puede ser también solución, parece
-                //Devuelvo arco siempre, queda más chulo
+            case Cut.FalseIntersect: {
+                //Por ejemplo dos segmentos en ángulo que al compensar por fuera obviamente no se cortan 
+                //Devuelvo arco siempre, queda más chulo. pero podría ser un segmento
                 let origin = path.elements[s1.origin];
                 let ns = createArc(arc2PC2SVG({x:origin.pf.x, y:origin.pf.y}, Math.abs(join_params.offset), s1.pf, s2.pi, join_params.connection_arcs_ccw ));
                 return ({res:[s1, ns], left: s2});
-                //return ({res:[s1, connect_using_arc(s1, s2, path, join_params)], left: s2});
                 }
             }
         }
@@ -128,25 +110,26 @@ function line_line_join( s1, s2, path, join_params){
 
 /// Join two adjacent raw offset segments where the first segment is a line and the second is a arc.
 // el s puede ser un arco colapsado, sustituido por un segmento de l=0 y un flag
+/**
+ * 
+ * @param {segmento} s 
+ * @param {arco} a 
+ * @param {path original} path 
+ * @param {parametros} join_params 
+ * @returns 
+ */
 function line_arc_join( s, a, path, join_params){
-    //let connection_arcs_ccw = join_params.connection_arcs_ccw;
     let pos_equal_eps = join_params.pos_equal_eps;
-    if((s.type !== 'segment') || (a.type !== 'arc')) console.log('deben venir segmento y arco')
-    //YURRE: Nosotros no tenemos el parámetro t y además la rutina de corte ya procesa los casos, se supone
-    //Así que devolvemos, NoIntersect, TangentIntersect, OneIntersect y TwoIntersects, y nada más
-    //YURRE: Cambio completo de estructura de programa, reuso el código y lo pongo en línea
+//    if((s.type !== 'segment') || (a.type !== 'arc')) console.log('deben venir segmento y arco')
     let res = segment_arc_intr(s, a, pos_equal_eps);
-    if( res.r === Cut.NoIntersect) {
-            //pues hay que empalmar, o bien con un arco o bien con un segmento
-            //YURRE: No termino de ver en qué caso se usaría un segmento, de momento pongo arco siempre
+    if( res.r === Cut.NoIntersect) { //empalmo siempre por arco  
             let origin = path.elements[s.origin];
             let ns = createArc(arc2PC2SVG({x:origin.pf.x, y:origin.pf.y}, Math.abs(join_params.offset), s.pf, a.pi, join_params.connection_arcs_ccw ));
             return ({res:[s, ns], left:a});
-            //return ({res:[s,connect_using_arc(s, a, path, join_params)], left:a});
         }
     else {
         let point;
-        if(res.r === Cut.TwoIntersects){
+        if(res.r === Cut.TwoIntersects){    //un arco sí puede tener dos cortes con un segmento
             // always use intersect closest to original point
             let dist1 = sqDistancePointToPoint( res.point1.x, res.point1.y, s.pf.x, s.pf.y);
             let dist2 = sqDistancePointToPoint( res.point2.x, res.point2.y, s.pf.x, s.pf.y);
@@ -163,23 +146,16 @@ function line_arc_join( s, a, path, join_params){
         return({res:[ns1], left:ns2})
         } 
     }
-
     
-/// Join two adjacent raw offset segments where the first segment is a arc and the second is a line.
 //YURRE: Como la anterior ....?
 function arc_line_join( a, s, path, join_params){
-    //let connection_arcs_ccw = join_params.connection_arcs_ccw;
     let pos_equal_eps = join_params.pos_equal_eps;
-
-    if((a.type !== 'arc') || (s.type !== 'segment')) console.log('deben venir segmentos')
-
+//    if((a.type !== 'arc') || (s.type !== 'segment')) console.log('deben venir segmentos')
     let res = segment_arc_intr(s, a, pos_equal_eps);
     if(res.r === Cut.NoIntersect){
             let origin = path.elements[a.origin];
             let ns = createArc(arc2PC2SVG({x:origin.pf.x, y:origin.pf.y}, Math.abs(join_params.offset), a.pf, s.pi, join_params.connection_arcs_ccw ));
             return ({res:[a, ns], left:s});
-
-            //return ({res:[a,connect_using_arc(a, s, path, join_params)], left:s});
     } else { //'TangentIntersect','TwoIntersects','OneIntersect'
         let point;
         if(res.r === Cut.TwoIntersects){
@@ -198,16 +174,12 @@ function arc_line_join( a, s, path, join_params){
     }
 }
 
-/// Join two adjacent raw offset segments where both segments are arcs.
 // Nuestra rutina original devuelve 'NoIntersect', 'Overlapping', 'TangentIntersect', 'TwoIntersects'
 function arc_arc_join( a1, a2, path, join_params){
-    //let connection_arcs_ccw = join_params.connection_arcs_ccw;
     let pos_equal_eps = join_params.pos_equal_eps;
-    if((a1.type !== 'arc') || (a2.type !== 'arc')) console.log('deben venir arcos')
-
-    //YURRE: En vez de llamar a circle_circle_intr he hecho la arc_arc_intr que ya devuelve machacado
+//    if((a1.type !== 'arc') || (a2.type !== 'arc')) console.log('deben venir arcos')
     let res = arc_arc_intr(a1, a2, pos_equal_eps );
-    if(res.r === Cut.OverlappingArcs){
+    if(res.r === Cut.OverlappingArcs){ //todo, buscar el caso malo que pase por aquí
         console.log('TODO');    //El original parece no hacer nada
         if(res.sameDirection === true){
             const ns1 = createArc(arc2PC2SVG({x:a1.cx, y:a1.cy}, a1.r, a1.pi, res.point1, a1.way));
@@ -223,13 +195,11 @@ function arc_arc_join( a1, a2, path, join_params){
             let origin = path.elements[a1.origin];
             let ns = createArc(arc2PC2SVG({x:origin.pf.x, y:origin.pf.y}, Math.abs(join_params.offset), a1.pf, a2.pi, join_params.connection_arcs_ccw ));
             return ({res:[a1, ns], left:a2});
-            //return ({res:[a1,connect_using_arc(a1, a2, path, join_params)], left:a2});
         }
     let point;
     if((res.r === Cut.OneIntersect) || (res.r === Cut.TangentIntersect)) { //Supongo que tengo que cortar como si hubiera solo 1 intersect...
         point = res.point;
     } else if (res.r === Cut.TwoIntersects){
-        // always use intersect closest to original point. 
         // YURRE: el original trataba aquí el TangentIntersect para hacer un solo intersect, nosotros lo traemos desde el arc_arc_intr
         let dist1 = sqDistancePointToPoint(res.point1.x, res.point1.y, a1.pf.x, a1.pf.y);
         let dist2 = sqDistancePointToPoint(res.point2.x, res.point2.y, a1.pf.x, a1.pf.y);
@@ -246,6 +216,8 @@ function createRawOffsetPath(path, offset, options){
     //NO testeo cosas que ya se han mirado en la entrada a parallelOffset
     //Esta crea un clone, no modifica el path original. Se genera el offset de cada elemento, sin más
     let rawOffsetSegs = createUntrimmedRawOffsetSegments(path, offset);
+    //En realidad, si el path estaba cerrado y queremos hacer el offset, cualquier cosa que no tenga tres segmentos,
+    //  o segmento y arco o dos arcos como mínimo sería error...
     if(rawOffsetSegs.length === 0) {
         return createPath({elements:[]});
     }
@@ -261,7 +233,6 @@ function createRawOffsetPath(path, offset, options){
     let connection_arcs_ccw = offset < 0 ? 'clock' : 'antiClock'; //(cw==='ccw') && (offset > 0)) || ((ccw==='cw') && (offset > 0)) ; //?? YURRE, debe ir según la definición de creación a derechas o izquierdas
     let join_params = { offset: offset, connection_arcs_ccw : connection_arcs_ccw, pos_equal_eps : options.pos_equal_eps || geometryPrecision};
 
-    //YURRE: Dudas de inserción de elementos nuevos. Dónde?
     let joinOffsetShapes = (s1, s2, join_params) => {
         if(s1.type === 'segment'){
             if(s2.type === 'segment') return  line_line_join(s1, s2, path, join_params);
