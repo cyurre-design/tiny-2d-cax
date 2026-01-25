@@ -242,13 +242,16 @@ export function commandPocket(paths, co, ci, tolerance ){
           const oldPaths = paths;  //pueden ser polígonos
           //si son polígonos los paso a paths
           let newPaths = paths.map( p => p.type === 'polygon' ? polygonToPath(p) : p)
-          const result = parallelOffset(newPaths[0], co, ci);
+          const result = parallelOffset(newPaths[0], co);
           if((result.error === false) &&(result.paths.length !== 0)){
             //oldPaths.forEach(path =>  p.deleteBlock(path));
             p.addBlocks(undefined, result.paths);
             this.copiaAfter = JSON.stringify(p);
           } 
-          else window.alert(result.text);
+          else {
+            console.log(result)
+            //window.alert(result.text);
+          }
           p.draw();
     },
     undo(p,a){

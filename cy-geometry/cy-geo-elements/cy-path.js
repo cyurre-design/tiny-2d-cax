@@ -119,25 +119,22 @@ export function pathSetStartPoint(path, point){
     // Hay que incluir el caso de solape en el punto inicial (last = first)
 export function pathRemoveRedundant(path, options={pos_equal_eps: geometryPrecision, invert_area: false}) {
         let eps = options.pos_equal_eps;
-        let blocks = path.elements.filter(block=> !fuzzy_eq_point(block.pi, block.pf, eps)); //quito los elementos de l=0
-        let result = createPath({elements:[]});
-        //result.isClosed = path.isClosed;
-        if(blocks.length < 2) {
-            if(blocks.length > 0) result.elements.push(blockClone(blocks[0])) ; //después de filtrar solo ha quedado 0 o 1
-            return result;
+         //quito los elementos de l=0
+        let blocks = path.elements.filter(block=> !fuzzy_eq_point(block.pi, block.pf, eps));
+        let newBlocks = [];
+        if(blocks.length < 2) { //devuelvo por si acaso... pero no debería pasar?!
+            if(blocks.length > 0) newBlocks.push(blockClone(blocks[0])) ; //después de filtrar solo ha quedado 0 o 1
+            return createPath({elements: newBlocks});
         }
-        let elements = [];
         let actual = blockClone(blocks.shift()); //cojo el primero
-        let isArc = (sh) => sh.type === "arc";
-        let onArc = isArc(actual);
-        //let change = false; // actual, elements, etc... son globales en el scope de la función
+        // actual, newBlocks, etc... son globales en el scope de la función que sigue
         function notCollapsable(el){
-            let elArc = isArc(el);
-            //esto elimina muchas combinaciones, si pasa el test hay posibile emplame
-            if((elArc !== onArc) || !fuzzy_eq_point(el.pi, actual.pf, eps))
+            //esto elimina muchas combinaciones, si pasa el test hay posibile empalme por ser dos elementos iguales y contiguos
+            if((el.type !== actual.type) || !fuzzy_eq_point(el.pi, actual.pf, eps))
                 return true; //no colapsa
-            if(!isArc(actual)){ //segmento
-                // Aquí ya sé que están seguidos, miro si son colineales
+            //O son ambos segment o ambos arc
+            if(actual.type === 'segment'){
+                // Aquí ya sé que están seguidos porque no ha salido por el fuzzy anterior, miro si son colineales
                 if(fuzzy_eq(el.ux, actual.ux, eps) && fuzzy_eq(el.uy, actual.uy, eps)){
                     //misma recta y empalman (ux uy ya llevan sentido), el change está a false por defecto
                     actual = createSegment({subType : 'PP', x0: actual.pi.x, y0: actual.pi.y, x1: el.pf.x, y1: el.pf.y}); //y sigo
@@ -147,36 +144,35 @@ export function pathRemoveRedundant(path, options={pos_equal_eps: geometryPrecis
             }
             // aquí son ambos arcos, empalme posible y ya he mirado que están seguidos pero falta radio, etc
             // YURRE:?can only combine vertexes if total sweep will still be less than PI () Pero no divide el arco en tramos, creo...)
-            if(fuzzy_eq(el.x, actual.x, eps) && fuzzy_eq(el.y, actual.y, eps) && fuzzy_eq(el.r, actual.r, eps) && el.way===actual.way ){
-                //Como están orientados igual miro la suma de ángulos. En ambos pathways importa que el absoluto no pase de pi
-                if( Math.abs (actual.w + el.w) < Math.PI + eps/actual.r){
-                    actual = createArc(arc2PC2SVG({x:el.x, y:el.y}, el.r, actual.pi, el.pf, el.way ));
+            // Creo que es por cómo furrula autocad, no creo que haya problema en arcos grandes, @todo
+            if(fuzzy_eq(el.cx, actual.cx, eps) && fuzzy_eq(el.cy, actual.cy, eps) && fuzzy_eq(el.r, actual.r, eps) && el.way===actual.way ){
+                //Como están orientados igual miro la suma de ángulos. En ambos pathways importa que el absoluto no pase de pi??
+                //if( Math.abs (actual.da + el.da) < Math.PI + eps/actual.r){
+                    actual = createArc(arc2PC2SVG({x:el.cx, y:el.cy}, el.r, actual.pi, el.pf, el.way ));
                     return false;
-                }       
+                //}       
             }
             return true;
         }
-
+        //Aquí en blocks ya no está el primero, que es actual porque hemos hecho shift
         blocks.forEach(el => {
             if(notCollapsable(el) === true){
-                elements.push(actual)
+                newBlocks.push(actual)
                 actual = blockClone(el);
-                onArc = isArc(actual);
+                //onArc = isArc(actual);
             }
         })
         //en actual está lo último acumulado, o el último, sin más, pero podría juntarse con el primero...
-        //pero puede que elements esté vacío por haberse colapsado todo en uno
-        if(pathIsClosed(path) && (elements.length > 0)){
-            if(notCollapsable(elements[0]) === false){ //La función notCollapsable NO es pura, machaca actual si colapsa
-                elements.splice(0,1,actual);    //sustituyo el primero por el colapsado y tengo que salir 
-                result.elements = elements;
-                return result;
+        //pero puede que newBlocks esté vacío por haberse colapsado todo en uno
+        if(pathIsClosed(path) && (newBlocks.length > 0)){
+            if(notCollapsable(newBlocks[0]) === false){ //La función notCollapsable NO es pura, machaca actual si colapsa
+                newBlocks.splice(0,1,actual);    //sustituyo el primero por el colapsado y tengo que salir 
+                return createPath({elements:newBlocks});
             }
         }
         //caso normal, no es cerrado o no empalma
-        elements.push(actual);
-        result.elements = elements;
-        return result;
+        newBlocks.push(actual);
+        return createPath({elements:newBlocks});
         }
 /// Calculate the winding number for a `point` relative to the polyline.
 ///

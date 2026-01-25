@@ -1,5 +1,6 @@
 "use strict";
-import {geometryPrecision, _2PI, normalize_radians, translatePoint, rotateZ, scale0, arc2PC2SVG, pointSymmetricSegment} from '../cy-geometry-library.js'
+import {geometryPrecision, _2PI, sqDistancePointToPoint, translatePoint, fuzzy_eq_point,
+    pointWithinArcSweep, rotateZ, scale0, arc2PC2SVG, pointSymmetricSegment} from '../cy-geometry-library.js'
 
 //args centro(cx, cy), radio, pi(x1,y1), pf(x2,y2), ai, da, fS, fA En realidad son redundantes, pero se calcularían en el createDraw
 //Falta tratamiento de errores
@@ -122,9 +123,9 @@ export function arcClosestPoint(a, point, eps = geometryPrecision){
         //if(fuzzy_eq_point(this, point, eps))    //el this.x y this.y son el centro
         //    return {x:this.pi.x, y:this.pi.y};
         if (pointWithinArcSweep(a, point)){
-            let v = {x:point.x - a.x, y: point.y - a.y};
+            let v = {x:point.x - a.cx, y: point.y - a.cy};
             const m = a.r / Math.hypot(v.x, v.y) ; //escalado
-            return {x:a.x + m*v.x, y:a.y + m*v.y}
+            return {x:a.cx + m*v.x, y:a.cy + m*v.y}
         }
         //Si no está en el ángulo barrido, el punto más cercano es uno de los extremos.
         const dpi = sqDistancePointToPoint(a.pi.x, a.pi.y, point.x, point.y);
@@ -134,7 +135,7 @@ export function arcClosestPoint(a, point, eps = geometryPrecision){
 export function arcPointInsideOffset(a, point, offset, eps){
         let absoff = Math.abs(offset)-eps;
         let absoff2 = absoff*absoff ; 
-        let r2 = sqDistancePointToPoint(point.x, point.y, a.x, a.y);
+        let r2 = sqDistancePointToPoint(point.x, point.y, a.cx, a.cy);
         if( r2 > (a.r+absoff)*(a.r+absoff)) return false;
         if( r2 < (a.r-absoff)*(a.r-absoff)) return false;
         //Aquí está dentro del "tubo" +- offset de la circunferencia, si está fuera del span puede estar cerca de los bordes
