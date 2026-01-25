@@ -288,7 +288,7 @@ function createRawOffsetPath(path, offset, options){
             if(joint.left.type === 'segment')
                 result[0] = createSegment({x0:joint.left.pi.x, y0:joint.left.pi.y, x1:old.pf.x, y1:old.pf.y});
             else
-                result[0] = createArc(arc2PC2SVG({x:old.x, y:old.y}, old.r, joint.left.pi, old.pf, old.way));
+                result[0] = createArc(arc2PC2SVG({x:old.cx, y:old.cy}, old.r, joint.left.pi, old.pf, old.way));
         }
     }
     let res = createPath({elements:result});
