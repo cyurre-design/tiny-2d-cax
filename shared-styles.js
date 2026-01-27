@@ -24,11 +24,12 @@ sharedStyles.replaceSync(`
 .half{width:50%;}
 ._90{width:90%;}
 ._80{width:80%;}
+._75{width:75%;}
 ._70{width:70%;}
 ._60{width:60%;}
 ._50{width:50%;}
-._40{width:40%;}
-._33{width:30%;}
+._40{width:30%;}
+._33{width:33%;}
 ._25{width:25%;} 
 ._20{width:20%;}
 ._10{width:10%;}

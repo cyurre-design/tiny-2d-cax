@@ -7,13 +7,13 @@ import { sharedStyles } from './shared-styles.js';
 import "./cy-layer-list.js"
 
 //Aunque no se llame directamente hace falta importarlo porque la ejecución define el elemento!!!!
-import CyInputDataBasic from './cy-elements/cy-input-data-basic.js';
+//import CyInputDataBasic from './cy-elements/cy-input-data-basic.js';
 
 import { loadProject, saveProject, saveSvg, saveCNC } from "./cy-file-save-load.js";
 
 //From geometry
 
-import {findAllCuts, blockTranslate, blockRotate, blockScale, blockSymmetryX, blockSymmetryY, blockSymmetryL, fuzzy_eq, fuzzy_eq_point} from './cy-geometry/cy-geometry-library.js'
+import {findAllCuts, blockTranslate, blockRotate, blockScale, blockSymmetryX, blockSymmetryY, blockSymmetryL} from './cy-geometry/cy-geometry-library.js'
 import {createDrawElement } from './cy-geometry/cy-geometry-basic-elements.js';
 
 //Commands
@@ -259,19 +259,27 @@ const style = `
     border: 1px solid black;
     margin: 2px;
     padding: 2px;
-    background-color: #dddddd;
+    background-color: #ead24eff;
     }
 #drawing-options{
     border: 1px solid black;
     margin: 2px;
     padding: 2px;
-    background-color: #dddddd;
+    background-color: #6a87e7ff;
 }  
+    #menu-select{
+    background-color: #77d4ebff;
+    }
+    #menu-measure{
+    background-color: #f0b71cff;
+    }
+    #undo-redo{
+    background-color: #bb74f5ff;
+    }
     #menu-zoom, #menu-measure, #undo-redo, #menu-select{
     border: 1px solid black;
     margin: 2px;  
     padding: 2px;
-    background-color: #dddddd;
     }
     </style>
 `
@@ -362,7 +370,7 @@ class cyCad1830App extends HTMLElement {
       }
 
     })
-  this.addEventListener('quit-application', (e)=>{
+  this.addEventListener('quit-application', ()=>{
     this.viewer.interactiveDrawing.quit();
         //this.registerInputApplications(new DrawBasic(this.viewer.layerDraw, ''))
     this.mData.setActiveApplication('none');
@@ -626,7 +634,7 @@ class cyCad1830App extends HTMLElement {
       this.layerView.addLayer( JSON.stringify(this.viewer.axesLayer)); //Estas tienen gestión interna especial
       this.layerView.addLayer( JSON.stringify(this.viewer.gridLayer)); //Estas tienen gestión interna especial  
       //Al crearla se debe poner activa ella sola.
-      const layerData = commandLayerCreate()
+      /*const layerData = */ commandLayerCreate()
     });   
 
   } //END of connectedcallback

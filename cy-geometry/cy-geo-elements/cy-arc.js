@@ -9,9 +9,7 @@ import {geometryPrecision, _2PI, sqDistancePointToPoint, translatePoint, fuzzy_e
 export function createArc(data = {}) {
     const p = {type : 'arc', get pi(){ return ({x:this.x1, y: this.y1})}, get pf(){ return ({x:this.x2, y: this.y2})}}
     const a = Object.assign(p, data);       
-    //a.x0 = data.x0; a.y0 = data.y0;
     a.bbox = arcBoundingBox(a);
-    console.log(a.bbox);
     return a;
     }
 
