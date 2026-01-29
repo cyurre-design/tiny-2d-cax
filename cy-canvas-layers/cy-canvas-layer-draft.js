@@ -1,18 +1,17 @@
 //Heredo de layer genérica que me da los métodos de borrado, etc...
 //import {scalePixels2mm, scaleMm2pixels, position2pixels} from './cy-canvas-handler.js';
-import { position2pixels, scaleMm2pixels, scalePixels2mm } from './cy-canvas-handler.js';
-import {CyCanvasLayer } from './cy-canvas-layer.js';
-
+import { position2pixels } from "./cy-canvas-handler.js";
+import { CyCanvasLayer } from "./cy-canvas-layer.js";
 
 export default class CyCanvasLayerDraft extends CyCanvasLayer {
     constructor() {
-        super('draft');
+        super("draft");
         //this.dom = this.attachShadow({mode:'open'});
         //this.dataLayers = [];
         //this._activeLayer = undefined;
-        }
+    }
     createStyle() {
-        return`
+        return `
         <style>
         
         #draft-layer{
@@ -28,9 +27,9 @@ export default class CyCanvasLayerDraft extends CyCanvasLayer {
             height: 100%;
 }
         </style>
-        `
+        `;
     }
-    
+
     // createTextCanvas(text, font = '20px Arial', color = '#000') {
     //     const canvas = document.createElement('canvas');
     //     const ctx = canvas.getContext('2d');
@@ -49,42 +48,42 @@ export default class CyCanvasLayerDraft extends CyCanvasLayer {
     //     return canvas;
     //     }
 
-        //EJEMPLO const textCache = createTextCanvas('42');
-//         ctx.drawImage(textCache, 50, 50);
-// ctx.drawImage(textCache, 200, 80);
-// ctx.drawImage(textCache, 300, 150);
-    
+    //EJEMPLO const textCache = createTextCanvas('42');
+    //         ctx.drawImage(textCache, 50, 50);
+    // ctx.drawImage(textCache, 200, 80);
+    // ctx.drawImage(textCache, 300, 150);
+
     //Atención al orden de los canvas. Para que los eventos de mouse lleguen a draw, tiene que estar encima
-    connectedCallback(){
+    connectedCallback() {
         super.connectedCallback();
     }
     //x,y son mm
     //Hay que dar la vuelta al eje Y... casi mejor paso un array de posiciones y textos
-    drawNumber(texts){
+    drawNumber(texts) {
         this.ctx.save(); // Save the normal state
-        this.ctx.setTransform();    //lo pone de fábrica
+        this.ctx.setTransform(); //lo pone de fábrica
         this.ctx.font = "20px Arial";
-        this.ctx.fillStyle = 'red';
-        texts.forEach(t => {
-            const p = position2pixels({x:t.x0, y:t.y0})
+        this.ctx.fillStyle = "red";
+        texts.forEach((t) => {
+            const p = position2pixels({ x: t.x0, y: t.y0 });
             this.ctx.fillText(t.text, p.x, p.y); //0,0 porque hemos puesto los offsets antes
-        })
+        });
         this.ctx.restore(); // Restore to normal state
     }
-    disconnectedCallback(){
+    disconnectedCallback() {
         //Aquí hay que quitar los listeners siendo formales
         super.disconnectedCallback();
     }
-    static get observedAttributes(){
-        return([]);
-    }   
-    attributeChangedCallback(name, oldVal, newVal){
-        switch(name){
-        case '':
-          break;
-        default:break;
-      }
+    static get observedAttributes() {
+        return [];
     }
-
+    attributeChangedCallback(name, oldVal, newVal) {
+        switch (name) {
+            case "":
+                break;
+            default:
+                break;
+        }
+    }
 }
-customElements.define('cy-canvas-layer-draft', CyCanvasLayerDraft);
+customElements.define("cy-canvas-layer-draft", CyCanvasLayerDraft);

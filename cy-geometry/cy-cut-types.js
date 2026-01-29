@@ -23,12 +23,12 @@
 
 export const Cut = Object.freeze({
     NoIntersect: 0,
-    FalseIntersect:1,
+    FalseIntersect: 1,
     TrueIntersect: 2,
-    OneIntersect:3,
-    TwoIntersects:4,
+    OneIntersect: 3,
+    TwoIntersects: 4,
     Overlapping: 5,
     OverlappingLines: 6,
-    OverlappingArcs: 7, 
-    TangentIntersect: 8
+    OverlappingArcs: 7,
+    TangentIntersect: 8,
 });

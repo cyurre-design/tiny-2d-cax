@@ -1,5 +1,3 @@
-
-
 export const sharedStyles = new CSSStyleSheet();
 sharedStyles.replaceSync(`
   .row {
@@ -23,7 +21,7 @@ sharedStyles.replaceSync(`
 .full{width:100%;}
 .half{width:50%;}
 ._90{width:90%;}
-._80{width:80%;}
+._80{width:80%;} 
 ._75{width:75%;}
 ._70{width:70%;}
 ._60{width:60%;}

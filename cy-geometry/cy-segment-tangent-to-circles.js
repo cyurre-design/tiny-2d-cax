@@ -8,7 +8,7 @@
  * @param {number} r2 Radio del segundo círculo.
  * @returns {Array<Object>} Un array de objetos que representan las líneas tangentes ({a, b, c}).
  */
-function commonTangentLines(x1, y1, r1, x2, y2, r2) {
+export function commonTangentLines(x1, y1, r1, x2, y2, r2) {
     const results = [];
 
     // Calcula delta1 para tangentes externas y delta2 para tangentes internas
@@ -36,31 +36,15 @@ function commonTangentLines(x1, y1, r1, x2, y2, r2) {
     if (delta1 >= 0) {
         const sqrtDelta1 = Math.sqrt(delta1);
         // Dos tangentes externas
-        addLine(
-            (x2 - x1) * (r1 + r2) + (y1 - y2) * sqrtDelta1,
-            (y2 - y1) * (r1 + r2) + (x2 - x1) * sqrtDelta1,
-            p1 + p2 + q * sqrtDelta1
-        );
-        addLine(
-            (x2 - x1) * (r1 + r2) - (y1 - y2) * sqrtDelta1,
-            (y2 - y1) * (r1 + r2) - (x2 - x1) * sqrtDelta1,
-            p1 + p2 - q * sqrtDelta1
-        );
+        addLine((x2 - x1) * (r1 + r2) + (y1 - y2) * sqrtDelta1, (y2 - y1) * (r1 + r2) + (x2 - x1) * sqrtDelta1, p1 + p2 + q * sqrtDelta1);
+        addLine((x2 - x1) * (r1 + r2) - (y1 - y2) * sqrtDelta1, (y2 - y1) * (r1 + r2) - (x2 - x1) * sqrtDelta1, p1 + p2 - q * sqrtDelta1);
     }
 
     if (delta2 >= 0) {
         const sqrtDelta2 = Math.sqrt(delta2);
         // Dos tangentes internas
-        addLine(
-            (x2 - x1) * (r1 - r2) + (y1 - y2) * sqrtDelta2,
-            (y2 - y1) * (r1 - r2) + (x2 - x1) * sqrtDelta2,
-            p1 - p2 + q * sqrtDelta2
-        );
-        addLine(
-            (x2 - x1) * (r1 - r2) - (y1 - y2) * sqrtDelta2,
-            (y2 - y1) * (r1 - r2) + (x2 - x1) * sqrtDelta2,
-            p1 - p2 - q * sqrtDelta2
-        );
+        addLine((x2 - x1) * (r1 - r2) + (y1 - y2) * sqrtDelta2, (y2 - y1) * (r1 - r2) + (x2 - x1) * sqrtDelta2, p1 - p2 + q * sqrtDelta2);
+        addLine((x2 - x1) * (r1 - r2) - (y1 - y2) * sqrtDelta2, (y2 - y1) * (r1 - r2) + (x2 - x1) * sqrtDelta2, p1 - p2 - q * sqrtDelta2);
     }
 
     return results;
