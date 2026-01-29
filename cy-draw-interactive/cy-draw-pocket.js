@@ -1,5 +1,5 @@
 import DrawBasic from "./cy-draw-basic.js";
-//import { pathSetStartPoint, pathReverse } from '../cy-geometry/cy-geo-elements/cy-path.js'
+//import { pathReverse } from '../cy-geometry/cy-geo-elements/cy-path.js'
 //import {pathOrientation} from '../cy-geometry/cy-geo-elements/cy-path.js'
 
 /**
@@ -9,43 +9,18 @@ import DrawBasic from "./cy-draw-basic.js";
  * se vaya a generar el iso. Así podemo hacer un perfil interior a izquierdas y otro exteerior a
  * derechas con la misma geometría...o así
  */
-export class DrawBoolean extends DrawBasic {
+export class DrawPocket extends DrawBasic {
 	constructor(layerDraw, mode) {
-		super(layerDraw, "boolean", mode);
+		super(layerDraw, "pocket", mode);
 		this.data = { subType: mode };
 		this.paths = [];
 
 		this.moveFn = [[this.hover, this.draw], []];
 		this.clickFn = [[this.select, this.draw], []];
 		this.dataSent = [[], []];
-		this.dataReceived = [];
+		this.dataReceived = ["co", "io"];
 	}
-	//generar una flechita al comienzo de un path. Local, no compruebo que es un path
-	//Sería más limpio un método de segmento y arco, como getUnitVector o así
-	createArrow(path) {
-		const b = path.elements[0];
-		let ux, uy, x0, y0;
-		if (b.type === "segment") {
-			ux = b.ux;
-			uy = b.uy;
-			x0 = b.x0;
-			y0 = b.y0;
-		} else if (b.type === "arc") {
-			uy = Math.cos(b.ai);
-			ux = -Math.sin(b.ai);
-			x0 = b.x1;
-			y0 = b.y1;
-		} else if (b.type === "bezier") {
-			const dx = b.cp1x - b.x0,
-				dy = b.cp1y - b.y0;
-			const d = Math.hypot(dx, dy);
-			ux = dx / d;
-			uy = dy / d;
-			x0 = b.x0;
-			y0 = b.y0;
-		}
-		return { type: "arrow", x0: x0, y0: y0, dx: ux, dy: uy };
-	}
+
 	//mientras mueve sin click, estado 0, miramos si pincha en bloque
 	hover = (pi) => {
 		return this.layerDraw.hover(pi.x, pi.y, undefined, false);
@@ -70,20 +45,12 @@ export class DrawBoolean extends DrawBasic {
 	updateData = (data) => {
 		const newData = this.updateDataBasic(data);
 		const idn = newData[0].idn; //no esperamos más que una pulsación...
-		//const value = newData[0].v;
 		switch (idn) {
-			case "and":
-			case "or":
-			case "not":
-			case "xor": {
-				if (this.paths.length < 2) break;
-				this.layerDraw.dispatchEvent(new CustomEvent("boolean-op", { bubbles: true, composed: true, detail: { mode: idn, paths: this.paths } }));
+			case "enter":
+				this.layerDraw.dispatchEvent(
+					new CustomEvent("pocket-op", { bubbles: true, composed: true, detail: { co: this.data.co, io: this.data.io, paths: this.paths } }),
+				);
 				this.deleteData();
-				break;
-			}
-			case "save":
-				break;
-			case "end":
 				break;
 			default:
 				break;

@@ -1,45 +1,80 @@
 //Layers
-import './cy-canvas-layers/cy-canvas-viewer.js';
-import {getSvgPathFromBlocks} from "./cy-canvas-layers/cy-elements-to-canvas.js"
-import { sharedStyles } from './shared-styles.js';
+import "./cy-canvas-layers/cy-canvas-viewer.js";
+import { getSvgPathFromBlocks } from "./cy-canvas-layers/cy-elements-to-canvas.js";
+import { sharedStyles } from "./shared-styles.js";
 
 //Application
-import "./cy-layer-list.js"
+import "./cy-layer-list.js";
 
 //Aunque no se llame directamente hace falta importarlo porque la ejecución define el elemento!!!!
-//import CyInputDataBasic from './cy-elements/cy-input-data-basic.js';
+import "./cy-elements/cy-input-data-basic.js";
 
 import { loadProject, saveProject, saveSvg, saveCNC } from "./cy-file-save-load.js";
 
 //From geometry
 
-import {findAllCuts, blockTranslate, blockRotate, blockScale, blockSymmetryX, blockSymmetryY, blockSymmetryL} from './cy-geometry/cy-geometry-library.js'
-import {createDrawElement } from './cy-geometry/cy-geometry-basic-elements.js';
+import {
+	findAllCuts,
+	blockTranslate,
+	blockRotate,
+	blockScale,
+	blockSymmetryX,
+	blockSymmetryY,
+	blockSymmetryL,
+} from "./cy-geometry/cy-geometry-library.js";
+import { createDrawElement } from "./cy-geometry/cy-geometry-basic-elements.js";
 
 //Commands
-import {createCommandManager, commandLayerCreate, commandLayerDelete, commandLayerSetStyle, 
-      commandBlockCreate, commandBlockDelete, commandBlockTransform, commandCreateCutPoints,
-      commandChangeOrigin,
-      commandLinkUnlink, commandBooleanOperation, commandPocket} from './cy-commands/cy-command-definitions.js';
+import {
+	createCommandManager,
+	commandLayerCreate,
+	commandLayerDelete,
+	commandLayerSetStyle,
+	commandBlockCreate,
+	commandBlockDelete,
+	commandBlockTransform,
+	commandCreateCutPoints,
+	commandChangeOrigin,
+	commandLinkUnlink,
+	commandBooleanOperation,
+	commandPocket,
+} from "./cy-commands/cy-command-definitions.js";
 
 //For Drawing Interactively
-import { DrawArc, DrawBoolean, DrawCircle, DrawExportGcode, DrawGcode, DrawLink,
-        DrawMeasure, DrawNormal, DrawOrigin, DrawPath, DrawPocket, DrawPolygon, DrawRotate,
-        DrawScale, DrawSegment, DrawSegmentBB, DrawSegmentPB, DrawSelection, DrawSymmetry,
-        DrawText, DrawTranslate
-        } from "./cy-draw-interactive/cy-drawing-interactive.js"
+import {
+	DrawArc,
+	DrawBoolean,
+	DrawCircle,
+	DrawExportGcode,
+	DrawGcode,
+	DrawLink,
+	DrawMeasure,
+	DrawNormal,
+	DrawOrigin,
+	DrawPath,
+	DrawPocket,
+	DrawPolygon,
+	DrawRotate,
+	DrawScale,
+	DrawSegment,
+	DrawSegmentBB,
+	DrawSegmentPB,
+	DrawSelection,
+	DrawSymmetry,
+	DrawText,
+	DrawTranslate,
+} from "./cy-draw-interactive/cy-drawing-interactive.js";
 
 //Parsers
-import {convertDxfToGeometry} from "./parsers/cy-parser-dxf-geometry-objects.js"
+import { convertDxfToGeometry } from "./parsers/cy-parser-dxf-geometry-objects.js";
 //import {isoToGeometry } from "./parsers/cy-parser-iso-geometry.js"
-import {gcodeToGeometry} from "./parsers/cy-parser-gcode-tiny.js"
-import {svgToGeometry} from "./parsers/cy-parser-svg.js"
-import {pathsToIso, setGCodeDefaults} from "./parsers/cy-parser-geometry-to-iso.js"
+import { gcodeToGeometry } from "./parsers/cy-parser-gcode-tiny.js";
+import { svgToGeometry } from "./parsers/cy-parser-svg.js";
+import { pathsToIso, setGCodeDefaults } from "./parsers/cy-parser-geometry-to-iso.js";
 
+const defaultConfig = await fetch("./cy-1830-config.json").then((r) => r.json());
 
-const defaultConfig = await fetch('./cy-1830-config.json').then(r => r.json());
-
-const templateMainMenu =`
+const templateMainMenu = `
   <span >
     <md-filled-button id="file-menu-anchor">FILE</md-filled-button>
   <!-- Note the has-overflow attribute -->
@@ -59,7 +94,7 @@ const templateMainMenu =`
         <md-menu-item id="settings-GCode-defaults"><div slot="headline">G-Code</div></md-menu-item>        
       </md-menu>
 </span>
-`
+`;
 //tools y settings fijos
 const templateMeasure = `
 <div class="column" id='menu-measure'>
@@ -68,7 +103,7 @@ const templateMeasure = `
   <input type="button" id='measure-block' value="MEAS. BLOCK" class="_50"/>
   <input type="button" id='measure-p2p' value="MEAS. P2P" class="_50"/>
 </div>
-</div>`
+</div>`;
 const templateZoom = `
 <div class="column" id='menu-zoom'>
   <div class="row">ZOOM</div>
@@ -80,10 +115,10 @@ const templateZoom = `
     <input type="button" id='zoom-out' value=" Z- " class="_20"/>
     <input type="button" id='zoom-fit' value="FIT" class="_20"/>
   </div>
-</div>`
+</div>`;
 //Esto aparecería en los comandos de transform por ejemplo
 //Aprovecho y pongo aquí el width de selección, por ejemplo
-const templateSelectInputData =`
+const templateSelectInputData = `
 <div>
     
     <div id="menu-select" class="column">
@@ -102,7 +137,7 @@ const templateSelectInputData =`
       </div-->
     </div>
 </div>
-`
+`;
 const templateUndo = `
 <div id='undo-redo' class="column">
   <div class="row">UNDO / REDO</div>
@@ -111,7 +146,7 @@ const templateUndo = `
     <input type="button" id="redo" class="_50" value="REDO" />
   </div>
 </div>
-`
+`;
 // const templateDraw = `<div id='drawing'>
 //   <div class="row">
 //     <input type="button" id="line" class="_25" value="LINE" />
@@ -163,7 +198,7 @@ const templateDrawOptions = `
       <input type="button" id="gcode" class="_25" value="GCODE" />
       <input type="button" id="text" class="_25" value="TEXT" />
     </div>
-</div>`
+</div>`;
 
 const templateTransform = `<div id='transform'>
   <div class="row">GEOMETRIC TRANSFORMS</div>
@@ -186,7 +221,7 @@ const templateTransform = `<div id='transform'>
     <input type="button" id="boolean" class="_33" value="BOOLEAN" />
     <input type="button" id="pocket" class="_33" value="POCKET" />
   </div>
-</div>`
+</div>`;
 
 const template = `
   <div id="full-screen" tabindex='1' class='column'>
@@ -203,7 +238,7 @@ const template = `
     </div>
     <cy-canvas-viewer id="viewer" tabindex="0"></cy-canvas-viewer></div>
   </div>
-  `
+  `;
 const style = `
 <style>
 
@@ -282,471 +317,535 @@ const style = `
     padding: 2px;
     }
     </style>
-`
+`;
 
-  //Almacenamiento de los datos manuales entre entradas y salidas de menus.
-  //Pongo defaults (podrían ser de un JSON, TODO)
-  //Uso la nomenclatura de variables de los componentes
+//Almacenamiento de los datos manuales entre entradas y salidas de menus.
+//Pongo defaults (podrían ser de un JSON, TODO)
+//Uso la nomenclatura de variables de los componentes
 
 // function saveConfig(config) {
 //   localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
 // }
 
-
 class cyCad1830App extends HTMLElement {
+	constructor() {
+		super();
 
-  constructor() {
-      super();
+		this.dom = this.attachShadow({ mode: "open" });
+		this.dom.adoptedStyleSheets = [sharedStyles];
+		this.dom.innerHTML = template + style;
+	}
+	registerInputApplications(drawingApp) {
+		//-------------------INPUT DATA
+		//Interactividad entre parte izquierda, datos manuales y ratón.
+		this.drawingApp = drawingApp;
+		this.viewer.interactiveDrawing.quit();
+		this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp);
+	}
 
-      this.dom = this.attachShadow({ mode: 'open' });
-      this.dom.adoptedStyleSheets = [sharedStyles];
-      this.dom.innerHTML = template + style;
-    }
-  registerInputApplications(drawingApp){
-    //-------------------INPUT DATA
-    //Interactividad entre parte izquierda, datos manuales y ratón.
-    this.drawingApp = drawingApp;
-    this.viewer.interactiveDrawing.quit();
-    this.viewer.interactiveDrawing.setDrawingMode(this.drawingApp );
-    }
-    
-  connectedCallback(){
-    this.viewer = this.dom.querySelector("#viewer");
-    this.manager =  createCommandManager( this.viewer.layerDraw, this ); // 
+	connectedCallback() {
+		this.viewer = this.dom.querySelector("#viewer");
+		this.manager = createCommandManager(this.viewer.layerDraw, this); //
 
-       //--------------MENUS
-    const menus = ['file', 'settings' ]
-    menus.forEach(m => this[m+'MenuEl'] = this.dom.querySelector(`#${m}-menu`));
-    menus.forEach(m => {
-        const el = this.dom.querySelector(`#${m}-menu-anchor`);
-        el.addEventListener('click',  ()=> this[`${m}MenuEl`].open = !this[`${m}MenuEl`].open);
-    })
-    menus.forEach(m => this[`${m}MenuEl`].addEventListener('close-menu', (e) => this.handleMenus(e)));
-        //------------- INPUT DATA  ----------
-    customElements.whenDefined('cy-input-data-basic').then(()=>{
-      //console.log('mdata inicializado')
-      this.mData = this.dom.querySelector('#input-data');
-      this.mData.initialData(defaultConfig)
-      //drawing-event recibe info de la aplicación de dibujo interactivo
-      this.viewer.addEventListener('drawing-event', (e) => this.mData.update(e.detail));
-      //------------------- GESTION interactive drawing y lado izquierdo
-      this.registerInputApplications(new DrawSelection(this.viewer.layerDraw, ''))
-      //Tratamiento homogéneo de botones, inputs y teclas, se envía todo a data, pero se podría filtrar
-      const events =   ['input-data', 'input-click', 'input-key'];
-      events.forEach( eType =>  
-        this.mData.addEventListener(eType, (e) => {
-          e.stopPropagation();
-          this.drawingApp.updateData( e.detail);
-        }))
-      this.mData.setActiveApplication('none');
-    })
+		//--------------MENUS
+		const menus = ["file", "settings"];
+		menus.forEach((m) => (this[m + "MenuEl"] = this.dom.querySelector(`#${m}-menu`)));
+		menus.forEach((m) => {
+			const el = this.dom.querySelector(`#${m}-menu-anchor`);
+			el.addEventListener("click", () => (this[`${m}MenuEl`].open = !this[`${m}MenuEl`].open));
+		});
+		menus.forEach((m) => this[`${m}MenuEl`].addEventListener("close-menu", (e) => this.handleMenus(e)));
+		//------------- INPUT DATA  ----------
+		customElements.whenDefined("cy-input-data-basic").then(() => {
+			//console.log('mdata inicializado')
+			this.mData = this.dom.querySelector("#input-data");
+			this.mData.initialData(defaultConfig);
+			//drawing-event recibe info de la aplicación de dibujo interactivo
+			this.viewer.addEventListener("drawing-event", (e) => this.mData.update(e.detail));
+			//------------------- GESTION interactive drawing y lado izquierdo
+			this.registerInputApplications(new DrawSelection(this.viewer.layerDraw, ""));
+			//Tratamiento homogéneo de botones, inputs y teclas, se envía todo a data, pero se podría filtrar
+			const events = ["input-data", "input-click", "input-key"];
+			events.forEach((eType) =>
+				this.mData.addEventListener(eType, (e) => {
+					e.stopPropagation();
+					this.drawingApp.updateData(e.detail);
+				}),
+			);
+			this.mData.setActiveApplication("none");
+		});
 
+		//--------------Gestión de CAPAS, LAYERS
+		//se pueden generar capas bien en el Load, bien en la propia aplicación (menú)
+		//si se crea una capa, por ejemplo al leer un fichero, generamos su control de ver/etc..
+		//Si en la lista de capas se desea ver/no ver, etc..., viene aquí
+		//y si se crea en la propia lista también
+		//La gestión se centraliza aquí que para eso es la aplicación, y los comandos se preparan para undo, redo
+		this.layerView = this.dom.querySelector("#layer-view");
+		this.layerView.addEventListener("layer-handle", (data) => {
+			const e = data.detail;
+			if (e.action === "visibility") this.viewer.setVisible(e.layerId, e.value);
+			else if (e.action === "create") {
+				/*const layer = */ commandLayerCreate(e.layer); //de momento es siempre undefined por el modo de trabajo
+			} else if (e.action === "delete") {
+				const id = e.layerId;
+				let del = true;
+				if (!this.viewer.layerDraw.layerIsEmpty(id)) {
+					del = confirm("the layer is not empty, are you sure ?");
+				}
+				if (del) commandLayerDelete(id); //de momento es siempre undefined por el modo de trabajo
+			} else if (e.action === "set-style") {
+				commandLayerSetStyle(e.layerId, e.value);
+			} else if (e.action === "active") {
+				this.viewer.layerDraw.setActiveLayerId(e.layerId);
+			}
+		});
+		this.addEventListener("quit-application", () => {
+			this.viewer.interactiveDrawing.quit();
+			//this.registerInputApplications(new DrawBasic(this.viewer.layerDraw, ''))
+			this.mData.setActiveApplication("none");
+		});
+		//Los comandos se originan a la recepción de eventos específicos
+		//--------------------- CREACION DE BLOQUES ------------------
+		/**@listens new-block Aquí es donde se recibe la petición de insertar geometría
+		 * tras terminar la parte interactiva !!! */
+		this.addEventListener("new-block", (e) => {
+			//this.layerDraft.clear();
+			const blocks = createDrawElement(e.detail.type, e.detail.data);
+			commandBlockCreate(blocks);
+		});
+		//--------------------- ORIGIN   COMANDO --------------------------------
+		/**
+		 * el origen es un comanod chingo que afecta a la totalidad de la base de datos, incluidos los trees rbush
+		 * la alternativa es mantener un offset en cada elemento creado y tenerlo en cuenta al pintar, etc...
+		 * Se puede evaluar pero....
+		 */
+		/**@listens set-origin cuando se ejecuta de verdad el comando definido de forma interactiva */
+		//Los comandos en realidad no se ejecutan al accionar el menú sino cuando se dan por concluidas las partes interactivas
+		//El dibujo se debe mantener en pantalla como estaba, por eso hay que cambar la ventana (Pane)
+		this.addEventListener("set-origin", (e) => {
+			const dx = e.detail.data.x0,
+				dy = e.detail.data.y0;
+			commandChangeOrigin(dx, dy);
+		});
+		//--------------------- LINK-UNLINK COMANDO --------------------------------
+		/**@listens link-unlink cuando se ejecuta de verdad el comando link o unlink definido de forma interactiva */
+		//Los comandos en realidad no se ejecutan al accionar el menú sino cuando se dan por concluidas las partes interactivas
+		this.addEventListener("link-unlink", (e) => {
+			//Aquí se debería hacer el comando link o unlink
+			commandLinkUnlink(e.detail.mode, e.detail.data.tol);
+		});
+		//--------------------- BOOLEAN  COMANDOS ------------------------
+		/**@listens boolean-op  para hacer operaciones con paths */
+		// Para las and y or se admiten n paths, pero para not y xor solo 2
+		this.addEventListener("boolean-op", (e) => {
+			//Aquí se debería hacer el comando propiamente dicho y guardar info de deshacer
+			//En realidad hay comandos como el or y and que admiten más de dos parámetros, a decidir qué hacer
+			commandBooleanOperation(e.detail.paths[0], e.detail.paths[1], e.detail.mode);
+		});
+		//--------------------- POCKET  COMANDOS ------------------------
+		/**@listens pocket-op  para hacer cajeras con islas */
+		// Admitimos n paths, siendo el primero el contorno exterior y los siguientes las islas
+		// Los offsets se pasan en detail.co y detail.io y se usan para pasada de acabado y contorneo de desbaste
+		// Si son 0 no se hace offset y el de contorneo tiene signo, Si es negativo es moyú y no se hacen cajeras
+		// Se debe chequear que las islas están dentro del contorno
+		// Se realiza el OR de las islas previamente.
+		// Si alguna isla está fuera del contorno se ignora
+		// Si intersecta con el contorno de da error (se puede hacer el OR de los contornos o islas previamente)
+		this.addEventListener("pocket-op", (e) => {
+			commandPocket(e.detail.paths, e.detail.co, e.detail.io);
+			console.log("pocket-op received", e.detail);
+			//commandPocketOperation(e.detail.paths[0], e.detail.paths[1], e.detail.mode);
+		});
+		//--------------------- TRANSFORMACIONES   COMANDOS ------------------------
+		this.addEventListener("geometry-transform", (evt) => {
+			evt.stopPropagation();
+			let op = evt.detail.command,
+				mode = evt.detail.mode || "",
+				data = evt.detail.data;
+			op += mode;
+			let opData;
+			switch (op) {
+				case "symmetryX":
+					opData = { op: blockSymmetryX, arg: [data.y0] };
+					break;
+				case "symmetryY":
+					opData = { op: blockSymmetryY, arg: [data.x0] };
+					break;
+				case "symmetryL":
+					opData = { op: blockSymmetryL, arg: [data] };
+					break;
+				case "translate":
+					opData = { op: blockTranslate, arg: [data.dx, data.dy] };
+					break;
+				case "rotate":
+					opData = { op: blockRotate, arg: [data.x, data.y, data.a] };
+					break;
+				case "scale":
+					opData = { op: blockScale, arg: [data.x, data.y, data.s] };
+					break;
+				default:
+					break;
+			}
+			const blocks = this.viewer.layerDraw.getSelectedBlocks();
 
-//--------------Gestión de CAPAS, LAYERS
-    //se pueden generar capas bien en el Load, bien en la propia aplicación (menú)
-    //si se crea una capa, por ejemplo al leer un fichero, generamos su control de ver/etc..
-    //Si en la lista de capas se desea ver/no ver, etc..., viene aquí
-    //y si se crea en la propia lista también
-    //La gestión se centraliza aquí que para eso es la aplicación, y los comandos se preparan para undo, redo
-    this.layerView = this.dom.querySelector('#layer-view');
-    this.layerView.addEventListener('layer-handle', (data)=>{
-      const e = data.detail;
-      if(e.action === 'visibility')
-        this.viewer.setVisible(e.layerId, e.value);
-      else if(e.action === 'create'){
-        const layer = commandLayerCreate(e.layer);    //de momento es siempre undefined por el modo de trabajo
-      } else if(e.action === 'delete'){
-        const id = e.layerId;
-        let del = true;
-        if(!this.viewer.layerDraw.layerIsEmpty(id)){
-          del = confirm('the layer is not empty, are you sure ?');
-        }
-        if(del) 
-          commandLayerDelete(id);    //de momento es siempre undefined por el modo de trabajo
-      } else if(e.action === 'set-style'){
-        commandLayerSetStyle(e.layerId, e.value);
-      } else if(e.action === 'active'){
-        this.viewer.layerDraw.setActiveLayerId(e.layerId);
-      }
+			commandBlockTransform(blocks, opData);
+			//this.layerDraw.symmetrySelected(evt.detail.mode, evt.detail.data));
+		});
 
-    })
-  this.addEventListener('quit-application', ()=>{
-    this.viewer.interactiveDrawing.quit();
-        //this.registerInputApplications(new DrawBasic(this.viewer.layerDraw, ''))
-    this.mData.setActiveApplication('none');
-  })
-//Los comandos se originan a la recepción de eventos específicos
-//--------------------- CREACION DE BLOQUES ------------------
-  /**@listens new-block Aquí es donde se recibe la petición de insertar geometría
-   * tras terminar la parte interactiva !!! */
-  this.addEventListener('new-block', e=>{
-      //this.layerDraft.clear();
-      const blocks = createDrawElement(e.detail.type, e.detail.data);
-      commandBlockCreate(blocks);
-  });
-//--------------------- ORIGIN   COMANDO --------------------------------
-/**
- * el origen es un comanod chingo que afecta a la totalidad de la base de datos, incluidos los trees rbush
- * la alternativa es mantener un offset en cada elemento creado y tenerlo en cuenta al pintar, etc...
- * Se puede evaluar pero....
- */
-    /**@listens set-origin cuando se ejecuta de verdad el comando definido de forma interactiva */
-    //Los comandos en realidad no se ejecutan al accionar el menú sino cuando se dan por concluidas las partes interactivas
-    //El dibujo se debe mantener en pantalla como estaba, por eso hay que cambar la ventana (Pane)
-    this.addEventListener('set-origin', e=>{
-      const dx = e.detail.data.x0, dy =e.detail.data.y0
-      commandChangeOrigin( dx, dy);
-    });
-//--------------------- LINK-UNLINK COMANDO --------------------------------
-    /**@listens link-unlink cuando se ejecuta de verdad el comando link o unlink definido de forma interactiva */
-    //Los comandos en realidad no se ejecutan al accionar el menú sino cuando se dan por concluidas las partes interactivas
-    this.addEventListener('link-unlink', e=>{
-      //Aquí se debería hacer el comando link o unlink
-      commandLinkUnlink( e.detail.mode, e.detail.data.tol);
-      });
-//--------------------- BOOLEAN  COMANDOS ------------------------
-    /**@listens boolean-op  para hacer operaciones con paths */
-    // Para las and y or se admiten n paths, pero para not y xor solo 2
-    this.addEventListener('boolean-op', e=>{
- 
-      //Aquí se debería hacer el comando propiamente dicho y guardar info de deshacer
-      //En realidad hay comandos como el or y and que admiten más de dos parámetros, a decidir qué hacer
-      commandBooleanOperation(e.detail.paths[0], e.detail.paths[1], e.detail.mode);
-      });   
-//--------------------- POCKET  COMANDOS ------------------------
-    /**@listens pocket-op  para hacer cajeras con islas */
-    // Admitimos n paths, siendo el primero el contorno exterior y los siguientes las islas
-    // Los offsets se pasan en detail.co y detail.io y se usan para pasada de acabado y contorneo de desbaste
-    // Si son 0 no se hace offset y el de contorneo tiene signo, Si es negativo es moyú y no se hacen cajeras
-    // Se debe chequear que las islas están dentro del contorno
-    // Se realiza el OR de las islas previamente.
-    // Si alguna isla está fuera del contorno se ignora
-    // Si intersecta con el contorno de da error (se puede hacer el OR de los contornos o islas previamente)
-    this.addEventListener('pocket-op', e=>{
-      commandPocket(e.detail.paths, e.detail.co, e.detail.io);
-      console.log(
-        "pocket-op received", e.detail  
-      )
-      //commandPocketOperation(e.detail.paths[0], e.detail.paths[1], e.detail.mode);
-     });
-//--------------------- TRANSFORMACIONES   COMANDOS ------------------------  
-  this.addEventListener('geometry-transform',  (evt)=>{
-      evt.stopPropagation();
-      let op = evt.detail.command, mode = evt.detail.mode || '', data = evt.detail.data;
-      op += mode;
-      let opData;
-      switch(op){
-        case 'symmetryX':  opData = {op: blockSymmetryX, arg : [data.y0]};  break;
-        case 'symmetryY':  opData = {op: blockSymmetryY, arg : [data.x0]};  break;
-        case 'symmetryL':  opData = {op: blockSymmetryL, arg : [data]};     break;
-        case 'translate':  opData = {op: blockTranslate, arg: [data.dx, data.dy]}; break;
-        case 'rotate'   :  opData = {op: blockRotate, arg: [data.x, data.y, data.a]}; break;
-        case 'scale'    :  opData = {op: blockScale, arg: [data.x, data.y, data.s]}; break;
-        default:          break;
-      }
-      const blocks = this.viewer.layerDraw.getSelectedBlocks();
+		// Gestión de botones de la parte izquierda y gestión del menú
+		//-----------------UNDO, REDO -------- BOTONES
+		/**undo-redo
+		 *
+		 */
+		this.dom.querySelector("#undo-redo").addEventListener("click", (evt) => {
+			if (evt.target.id === "undo") {
+				this.manager.undo();
+			} else if (evt.target.id === "redo") {
+				this.manager.redo();
+			}
+		});
+		//----------------- SEL, ALL, INV, DEL -------- BOTONES
+		/**select
+		 * Esto no está en el menú sino en la zona vertical
+		 */
+		this.dom.querySelector("#menu-select").addEventListener("click", (evt) => {
+			const [main, sub1, sub2] = evt.target.id.split("-");
+			this.registerInputApplications(new DrawSelection(this.viewer.layerDraw, ""));
+			this.mData.setActiveApplication("none", "");
+			switch (sub1) {
+				case "all":
+					{
+						this.viewer.layerDraw.deselectAll();
+						this.selectedBlocks = [];
+					}
+					break;
+				case "invert":
+					this.viewer.layerDraw.invertSelection();
+					break;
+				case "del":
+					{
+						this.selectedBlocks = this.viewer.layerDraw.getSelectedBlocks();
+						commandBlockDelete(this.selectedBlocks);
+					}
+					break;
+				case "sel":
+					{
+						//este es el modo por defecto
+					}
+					break;
+				// case 'copy'   : {
+				//                   this.selectedBlocks = this.viewer.layerDraw.getSelectedBlocks();
+				//                 }
+				//                 break;
+				// case 'paste'  : {
 
-      commandBlockTransform(blocks, opData)
-        //this.layerDraw.symmetrySelected(evt.detail.mode, evt.detail.data));
-  })
+				//                 }
+				//                 break;
+			}
+		});
+		//----------------- ZOOM  ------------------------------ BOTONES
+		/** En realidad la gestión normal es con ratón, excepto el fit y home. El set home se usa poco */
+		this.dom.querySelector("#menu-zoom").addEventListener("click", (evt) => {
+			this.viewer.clearCursors();
+			this.viewer.canvasHandler.setZoomMode();
+			const cmd = evt.target.id.split("-")[1];
+			switch (cmd) {
+				case "fit":
+					this.viewer.fit();
+					break;
+				case "home":
+					this.viewer.canvasHandler.view("fgZoomHome");
+					break;
+				case "sethome":
+					this.viewer.canvasHandler.view("fgSetHome");
+					break;
+				case "in":
+					this.viewer.canvasHandler.view("fgZoomIn");
+					break;
+				case "out":
+					this.viewer.canvasHandler.view("fgZoomOut");
+					break;
+			}
+		});
+		//-----------------  MEASURE ---------------------------- BOTONES
+		/** menu de medición, elemento, path o punto a punto */
+		this.dom.querySelector("#menu-measure").addEventListener("click", (evt) => {
+			const [main, sub1, sub2] = evt.target.id.split("-");
+			this.registerInputApplications(new DrawMeasure(this.viewer.layerDraw, sub1));
+			this.mData.setActiveApplication("measure", sub1);
+		});
+		//---------------- TRANSFORM ------------------------- BOTONES
+		this.dom.querySelector("#transform").addEventListener("click", (evt) => {
+			this.dom.querySelectorAll("#transform input").forEach((btn) => btn.classList.remove("active"));
+			evt.target.classList.add("active");
+			const [main, sub1, sub2] = evt.target.id.split("-");
+			console.log(main, sub1, sub2);
+			switch (main) {
+				case "origin":
+					{
+						this.registerInputApplications(new DrawOrigin(this.viewer.layerDraw, sub1));
+						this.mData.setActiveApplication("transform", "origin");
+					}
+					break;
+				/**
+				 * El link debe unir tanto tramos sueltos como paths.
+				 * @todo hacerlo interactivo pinchando bloque
+				 */
+				case "link":
+					{
+						this.registerInputApplications(new DrawLink(this.viewer.layerDraw, sub1));
+						this.mData.setActiveApplication("transform", `link`);
+						//this.viewer.layerDraw.link();
+					}
+					break;
+				case "symmetry":
+					{
+						this.registerInputApplications(new DrawSymmetry(this.viewer.layerDraw, sub1));
+						this.mData.setActiveApplication("transform", `symmetry${sub1}`);
+					}
+					break;
+				case "cut":
+					{
+						const selectedBlocks = this.viewer.layerDraw.getSelectedBlocks();
+						const cutPoints = findAllCuts(selectedBlocks);
+						commandCreateCutPoints(cutPoints); //ye un comando con undo
+					}
+					break;
+				case "scale":
+					{
+						this.registerInputApplications(new DrawScale(this.viewer.layerDraw, sub1));
+						this.mData.setActiveApplication("transform", "scale");
+					}
+					break;
+				case "translate":
+					{
+						this.registerInputApplications(new DrawTranslate(this.viewer.layerDraw, sub1));
+						this.mData.setActiveApplication("transform", "translate");
+					}
+					break;
+				case "rotate":
+					{
+						this.registerInputApplications(new DrawRotate(this.viewer.layerDraw, sub1));
+						this.mData.setActiveApplication("transform", "rotate");
+					}
+					break;
+				case "boolean":
+					{
+						this.dom.querySelector("#select-all").dispatchEvent(new CustomEvent("click", { bubbles: true, composed: true }));
+						this.registerInputApplications(new DrawBoolean(this.viewer.layerDraw, sub1));
+						this.mData.setActiveApplication("transform", "boolean");
+					}
+					break;
+				case "pocket":
+					{
+						this.dom.querySelector("#select-all").dispatchEvent(new CustomEvent("click", { bubbles: true, composed: true }));
+						this.registerInputApplications(new DrawPocket(this.viewer.layerDraw, sub1));
+						this.mData.setActiveApplication("transform", "pocket");
+					}
+					break;
+			}
+		});
+		//------------------------- DRAW  BOTONES ----------------------
+		this.dom.querySelector("#drawing-options").addEventListener("click", (evt) => {
+			this.dom.querySelectorAll("#drawing-options input").forEach((btn) => btn.classList.remove("active"));
+			evt.target.classList.add("active");
+			const [main, sub1, sub2] = evt.target.id.split("-");
+			console.log(main, sub1, sub2);
+			switch (main) {
+				case "point":
+					break;
+				case "line":
+					{
+						switch (
+							sub1 //agrupo acciones comunes
+						) {
+							case "NP":
+								this.registerInputApplications((this.drawingApp = new DrawNormal(this.viewer.layerDraw, sub1)));
+								break;
+							case "PP":
+							case "PXA":
+							case "PYA":
+							case "PDA":
+								this.registerInputApplications(new DrawSegment(this.viewer.layerDraw, sub1));
+								break;
+							case "TPB":
+								this.registerInputApplications(new DrawSegmentPB(this.viewer.layerDraw, sub1));
+								break;
+							case "TBB":
+								this.registerInputApplications(new DrawSegmentBB(this.viewer.layerDraw, sub1));
+								break;
+						}
+						this.mData.setActiveApplication("segment", sub1);
+					}
+					break;
+				case "circle":
+					{
+						this.registerInputApplications(new DrawCircle(this.viewer.layerDraw, sub1));
+						this.mData.setActiveApplication("circle", sub1);
+					}
+					break;
+				case "arc":
+					{
+						this.registerInputApplications(new DrawArc(this.viewer.layerDraw, sub1));
+						this.mData.setActiveApplication("arc", sub1);
+					}
+					break;
+				case "path":
+					{
+						this.registerInputApplications(new DrawPath(this.viewer.layerDraw, sub1));
+						this.mData.setActiveApplication("path", sub1);
+					}
+					break;
+				case "poly":
+					{
+						//quito el menú de tipo y lo pongo en el selector de input-data
+						this.registerInputApplications(new DrawPolygon(this.viewer.layerDraw, sub1));
+						this.mData.setActiveApplication("polygon", sub1);
+					}
+					break;
+				case "gcode":
+					{
+						this.registerInputApplications(new DrawGcode(this.viewer.layerDraw, ""));
+						this.mData.setActiveApplication("gcode", sub1);
+					}
+					break;
+				case "text":
+					{
+						this.registerInputApplications(new DrawText(this.viewer.layerDraw, ""));
+						this.mData.setActiveApplication("text", sub1);
+					}
+					break;
+				default:
+					break;
+			}
+		});
 
-  // Gestión de botones de la parte izquierda y gestión del menú
-//-----------------UNDO, REDO -------- BOTONES
-  /**undo-redo
-   * 
-   */
-    this.dom.querySelector('#undo-redo').addEventListener('click',(evt)=>{
-            if(evt.target.id === 'undo'){
-                this.manager.undo();
-            } else if(evt.target.id === 'redo'){
-                this.manager.redo();
-            }
-        })
-//----------------- SEL, ALL, INV, DEL -------- BOTONES
-  /**select
-   * Esto no está en el menú sino en la zona vertical
-   */
-    this.dom.querySelector('#menu-select').addEventListener('click',(evt)=>{
-      const [main, sub1, sub2] = evt.target.id.split('-');
-      this.registerInputApplications( new DrawSelection(this.viewer.layerDraw, '') );
-      this.mData.setActiveApplication( 'none', '');
-      switch(sub1){
-        case 'all'    : {
-                          this.viewer.layerDraw.deselectAll();
-                          this.selectedBlocks = [];
-                        }
-                        break;
-        case 'invert' : this.viewer.layerDraw.invertSelection(); break;
-        case 'del'    : {
-                          this.selectedBlocks = this.viewer.layerDraw.getSelectedBlocks();
-                          commandBlockDelete(this.selectedBlocks);
-                        }
-              break;
-        case 'sel'    : { //este es el modo por defecto
-                        }
-                        break;
-        case 'copy'   : {
-                          this.selectedBlocks = this.viewer.layerDraw.getSelectedBlocks();
-                        }
-                        break;
-        case 'paste'  : {
+		//-----------------CREAR CAPAS INICIALES
+		//Estas capas las generamos de oficio
+		//Los tratamientos son aditivos y los atributos ascii
+		customElements.whenDefined("cy-layer-list").then(() => {
+			this.layerView.addLayer(JSON.stringify(this.viewer.axesLayer)); //Estas tienen gestión interna especial
+			this.layerView.addLayer(JSON.stringify(this.viewer.gridLayer)); //Estas tienen gestión interna especial
+			//Al crearla se debe poner activa ella sola.
+			/*const layerData = */ commandLayerCreate();
+		});
+	} //END of connectedcallback
 
-                        }
-                        break;
-      }
-    })
-//----------------- ZOOM  ------------------------------ BOTONES
-  /** En realidad la gestión normal es con ratón, excepto el fit y home. El set home se usa poco */
-    this.dom.querySelector('#menu-zoom').addEventListener('click', (evt) => {
-        this.viewer.clearCursors();
-        this.viewer.canvasHandler.setZoomMode();               
-        const cmd = evt.target.id.split('-')[1];
-        switch( cmd) {
-            case 'fit':     this.viewer.fit();break;
-            case 'home':    this.viewer.canvasHandler.view('fgZoomHome'); break;
-            case 'sethome': this.viewer.canvasHandler.view('fgSetHome'); break;
-            case 'in':      this.viewer.canvasHandler.view('fgZoomIn'); break;
-            case 'out':     this.viewer.canvasHandler.view('fgZoomOut');break;
-        }
-    })
-//-----------------  MEASURE ---------------------------- BOTONES
-/** menu de medición, elemento, path o punto a punto */
-    this.dom.querySelector('#menu-measure').addEventListener('click', (evt) => {
-      const [main, sub1, sub2] = evt.target.id.split('-');
-      this.registerInputApplications( new DrawMeasure(this.viewer.layerDraw, sub1) );
-      this.mData.setActiveApplication( 'measure', sub1);
-    })
-//---------------- TRANSFORM ------------------------- BOTONES 
-    this.dom.querySelector('#transform').addEventListener('click',(evt)=>{
-      this.dom.querySelectorAll('#transform input').forEach( btn => btn.classList.remove('active'));
-      evt.target.classList.add('active');
-      const [main, sub1, sub2] = evt.target.id.split('-');  
-      console.log(main, sub1, sub2);
-      switch(main){
-                case 'origin':{
-          this.registerInputApplications( new DrawOrigin(this.viewer.layerDraw, sub1) )
-          this.mData.setActiveApplication( 'transform', 'origin' );
-        }break;
-       /**
-         * El link debe unir tanto tramos sueltos como paths.
-        * @todo hacerlo interactivo pinchando bloque
-       */
-        case 'link':{
-          this.registerInputApplications( new DrawLink(this.viewer.layerDraw, sub1) )
-          this.mData.setActiveApplication( 'transform', `link`);
-          //this.viewer.layerDraw.link();
-        }
-        break;          
-        case 'symmetry':{
-          this.registerInputApplications( new DrawSymmetry(this.viewer.layerDraw, sub1) )
-          this.mData.setActiveApplication( 'transform', `symmetry${sub1}`);
-        }
-        break;
-        case 'cut':{
-          const selectedBlocks = this.viewer.layerDraw.getSelectedBlocks();
-          const cutPoints = findAllCuts(selectedBlocks);
-          commandCreateCutPoints(cutPoints); //ye un comando con undo
-        }
-        break;
-        case 'scale':{
-          this.registerInputApplications( new DrawScale(this.viewer.layerDraw, sub1))
-          this.mData.setActiveApplication( 'transform', 'scale' );
-        }
-        break;
-        case 'translate': {
-          this.registerInputApplications(  new DrawTranslate(this.viewer.layerDraw, sub1) )
-          this.mData.setActiveApplication( 'transform', 'translate' );
-        }
-        break;
-        case 'rotate':{
-          this.registerInputApplications(  new DrawRotate(this.viewer.layerDraw, sub1) )
-          this.mData.setActiveApplication( 'transform', 'rotate' );
-        }
-        break;
-        case 'boolean':{
-          this.dom.querySelector('#select-all').dispatchEvent(new CustomEvent('click', {bubbles:true, composed:true}));
-          this.registerInputApplications(  new DrawBoolean(this.viewer.layerDraw, sub1) )
-          this.mData.setActiveApplication( 'transform', 'boolean' );
-        }
-        break;        
-        case 'pocket':{
-          this.dom.querySelector('#select-all').dispatchEvent(new CustomEvent('click', {bubbles:true, composed:true}));
-          this.registerInputApplications(  new DrawPocket(this.viewer.layerDraw, sub1) )
-          this.mData.setActiveApplication( 'transform', 'pocket' );
-        }
-        break;        
-      }})
-//------------------------- DRAW  BOTONES ----------------------
-    this.dom.querySelector('#drawing-options').addEventListener('click',(evt)=>{
-      this.dom.querySelectorAll('#drawing-options input').forEach( btn => btn.classList.remove('active'));
-      evt.target.classList.add('active');
-      const [main, sub1, sub2] = evt.target.id.split('-');  
-      console.log(main, sub1, sub2);
-      switch(main){
-        case 'point':  break;
-        case 'line' :{
-          switch(sub1){ //agrupo acciones comunes
-            case 'NP':  this.registerInputApplications(this.drawingApp = new DrawNormal(this.viewer.layerDraw, sub1));    break;
-            case 'PP':
-            case 'PXA':
-            case 'PYA':
-            case 'PDA': this.registerInputApplications( new DrawSegment(this.viewer.layerDraw, sub1) );   break;
-            case 'TPB': this.registerInputApplications( new DrawSegmentPB(this.viewer.layerDraw, sub1)); break;
-            case 'TBB': this.registerInputApplications( new DrawSegmentBB(this.viewer.layerDraw, sub1)); break;
-          }
-          this.mData.setActiveApplication( 'segment', sub1 );
-        }
-        break;
-        case 'circle' :{
-          this.registerInputApplications(  new DrawCircle(this.viewer.layerDraw, sub1))
-          this.mData.setActiveApplication( 'circle', sub1 );
-        }
-        break;
-        case 'arc' :{
-          this.registerInputApplications( new DrawArc(this.viewer.layerDraw, sub1) )        
-          this.mData.setActiveApplication( 'arc', sub1 );
-        }
-        break;
-        case 'path':{
-          this.registerInputApplications( new DrawPath(this.viewer.layerDraw, sub1) )        
-          this.mData.setActiveApplication( 'path', sub1 );
-        } break;
-        case 'poly' :{ //quito el menú de tipo y lo pongo en el selector de input-data
-          this.registerInputApplications( new DrawPolygon(this.viewer.layerDraw, sub1) );
-          this.mData.setActiveApplication( 'polygon', sub1 );
-        } break;
-        case 'gcode' : {
-          this.registerInputApplications( new DrawGcode(this.viewer.layerDraw, '') )
-          this.mData.setActiveApplication( 'gcode', sub1 );
-        } break;
-        case 'text' : {
-          this.registerInputApplications( new DrawText(this.viewer.layerDraw, '') )
-          this.mData.setActiveApplication( 'text', sub1 );
-        } break;
-        default:break;
-      }
-      });
-
-//-----------------CREAR CAPAS INICIALES
-    //Estas capas las generamos de oficio
-    //Los tratamientos son aditivos y los atributos ascii
-    customElements.whenDefined('cy-layer-list').then(() => {
-      this.layerView.addLayer( JSON.stringify(this.viewer.axesLayer)); //Estas tienen gestión interna especial
-      this.layerView.addLayer( JSON.stringify(this.viewer.gridLayer)); //Estas tienen gestión interna especial  
-      //Al crearla se debe poner activa ella sola.
-      /*const layerData = */ commandLayerCreate()
-    });   
-
-  } //END of connectedcallback
-
-    /**para poder llamarla desde la gestión de comandos desde donde solo queremos acceso al modelo y la app (esta) */
-    translateOrigin = (dx, dy) => {
-      this.viewer.canvasHandler.view("fgPane", {x:dx, y:dy});  //rehace los cálculos del handler
-    }
-    //Gestión del menú de save/load. Distingo entre abrir proyecto (json) y abrir geometría (iso, svg, dxf)
-    //y además entre guardar proyecto (json) y exportar geometría (iso, svg) y entre project y geometry(load)
-    handleMenus = (e) => {
-      //Nos ponemos una nomenclatura razonable para poner orden en los ids
-      //menu, submenu, etc... separados por guiones
-      const action = e.detail.initiator.id;
-      const [main, sub1, sub2] = action.split('-');
-      console.log(main, sub1, sub2);
-      switch(main){
-        case 'open': {
-          const clear = sub1 === 'geometry'? false: true;
-          loadProject().then(file => {
-            const type = file.name.split('.').pop();
-            if(type.toLowerCase() === 'json'){
-              const data = JSON.parse(file.text );
-            // Restaurar modelo
-              this.viewer.layerDraw.deserialize( data.model, clear); //Falta restaurar historia
-              this.viewer.fit();
-              this.viewer.layerDraw.draw();
-            }
-            else if((type === 'nc') || (type === 'pxy')){
-              //Me cepillo el lector de iso original y pongo el ligero, que ya lo iré aumentando si hace falta...
-              const geo = gcodeToGeometry(file.text);
-              this.viewer.layerDraw.addBlocks(undefined, geo);
-              this.viewer.fit();
-              this.viewer.layerDraw.draw();
-            } else if(type === 'svg'){
-              const geo = svgToGeometry(file.text);
-              geo.layers.forEach(ly => {
-                const id = this.viewer.layerDraw.addLayer(); //debe poner el activeLayer
-                this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.getLayer(id)));
-                this.viewer.layerDraw.addBlocks(undefined, ly.paths);
-              })
-              this.viewer.fit();
-              this.viewer.layerDraw.draw();
-            } else if(type === 'dxf'){
-              const layers = convertDxfToGeometry(file.text); //devuelve array de layers y cada una con sus bloques...
-              layers.forEach(ly => {
-                const id = this.viewer.layerDraw.addLayer(ly.name, {pathColor:`#${ly.color.toString(16)}`}); //debe poner el activeLayer
-                this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.getLayer(id)));
-                this.viewer.layerDraw.addBlocks(undefined, ly.blocks.concat(ly.paths).concat(ly.circles));
-              })
-              this.viewer.fit();
-              this.viewer.layerDraw.draw();
-            }
-            
-          })
-        }break;
-        case 'save': {
-          switch(sub1){
-            case 'project':{
-              const projectData = {
-              project: { name: "unnamed", timestamp: Date.now()},
-              model: this.viewer.layerDraw
-              // serializamos los comandos registrados
-              //commands: Array.from(commandRegistry.entries()).map(([name, fn]) => ({ name, source: fn.toString(), })),
-              };
-              const json = JSON.stringify(projectData, null, 2);
-              saveProject(null, json);
-              //saveProject(null, json);
-              //     const type = file.name.split('.').pop();
-            }break;
-            case 'iso':{
-              //En el futuro , en vez de perfil, puede elegirse tipo de mecanizado, compensación, etc...
-              //Se trabaja sobre paths que estén seleccionados para no dispersar la manera de hacer cosas
-              //let data = this.viewer.layerDraw.getSelectedBlocks().filter( b => b.type === 'path');
-              this.registerInputApplications( new DrawExportGcode(this.viewer.layerDraw, '') );
-              this.mData.setActiveApplication( 'export-gcode', sub1);
-              this.viewer.layerDraw.addEventListener('generate-iso', (evt)=>{
-                setGCodeDefaults(evt.detail)
-                saveCNC(null, pathsToIso(evt.detail.paths))
-              })
-            }break;
-            case 'svg':{   
-              let data = this.viewer.layerDraw.getSelectedBlocks().filter( b => b.type === 'path');;
-              const ww = this.viewer.layerDraw.extents;
-              const header = `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"
+	/**para poder llamarla desde la gestión de comandos desde donde solo queremos acceso al modelo y la app (esta) */
+	translateOrigin = (dx, dy) => {
+		this.viewer.canvasHandler.view("fgPane", { x: dx, y: dy }); //rehace los cálculos del handler
+	};
+	//Gestión del menú de save/load. Distingo entre abrir proyecto (json) y abrir geometría (iso, svg, dxf)
+	//y además entre guardar proyecto (json) y exportar geometría (iso, svg) y entre project y geometry(load)
+	handleMenus = (e) => {
+		//Nos ponemos una nomenclatura razonable para poner orden en los ids
+		//menu, submenu, etc... separados por guiones
+		const action = e.detail.initiator.id;
+		const [main, sub1, sub2] = action.split("-");
+		console.log(main, sub1, sub2);
+		switch (main) {
+			case "open":
+				{
+					const clear = sub1 === "geometry" ? false : true;
+					loadProject().then((file) => {
+						const type = file.name.split(".").pop();
+						if (type.toLowerCase() === "json") {
+							const data = JSON.parse(file.text);
+							// Restaurar modelo
+							this.viewer.layerDraw.deserialize(data.model, clear); //Falta restaurar historia
+							this.viewer.fit();
+							this.viewer.layerDraw.draw();
+						} else if (type === "nc" || type === "pxy") {
+							//Me cepillo el lector de iso original y pongo el ligero, que ya lo iré aumentando si hace falta...
+							const geo = gcodeToGeometry(file.text);
+							this.viewer.layerDraw.addBlocks(undefined, geo);
+							this.viewer.fit();
+							this.viewer.layerDraw.draw();
+						} else if (type === "svg") {
+							const geo = svgToGeometry(file.text);
+							geo.layers.forEach((ly) => {
+								const id = this.viewer.layerDraw.addLayer(); //debe poner el activeLayer
+								this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.getLayer(id)));
+								this.viewer.layerDraw.addBlocks(undefined, ly.paths);
+							});
+							this.viewer.fit();
+							this.viewer.layerDraw.draw();
+						} else if (type === "dxf") {
+							const layers = convertDxfToGeometry(file.text); //devuelve array de layers y cada una con sus bloques...
+							layers.forEach((ly) => {
+								const id = this.viewer.layerDraw.addLayer(ly.name, { pathColor: `#${ly.color.toString(16)}` }); //debe poner el activeLayer
+								this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.getLayer(id)));
+								this.viewer.layerDraw.addBlocks(undefined, ly.blocks.concat(ly.paths).concat(ly.circles));
+							});
+							this.viewer.fit();
+							this.viewer.layerDraw.draw();
+						}
+					});
+				}
+				break;
+			case "save":
+				{
+					switch (sub1) {
+						case "project":
+							{
+								const projectData = {
+									project: { name: "unnamed", timestamp: Date.now() },
+									model: this.viewer.layerDraw,
+									// serializamos los comandos registrados
+									//commands: Array.from(commandRegistry.entries()).map(([name, fn]) => ({ name, source: fn.toString(), })),
+								};
+								const json = JSON.stringify(projectData, null, 2);
+								saveProject(null, json);
+								//saveProject(null, json);
+								//     const type = file.name.split('.').pop();
+							}
+							break;
+						case "iso":
+							{
+								//En el futuro , en vez de perfil, puede elegirse tipo de mecanizado, compensación, etc...
+								//Se trabaja sobre paths que estén seleccionados para no dispersar la manera de hacer cosas
+								//let data = this.viewer.layerDraw.getSelectedBlocks().filter( b => b.type === 'path');
+								this.registerInputApplications(new DrawExportGcode(this.viewer.layerDraw, ""));
+								this.mData.setActiveApplication("export-gcode", sub1);
+								this.viewer.layerDraw.addEventListener("generate-iso", (evt) => {
+									setGCodeDefaults(evt.detail);
+									saveCNC(null, pathsToIso(evt.detail.paths));
+								});
+							}
+							break;
+						case "svg":
+							{
+								let data = this.viewer.layerDraw.getSelectedBlocks().filter((b) => b.type === "path");
+								const ww = this.viewer.layerDraw.extents;
+								const header = `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"
                 fill="transparent" stroke="black" strokeWidth="2px" vector-effect="non-scaling-stroke"
-                viewBox = "${ww.xi} ${ww.yi} ${ww.xf-ww.xi} ${ww.yf-ww.yi}"
+                viewBox = "${ww.xi} ${ww.yi} ${ww.xf - ww.xi} ${ww.yf - ww.yi}"
                 preserveAspectRatio = xMidYMid meet"
-                transform="matrix(1 0 0 -1 0 0)" >\n` 
-                const paths = data.reduce((d,path) =>  d + `<path d="${(getSvgPathFromBlocks(path))}"/>\n`, '')
-                const file = `${header}${paths}</svg>`
-                saveSvg(null, file);
-            }break;
-          }
-        }break;
-
-        }
-    } 
-    //Se supone que aquí se llama al desconectar la página, pero en laa aplicaciones no parece que pase
-    disconnectedCallback() {
-    //hay que quitar los listeners... 
-    }
-    static get observedAttributes() {
-        return [];
-    }
-    attributeChangedCallback(name, oldVal, newVal) {
-        switch (name) {
-        default:
-            break;
-        }
-    }
+                transform="matrix(1 0 0 -1 0 0)" >\n`;
+								const paths = data.reduce((d, path) => d + `<path d="${getSvgPathFromBlocks(path)}"/>\n`, "");
+								const file = `${header}${paths}</svg>`;
+								saveSvg(null, file);
+							}
+							break;
+					}
+				}
+				break;
+		}
+	};
+	//Se supone que aquí se llama al desconectar la página, pero en laa aplicaciones no parece que pase
+	disconnectedCallback() {
+		//hay que quitar los listeners...
+	}
+	static get observedAttributes() {
+		return [];
+	}
+	attributeChangedCallback(name, oldVal, newVal) {
+		switch (name) {
+			default:
+				break;
+		}
+	}
 }
 
-customElements.define('cy-cad-1830-app', cyCad1830App);
-
+customElements.define("cy-cad-1830-app", cyCad1830App);

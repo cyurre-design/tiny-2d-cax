@@ -107,7 +107,7 @@ export function complexParallelOffset( complex, offset, options){
         pathSlices = pathSlices.map(path=> new BPath(path));
         let ccwPaths = [], cwPaths = [];
         pathSlices.forEach(path=>{
-            if(!path.isClosed) console.log('se ha abierto algún path!!?');
+            if(!pathIsClosed(path)) console.log('se ha abierto algún path!!?');
             else{
                 if(path.orientation() === 'ccw')
                     ccwPaths.push(path) ;

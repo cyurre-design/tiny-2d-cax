@@ -119,6 +119,7 @@ export function visitLocalIntersects( path, pos_equal_eps= geometryPrecision )
 {
     let intrs = [];
     let overlapping_intrs = [];
+    let overlapping_points = [];
     function segments_overlap(s1, s2)    { //Suponemos que son dos elementos contiguos
         if(s1.type === 'segment'){
             if(! (s2.type === 'segment')) return false;
