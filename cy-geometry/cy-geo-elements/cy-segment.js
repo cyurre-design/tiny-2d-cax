@@ -12,7 +12,7 @@ import {
 } from "../cy-geometry-library.js";
 
 //Por motivos operativos se mantiene una formulación interna optimizada con el vector director y la distancia al origen.
-//Es decir la recta en formato interno se mantiene con ux*x + uy*y + c = 0 (ax+by+c = 0) con ux*ux + uy*uy = 0
+//Es decir la recta en formato interno se mantiene con ux*x + uy*y + c = 0 (ax+by+c = 0) con ux*ux + uy*uy = 1
 //La distancia punto (x,y) a recta (ax+by+c=0) se define como abs(ax+by+c)/(sqrt(a*a + b*b))
 //La distancia al origen (0,0) es d = abs(c)
 

@@ -127,7 +127,7 @@ export function findIntersects(path1, path2, options) {
 // Sin embargo, al hacer el offset de una curva, sí se pueden producir intersecciones de estas
 
 // Intento traducir la idea. En lugar de recorrer 3 vértices seguidos recorremos 2 shapes contiguas
-export function visitLocalIntersects(path, pos_equal_eps = geometryPrecision) {
+function visitLocalIntersects(path, pos_equal_eps = geometryPrecision) {
     let intrs = [];
     let overlapping_intrs = [];
     let overlapping_points = [];
@@ -205,7 +205,7 @@ export function visitLocalIntersects(path, pos_equal_eps = geometryPrecision) {
 /// start of that segment is recorded (unless the polyline is open and the intersect is at the very
 /// end of the polyline, then the second to last vertex index is used to maintain that it represents
 /// the start of a polyline segment).
-export function visitGlobalSelfIntersects(path, pos_equal_eps = geometryPrecision) {
+function visitGlobalSelfIntersects(path, pos_equal_eps = geometryPrecision) {
     let intrs = [];
     let overlapping_intrs = [];
     //Si es closed, el constructor debe meter el shape correspondiente al final-comienzo y segments sería 2
