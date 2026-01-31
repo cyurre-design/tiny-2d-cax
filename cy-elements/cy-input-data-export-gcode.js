@@ -1,20 +1,31 @@
-import { sharedStyles } from '../shared-styles.js';
-import {inputDataInit, initialDataBasic, inputDataUpdate, inputDataSubtype, setEventHandlers, TSTART, TESC, TSAVE, TINVERT, TORDER, TEND} from './cy-input-data-templates.js'
+import { sharedStyles } from "../shared-styles.js";
+import {
+    inputDataInit,
+    initialDataBasic,
+    inputDataUpdate,
+    inputDataSubtype,
+    setEventHandlers,
+    TSTART,
+    TSAVE,
+    TINVERT,
+    TORDER,
+} from "./cy-input-data-templates.js";
 export default class CyInputDataExportGcode extends HTMLElement {
-    constructor( ) {
+    constructor() {
         super();
-        this.dom = this.attachShadow({mode:'open'});
+        this.dom = this.attachShadow({ mode: "open" });
         this.dom.adoptedStyleSheets = [sharedStyles];
     }
     //Aunque los html ya están inicializados, hay que pasar la info al componente que dibuja
     set subType(type) {
-        this.type = 'p' //por mantener coherencia y estandarización de tipo-subtipo-propiedad
+        this.type = "p"; //por mantener coherencia y estandarización de tipo-subtipo-propiedad
         inputDataSubtype(this, `data-export-gcode-${this.type}`);
-        this.dom.querySelector('#data-export-gcode-header').dispatchEvent(new Event("change", { bubbles: true }));
-        this.dom.querySelector('#data-export-gcode-footer').dispatchEvent(new Event("change", { bubbles: true }));
-        this.dom.querySelector('#data-export-gcode-post').dispatchEvent(new Event("change", { bubbles: true }));
-        this.dom.querySelector('#data-export-gcode-pre').dispatchEvent(new Event("change", { bubbles: true }));
-        this.dom.querySelector('#data-export-gcode-tol').dispatchEvent(new Event("change", { bubbles: true }));
+        this.dom.querySelector("#data-export-gcode-header").dispatchEvent(new Event("change", { bubbles: true }));
+        this.dom.querySelector("#data-export-gcode-footer").dispatchEvent(new Event("change", { bubbles: true }));
+        this.dom.querySelector("#data-export-gcode-post").dispatchEvent(new Event("change", { bubbles: true }));
+        this.dom.querySelector("#data-export-gcode-pre").dispatchEvent(new Event("change", { bubbles: true }));
+        this.dom.querySelector("#data-export-gcode-tol").dispatchEvent(new Event("change", { bubbles: true }));
+        this.dom.querySelector("#data-export-gcode-decs").dispatchEvent(new Event("change", { bubbles: true }));
     }
     createStyle() {
         let style = `<style>
@@ -25,51 +36,57 @@ export default class CyInputDataExportGcode extends HTMLElement {
     createTemplate() {
         let t = `export-gcode`;
         let h = `<div id=${t}>`;
-        h += `<div class="row">${TSAVE(t) + TINVERT(t) + TSTART(t) + TORDER(t) }</div></div>`
+        h += `<div class="row">${TSAVE(t) + TINVERT(t) + TSTART(t) + TORDER(t)}</div></div>`;
         h += `<div class="row"> <div class="_20">Header</div>
                 <textarea  id="data-${t}-header" autofocus class="data _75" contenteditable="plaintext-only" maxlength="50" ></textarea>
-                </div>`
-        h +=  `<div class="row"> <div class="_20">Footer</div>
+                </div>`;
+        h += `<div class="row"> <div class="_20">Footer</div>
                 <textarea  id="data-${t}-footer" class="data _75" contenteditable="plaintext-only" maxlength="50" ></textarea>
-                </div>`
-        h +=  `<div class="row"> <div class="_20">Post</div>
+                </div>`;
+        h += `<div class="row"> <div class="_20">Post</div>
                 <textarea  id="data-${t}-post" class="data _75" contenteditable="plaintext-only" maxlength="50" ></textarea>
-                </div>`
-        h +=  `<div class="row"> <div class="_20">Pre</div>
+                </div>`;
+        h += `<div class="row"> <div class="_20">Pre</div>
                 <textarea  id="data-${t}-pre" class="data _75" contenteditable="plaintext-only" maxlength="50" ></textarea>
-                </div>`
-        h += `<div class = "row"> Bezier to Arc Tolerance<input type="number" min="0.01" max="1" step="0.01" value="0.1" id="data-${t}-tol"/></div>`
-        return h
+                </div>`;
+        h += `<div class = "row">
+                <span class="_40">Bezier Tol.</span><input class="_20" type="number" min="0.01" max="1" step="0.01" value="0.1" id="data-${t}-tol"/>
+                <span class="_30">decimals</span><input class="_10" type="number" min="1" max="5" step="1" value="4" id="data-${t}-decs"/></div>
+                </div>`;
+        return h;
     }
 
     connectedCallback() {
-        inputDataInit(this) //Esto debe inicializar los punteros a componentes y lee sus valores de html
+        inputDataInit(this); //Esto debe inicializar los punteros a componentes y lee sus valores de html
         setEventHandlers(this);
-        this.addEventListener('input-click', (e) =>{
-            if(e.detail.save !== undefined){ //no miro con qué texto viene, solo que se manda
+        this.addEventListener("input-click", (e) => {
+            if (e.detail.save !== undefined) {
+                //no miro con qué texto viene, solo que se manda
                 //Recojo un objeto con las partes de iso puestas y se lo paso al main con evento
                 //this.dispatchEvent(new CustomEvent('generate-iso', { bubbles: true , composed:true, detail:this.data}))
                 //console.log(this.data);
-            }})
+            }
+        });
     }
     //Llamo al contenedor, que me hace de clase base
-    update(data){
+    update(data) {
         inputDataUpdate(this, data);
     }
     //Aquí se inicializan los valores de los componentes con lo que se pase, y viene para todos los subtipos...
     //Se inicializan antes de activarse el menú
-    initialData(data){
-        initialDataBasic(this, data)
+    initialData(data) {
+        initialDataBasic(this, data);
     }
-    disconnectedCallback() {
+    disconnectedCallback() {}
+    static get observedAttributes() {
+        return [];
     }
-    static get observedAttributes() {return []}
-    /**@todo unificar a clase data la selección */   
+    /**@todo unificar a clase data la selección */
     attributeChangedCallback(name, oldVal, newVal) {
-    switch(name) {
-        default:
-            break;
-    }
+        switch (name) {
+            default:
+                break;
+        }
     }
 }
-customElements.define('cy-input-data-export-gcode', CyInputDataExportGcode);
+customElements.define("cy-input-data-export-gcode", CyInputDataExportGcode);
