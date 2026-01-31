@@ -74,26 +74,18 @@ import { pathsToIso, setGCodeDefaults } from "./parsers/cy-parser-geometry-to-is
 
 const defaultConfig = await fetch("./cy-1830-config.json").then((r) => r.json());
 
-const templateMainMenu = `
-  <span >
-    <md-filled-button id="file-menu-anchor">FILE</md-filled-button>
-  <!-- Note the has-overflow attribute -->
-    <md-menu has-overflow positioning="popover" id="file-menu" anchor="file-menu-anchor">
-    <md-menu-item id="open-project"><div slot="headline">Open</div></md-menu-item>
-    <md-menu-item id="open-geometry"><div slot="headline">Load</div></md-menu-item>
-        <md-menu-item id="save-project"><div slot="headline">Save</div></md-menu-item>
-        <md-menu-item id="save-iso"><div slot="headline">Export GCode</div></md-menu-item>
-        <md-menu-item id="save-svg"><div slot="headline">Export Svg</div></md-menu-item>
-        <!--md-menu-item id="print"><div slot="headline">PRINT</div></md-menu-item-->
-    </md-menu>
-
-    <md-filled-button id="settings-menu-anchor">SETTINGS</md-filled-button>
-      <md-menu has-overflow positioning="popover" id="settings-menu" anchor="settings-menu-anchor">
-        <md-menu-item id="settings-layer-style"><div slot="headline">Layers</div></md-menu-item>        
-        <md-menu-item id="settings-geometry-defaults"><div slot="headline">Geometry</div></md-menu-item>        
-        <md-menu-item id="settings-GCode-defaults"><div slot="headline">G-Code</div></md-menu-item>        
-      </md-menu>
-</span>
+const templateFiles = `
+    <div id="file-menu">
+        <div class="row" id="file-open">
+            <input type="button" id='file-load-project' value="OPEN PR" class="_50"/>
+            <input type="button" id='file-load-geometry' value="LOAD GEO." class="_50"/>
+        </div>
+        <div class="row" id="file-save">
+            <input type="button" id='file-save-project' value="SAVE PR" class="_33"/>
+            <input type="button" id='file-save-iso' value="EXPORT ISO" class="_33"/>
+            <input type="button" id='file-save-svg' value="EXPORT SVG" class="_33"/>
+        </div>
+    </div>
 `;
 //tools y settings fijos
 const templateMeasure = `
@@ -147,19 +139,7 @@ const templateUndo = `
   </div>
 </div>
 `;
-// const templateDraw = `<div id='drawing'>
-//   <div class="row">
-//     <input type="button" id="line" class="_25" value="LINE" />
-//     <input type="button" id="arc" class="_25" value="ARC" />
-//     <input type="button" id="circle" class="_25" value="CIRCLE" />
-//     <input type="button" id="path" class="_25" value="PATH" />
-//   </div>
-//   <div class="row">
-//     <input type="button" id="poly" class="_25" value="POLY" />
-//     <input type="button" id="gcode" class="_25" value="GCODE" />
-//     <input type="button" id="text" class="_25" value="TEXT" />
-//   </div>
-// </div>`
+
 const templateDrawOptions = `
 <div id='drawing-options'>
   <div class="row">DRAWING OPTIONS</div>
@@ -224,9 +204,9 @@ const templateTransform = `<div id='transform'>
 </div>`;
 
 const template = `
-  <div id="full-screen" tabindex='1' class='column'>
-    <div id="main-menu" class="row">${templateMainMenu}</div>
+  <div id="full-screen" tabindex='1' class='row'>
     <div id="left" class="column" >
+        ${templateFiles}
       <cy-layer-list id="layer-view" class="column"></cy-layer-list>
       ${templateZoom}
       ${templateMeasure}
@@ -259,20 +239,25 @@ const style = `
     background-color: beige;
 }
 
-#full-screen{
+    :host {
+        font-family: italic bold arial, sans-serif;
+        font-size: 14px;
+        color: black;
+        width:100%;
+        height:100%;
+        overflow:hidden;
+        }
+/*#full-screen{
     width:100%;
     height:100%;
-}
-    #main-menu{
-    width:100%;
-    heigh:5%
-    }
+    overflow:hidden;
+}*/
 #left{
-    width: 24%;
-    height: 95%;
+    width: 25%;
+    height: 100%;
     position:absolute;
     left:0;
-    top:5%;
+    top:0;
     background-color: wheat;
 }
 #hidden-row{
@@ -281,10 +266,10 @@ const style = `
 #viewer { 
     display: block;
     width: 75%;
-    height: 95%;
+    height: 100%;
     position:absolute;
     left:25%;
-    top:5%;
+    top:0;
     background-color: #333333;
     fill: none;
     stroke: green; /*valor por defecto*/
@@ -302,16 +287,16 @@ const style = `
     padding: 2px;
     background-color: #6a87e7ff;
 }  
-    #menu-select{
+#menu-select{
     background-color: #77d4ebff;
     }
-    #menu-measure{
+#menu-measure{
     background-color: #f0b71cff;
     }
-    #undo-redo{
+#undo-redo{
     background-color: #bb74f5ff;
     }
-    #menu-zoom, #menu-measure, #undo-redo, #menu-select{
+#menu-zoom, #menu-measure, #undo-redo, #menu-select{
     border: 1px solid black;
     margin: 2px;  
     padding: 2px;
@@ -348,13 +333,13 @@ class cyCad1830App extends HTMLElement {
         this.manager = createCommandManager(this.viewer.layerDraw, this); //
 
         //--------------MENUS
-        const menus = ["file", "settings"];
-        menus.forEach((m) => (this[m + "MenuEl"] = this.dom.querySelector(`#${m}-menu`)));
-        menus.forEach((m) => {
-            const el = this.dom.querySelector(`#${m}-menu-anchor`);
-            el.addEventListener("click", () => (this[`${m}MenuEl`].open = !this[`${m}MenuEl`].open));
-        });
-        menus.forEach((m) => this[`${m}MenuEl`].addEventListener("close-menu", (e) => this.handleMenus(e)));
+        // const menus = ["file", "settings"];
+        // menus.forEach((m) => (this[m + "MenuEl"] = this.dom.querySelector(`#${m}-menu`)));
+        // menus.forEach((m) => {
+        //     const el = this.dom.querySelector(`#${m}-menu-anchor`);
+        //     el.addEventListener("click", () => (this[`${m}MenuEl`].open = !this[`${m}MenuEl`].open));
+        // });
+        // menus.forEach((m) => this[`${m}MenuEl`].addEventListener("close-menu", (e) => this.handleMenus(e)));
         //------------- INPUT DATA  ----------
         customElements.whenDefined("cy-input-data-basic").then(() => {
             //console.log('mdata inicializado')
@@ -493,7 +478,9 @@ class cyCad1830App extends HTMLElement {
             //this.layerDraw.symmetrySelected(evt.detail.mode, evt.detail.data));
         });
 
+        //================== BOTONES =================================
         // Gestión de botones de la parte izquierda y gestión del menú
+
         //-----------------UNDO, REDO -------- BOTONES
         /**undo-redo
          *
@@ -732,109 +719,110 @@ class cyCad1830App extends HTMLElement {
             //Al crearla se debe poner activa ella sola.
             /*const layerData = */ commandLayerCreate();
         });
+        //Gestión del menú de save/load. Distingo entre abrir proyecto (json) y abrir geometría (iso, svg, dxf)
+        //y además entre guardar proyecto (json) y exportar geometría (iso, svg) y entre project y geometry(load)
+        //---------------- FILES SAVE, LOAD .... ------------ BOTONES
+        this.dom.querySelector("#file-menu").addEventListener("click", (e) => {
+            // eslint-disable-next-line no-unused-vars
+            const [main, sub1, sub2] = e.target.id.split("-");
+            //Nos ponemos una nomenclatura razonable para poner orden en los ids
+            //menu, submenu, etc... separados por guiones
+            switch (sub1) {
+                case "load":
+                    {
+                        const clear = sub2 === "geometry" ? false : true;
+                        loadProject().then((file) => {
+                            const type = file.name.split(".").pop();
+                            if (type.toLowerCase() === "json") {
+                                const data = JSON.parse(file.text);
+                                // Restaurar modelo
+                                this.viewer.layerDraw.deserialize(data.model, clear); //Falta restaurar historia
+                                this.viewer.fit();
+                                this.viewer.layerDraw.draw();
+                            } else if (type === "nc" || type === "pxy") {
+                                //Me cepillo el lector de iso original y pongo el ligero, que ya lo iré aumentando si hace falta...
+                                const geo = gcodeToGeometry(file.text);
+                                this.viewer.layerDraw.addBlocks(undefined, geo);
+                                this.viewer.fit();
+                                this.viewer.layerDraw.draw();
+                            } else if (type === "svg") {
+                                const geo = svgToGeometry(file.text);
+                                geo.layers.forEach((ly) => {
+                                    const id = this.viewer.layerDraw.addLayer(); //debe poner el activeLayer
+                                    this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.getLayer(id)));
+                                    this.viewer.layerDraw.addBlocks(undefined, ly.paths);
+                                });
+                                this.viewer.fit();
+                                this.viewer.layerDraw.draw();
+                            } else if (type === "dxf") {
+                                const layers = convertDxfToGeometry(file.text); //devuelve array de layers y cada una con sus bloques...
+                                layers.forEach((ly) => {
+                                    const id = this.viewer.layerDraw.addLayer(ly.name, { pathColor: `#${ly.color.toString(16)}` }); //debe poner el activeLayer
+                                    this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.getLayer(id)));
+                                    this.viewer.layerDraw.addBlocks(undefined, ly.blocks.concat(ly.paths).concat(ly.circles));
+                                });
+                                this.viewer.fit();
+                                this.viewer.layerDraw.draw();
+                            }
+                        });
+                    }
+                    break;
+                case "save":
+                    {
+                        switch (sub2) {
+                            case "project":
+                                {
+                                    const projectData = {
+                                        project: { name: "unnamed", timestamp: Date.now() },
+                                        model: this.viewer.layerDraw,
+                                        // serializamos los comandos registrados
+                                        //commands: Array.from(commandRegistry.entries()).map(([name, fn]) => ({ name, source: fn.toString(), })),
+                                    };
+                                    const json = JSON.stringify(projectData, null, 2);
+                                    saveProject(null, json);
+                                    //saveProject(null, json);
+                                    //     const type = file.name.split('.').pop();
+                                }
+                                break;
+                            case "iso":
+                                {
+                                    //En el futuro , en vez de perfil, puede elegirse tipo de mecanizado, compensación, etc...
+                                    //Se trabaja sobre paths que estén seleccionados para no dispersar la manera de hacer cosas
+                                    //let data = this.viewer.layerDraw.getSelectedBlocks().filter( b => b.type === 'path');
+                                    this.registerInputApplications(new DrawExportGcode(this.viewer.layerDraw, ""));
+                                    this.mData.setActiveApplication("export-gcode", sub1);
+                                    this.viewer.layerDraw.addEventListener("generate-iso", (evt) => {
+                                        setGCodeDefaults(evt.detail);
+                                        saveCNC(null, pathsToIso(evt.detail.paths));
+                                    });
+                                }
+                                break;
+                            case "svg":
+                                {
+                                    let data = this.viewer.layerDraw.getSelectedBlocks().filter((b) => b.type === "path");
+                                    const ww = this.viewer.layerDraw.extents;
+                                    const header = `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"
+                fill="transparent" stroke="black" strokeWidth="2px" vector-effect="non-scaling-stroke"
+                viewBox = "${ww.xi} ${ww.yi} ${ww.xf - ww.xi} ${ww.yf - ww.yi}"
+                preserveAspectRatio = xMidYMid meet"
+                transform="matrix(1 0 0 -1 0 0)" >\n`;
+                                    const paths = data.reduce((d, path) => d + `<path d="${getSvgPathFromBlocks(path)}"/>\n`, "");
+                                    const file = `${header}${paths}</svg>`;
+                                    saveSvg(null, file);
+                                }
+                                break;
+                        }
+                    }
+                    break;
+            }
+        });
     } //END of connectedcallback
 
     /**para poder llamarla desde la gestión de comandos desde donde solo queremos acceso al modelo y la app (esta) */
     translateOrigin = (dx, dy) => {
         this.viewer.canvasHandler.view("fgPane", { x: dx, y: dy }); //rehace los cálculos del handler
     };
-    //Gestión del menú de save/load. Distingo entre abrir proyecto (json) y abrir geometría (iso, svg, dxf)
-    //y además entre guardar proyecto (json) y exportar geometría (iso, svg) y entre project y geometry(load)
-    handleMenus = (e) => {
-        //Nos ponemos una nomenclatura razonable para poner orden en los ids
-        //menu, submenu, etc... separados por guiones
-        const action = e.detail.initiator.id;
-        const [main, sub1, sub2] = action.split("-");
-        console.log(main, sub1, sub2);
-        switch (main) {
-            case "open":
-                {
-                    const clear = sub1 === "geometry" ? false : true;
-                    loadProject().then((file) => {
-                        const type = file.name.split(".").pop();
-                        if (type.toLowerCase() === "json") {
-                            const data = JSON.parse(file.text);
-                            // Restaurar modelo
-                            this.viewer.layerDraw.deserialize(data.model, clear); //Falta restaurar historia
-                            this.viewer.fit();
-                            this.viewer.layerDraw.draw();
-                        } else if (type === "nc" || type === "pxy") {
-                            //Me cepillo el lector de iso original y pongo el ligero, que ya lo iré aumentando si hace falta...
-                            const geo = gcodeToGeometry(file.text);
-                            this.viewer.layerDraw.addBlocks(undefined, geo);
-                            this.viewer.fit();
-                            this.viewer.layerDraw.draw();
-                        } else if (type === "svg") {
-                            const geo = svgToGeometry(file.text);
-                            geo.layers.forEach((ly) => {
-                                const id = this.viewer.layerDraw.addLayer(); //debe poner el activeLayer
-                                this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.getLayer(id)));
-                                this.viewer.layerDraw.addBlocks(undefined, ly.paths);
-                            });
-                            this.viewer.fit();
-                            this.viewer.layerDraw.draw();
-                        } else if (type === "dxf") {
-                            const layers = convertDxfToGeometry(file.text); //devuelve array de layers y cada una con sus bloques...
-                            layers.forEach((ly) => {
-                                const id = this.viewer.layerDraw.addLayer(ly.name, { pathColor: `#${ly.color.toString(16)}` }); //debe poner el activeLayer
-                                this.layerView.addLayer(JSON.stringify(this.viewer.layerDraw.getLayer(id)));
-                                this.viewer.layerDraw.addBlocks(undefined, ly.blocks.concat(ly.paths).concat(ly.circles));
-                            });
-                            this.viewer.fit();
-                            this.viewer.layerDraw.draw();
-                        }
-                    });
-                }
-                break;
-            case "save":
-                {
-                    switch (sub1) {
-                        case "project":
-                            {
-                                const projectData = {
-                                    project: { name: "unnamed", timestamp: Date.now() },
-                                    model: this.viewer.layerDraw,
-                                    // serializamos los comandos registrados
-                                    //commands: Array.from(commandRegistry.entries()).map(([name, fn]) => ({ name, source: fn.toString(), })),
-                                };
-                                const json = JSON.stringify(projectData, null, 2);
-                                saveProject(null, json);
-                                //saveProject(null, json);
-                                //     const type = file.name.split('.').pop();
-                            }
-                            break;
-                        case "iso":
-                            {
-                                //En el futuro , en vez de perfil, puede elegirse tipo de mecanizado, compensación, etc...
-                                //Se trabaja sobre paths que estén seleccionados para no dispersar la manera de hacer cosas
-                                //let data = this.viewer.layerDraw.getSelectedBlocks().filter( b => b.type === 'path');
-                                this.registerInputApplications(new DrawExportGcode(this.viewer.layerDraw, ""));
-                                this.mData.setActiveApplication("export-gcode", sub1);
-                                this.viewer.layerDraw.addEventListener("generate-iso", (evt) => {
-                                    setGCodeDefaults(evt.detail);
-                                    saveCNC(null, pathsToIso(evt.detail.paths));
-                                });
-                            }
-                            break;
-                        case "svg":
-                            {
-                                let data = this.viewer.layerDraw.getSelectedBlocks().filter((b) => b.type === "path");
-                                const ww = this.viewer.layerDraw.extents;
-                                const header = `<svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg"
-                fill="transparent" stroke="black" strokeWidth="2px" vector-effect="non-scaling-stroke"
-                viewBox = "${ww.xi} ${ww.yi} ${ww.xf - ww.xi} ${ww.yf - ww.yi}"
-                preserveAspectRatio = xMidYMid meet"
-                transform="matrix(1 0 0 -1 0 0)" >\n`;
-                                const paths = data.reduce((d, path) => d + `<path d="${getSvgPathFromBlocks(path)}"/>\n`, "");
-                                const file = `${header}${paths}</svg>`;
-                                saveSvg(null, file);
-                            }
-                            break;
-                    }
-                }
-                break;
-        }
-    };
+
     //Se supone que aquí se llama al desconectar la página, pero en laa aplicaciones no parece que pase
     disconnectedCallback() {
         //hay que quitar los listeners...
