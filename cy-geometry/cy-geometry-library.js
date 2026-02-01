@@ -559,9 +559,16 @@ export function pointWithinArcSweep(arc, p /*, eps = geometryPrecision*/) {
 
 //Esta rutina solo va a devolver los puntos, así que filtramos la info que no aporta
 //cada corte viene con un tipo y uno o dos puntos de corte, lo debemos tener en cuenta aquí
+//los paths se pasan a elementos en primera aproximación
+//Una mejora, cuando hay paths, sería eliminar previamente por el bbox del path, @todo
 export function findAllCuts(elements) {
     //busca los cortes , un array de ellos
     let els = Array.from(elements); //work copy
+    const pathEls = els
+        .filter((el) => el.type === "path")
+        .map((p) => p.elements)
+        .flat();
+    els = pathEls.concat(els.filter((el) => el.type !== "path"));
     let points = [];
     function cutPoint(x, y) {
         return Object.assign({}, { type: "cut-point", x0: x, y0: y });
