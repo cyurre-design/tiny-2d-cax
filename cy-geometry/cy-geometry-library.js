@@ -70,6 +70,7 @@ import {
 export const geometryPrecision = 0.0001;
 export const geometryPrecision2 = 0.00000001;
 export const _2PI = 2 * Math.PI;
+export const TAU = 2 * Math.PI; //en algunos sitios viene este nombre
 
 //Es la resolución de ecuaciones cuadráticas, que hay mejor que la del cole
 export function _solveq(a, b, c) {
@@ -541,18 +542,29 @@ export function arc2PL(p1, p2, arcLength, way = "clock") {
     return arc2PC2SVG({ x: sol.x0, y: sol.y0 }, r, p1, p2, way);
 }
 
-export function pointWithinArcSweep(arc, p /*, eps = geometryPrecision*/) {
-    //Habría que afinar con eps pero implica pasar a alfa = atan2(eps/r) o algo así... TODO
-    let a = Math.atan2(p.y - arc.cy, p.x - arc.cx);
-    //el arco tiene calculados el alfa inicial(a1) y el delta (da, con signo)
-    //Uso el mismo cálculo de delta que se usa para inicializar el arco
+export function angleOnArc(arc, a) {
     let delta = normalize_radians(a - arc.ai);
-    delta = arc.fS === 1 ? delta - _2PI : delta;
+    delta = arc.fS === 1 ? delta - TAU : delta;
     if (arc.da >= 0) {
         return delta >= 0 && delta <= arc.da;
     } else {
         return delta <= 0 && delta >= arc.da;
     }
+}
+
+export function pointWithinArcSweep(arc, p /*, eps = geometryPrecision*/) {
+    //Habría que afinar con eps pero implica pasar a alfa = atan2(eps/r) o algo así... TODO
+    let a = Math.atan2(p.y - arc.cy, p.x - arc.cx);
+    //el arco tiene calculados el alfa inicial(a1) y el delta (da, con signo)
+    return angleOnArc(arc, a);
+    //Uso el mismo cálculo de delta que se usa para inicializar el arco
+    // let delta = normalize_radians(a - arc.ai);
+    // delta = arc.fS === 1 ? delta - _2PI : delta;
+    // if (arc.da >= 0) {
+    //     return delta >= 0 && delta <= arc.da;
+    // } else {
+    //     return delta <= 0 && delta >= arc.da;
+    // }
 }
 
 //rutina pesada que calcula los puntos de corte entre los elementos que se le pasan, mirando dos a dos

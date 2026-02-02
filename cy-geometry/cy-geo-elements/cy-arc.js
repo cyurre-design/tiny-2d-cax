@@ -9,6 +9,8 @@ import {
     scale0,
     arc2PC2SVG,
     pointSymmetricSegment,
+    angleOnArc,
+    TAU,
 } from "../cy-geometry-library.js";
 
 //args centro(cx, cy), radio, pi(x1,y1), pf(x2,y2), ai, da, fS, fA En realidad son redundantes, pero se calcularían en el createDraw
@@ -29,12 +31,11 @@ export function createArc(data = {}) {
     return a;
 }
 
-const TAU = 2 * Math.PI;
-function angleOnArc(arc, a) {
-    const s = Math.sign(arc.da);
-    const d = (a - arc.ai) * s;
-    return d >= 0 && d <= Math.abs(arc.da);
-}
+// function angleOnArc(arc, a) {
+//     const s = Math.sign(arc.da);
+//     const d = (a - arc.ai) * s;
+//     return d >= 0 && d <= Math.abs(arc.da);
+// }
 
 function arcBoundingBox(arc, eps = geometryPrecision) {
     //caso frontera
@@ -44,7 +45,7 @@ function arcBoundingBox(arc, eps = geometryPrecision) {
     const bbox = { x0: Math.min(arc.x1, arc.x2), y0: Math.min(arc.y1, arc.y2), x1: Math.max(arc.x1, arc.x2), y1: Math.max(arc.y1, arc.y2) };
     const sin = [0, 1, 0, -1],
         cos = [1, 0, -1, 0];
-    [0, 0.5 * Math.PI, Math.PI, 1.5 * Math.PI].forEach((a, ix) => {
+    [0, 0.5 * Math.PI, Math.PI, -0.5 * Math.PI].forEach((a, ix) => {
         if (angleOnArc(arc, a)) {
             const x = arc.cx + arc.r * cos[ix];
             const y = arc.cy + arc.r * sin[ix];
