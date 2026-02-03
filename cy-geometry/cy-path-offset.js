@@ -32,9 +32,9 @@ function createUntrimmedRawOffsetSegments(path, offset) {
             let newr = shape.r + noffset;
             if (newr < 0 || fuzzy_eq_zero(newr, geometryPrecision)) {
                 //colapso del arco , devuelvo punto seguro , segmento de l= 0
-                //Uso un punto medio de la cuerda y el centro para calcular la dirección
-                const pm = { x: 0.5 * (shape.x1 + shape.x2), y: 0.5 * (shape.y1 + shape.y2) };
-                let m = { x: pm.x - shape.x0, y: pm.y - shape.y0 }; //apunto de mitad de la cuerda hacia el centro
+                //Uso un punto medio de la cuerda y el centro para calcular la dirección, al loro con cómo se calcula
+                const pm = arcMidpoint(shape); // { x: 0.5 * (shape.x1 + shape.x2), y: 0.5 * (shape.y1 + shape.y2) };
+                let m = { x: pm.x - shape.cx, y: pm.y - shape.cy }; //apunto de mitad de la cuerda hacia el centro
                 const d = Math.hypot(m.x, m.y);
                 m = { x: m.x / d, y: m.y / d }; //vector unitario que apunta al centro desde la mitad de la cuerda
                 const p = { x: pm.x + m.x * (Math.abs(offset) - shape.r), y: pm.y + m.y * (Math.abs(offset) - shape.r) };
@@ -367,11 +367,11 @@ export const defaultOffsetOptions = {
 // 2.- Solo tiene sentido para perfiles cerrados, Si se quieren perfiles abiertos se pueden cerrar en interactivo
 //          y volver a abrirlos posteriormente ...
 export function parallelOffset(path, offset, options = defaultOffsetOptions) {
-    if (path.elements.length < 1) {
-        return [];
+    if (path === undefined || path.elements === undefined || path.elements.length < 1) {
+        return { error: true, paths: [], text: "No path selected" };
     }
     if (!pathIsClosed(path)) return { error: true, paths: [], text: "Only prepared for closed contours" };
-    if (!offset || fuzzy_eq_zero(offset)) return { error: false, paths: [], text: "Offset must be !== 0" };
+    if (offset === undefined || fuzzy_eq_zero(offset)) return { error: false, paths: [], text: "Offset must be !== 0" };
     //Chequeo self-intersects, NO tienen sentido en un CAM
     const intersects = allSelfIntersectsAsBasic(path); //devuelve un objeto
     if (intersects.basic.length > 0) return { error: true, paths: [], text: "The path intersects itself!" };
@@ -383,6 +383,7 @@ export function parallelOffset(path, offset, options = defaultOffsetOptions) {
     //Ya he mirado que era cerrado y No trato los self-intersects
     let slices = slicesFromRawOffset(path, rawOffsetPath, offset, options);
     slices = stitchSlices(slices, options);
+    if (slices.length === 0) return { error: true, paths: [], text: "The offset is invalid for that path" };
     slices = slices.map((shapes) => createPath({ elements: shapes }));
     return { error: false, paths: slices, text: "" };
 }

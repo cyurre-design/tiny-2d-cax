@@ -238,8 +238,8 @@ export function commandPocket(paths, co, ci, tolerance) {
                 p.addBlocks(undefined, result.paths);
                 this.copiaAfter = JSON.stringify(p);
             } else {
-                console.log(result);
-                //window.alert(result.text);
+                //console.log(result);
+                window.alert(result.text);
             }
             p.draw();
         },
