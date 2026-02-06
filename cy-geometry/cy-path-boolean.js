@@ -1,6 +1,15 @@
 import { findIntersects, sliceAtIntersects, stitchSlices } from "./cy-cuts-full-paths.js";
 import { geometryPrecision, fuzzy_eq_point, blockMidpoint, blockClone } from "./cy-geometry-library.js";
-import { pathIsClosed, pathOrientation, pathReverse, createPath, pathWindingNumber } from "./cy-geo-elements/cy-path.js";
+import {
+    pathIsClosed,
+    segmentCompileForInsideTest,
+    arcCompileForInsideTest,
+    pathOrientation,
+    createPath,
+    pointInsidePath,
+} from "./cy-geo-elements/cy-path.js";
+
+//import { arcScale } from "./cy-geo-elements/cy-arc.js";
 
 /// Result of performing a boolean operation between two polylines.
 /* pub struct BooleanResult<P>  P: PlineCreation,
@@ -30,15 +39,25 @@ export function pathBoolean(path1, path2, op, options = { pos_equal_eps: geometr
         return { posPaths: anotb.posPaths.concat(bnota.posPaths), negPaths: [], r: "Intersected" };
     }
 
+    //YURRE: Oriento de operar porque simplifica el tratamiento de casos de overlap
+    //PERO hay que hacerlo antes de buscar los cortes porque se guardan índices a los shapes que se cortan
+    //if (pathOrientation(path1) !== pathOrientation(path2)) path2 = pathReverse(path2);
     let intrs = findIntersects(path1, path2, options);
     //YURRE, quito puntos repes, creo
     intrs.basic = intrs.basic.filter((intr) => !intrs.overlapPoints.find((p) => fuzzy_eq_point(p, intr.point)));
-    //YURRE: Oriento igual antes de operar porque simplifica el tratamiento de casos de overlap
-    if (pathOrientation(path1) !== pathOrientation(path2)) path2 = pathReverse(path2);
 
-    // helper functions to test if point is inside path1 and path2
-    let point_in_path1 = (point) => pathWindingNumber(path1, point) != 0;
-    let point_in_path2 = (point) => pathWindingNumber(path2, point) != 0;
+    // Rehecho completamente, eliminando el winding number que era muy costoso
+    //"Compilo" los paths para que luego el pointInsidePath vaya más rápido
+    const compile = (shapes, pathway) => {
+        let segments = shapes.filter((el) => el.type === "segment");
+        let arcs = shapes.filter((el) => el.type === "arc");
+        segments = segments.map((el) => segmentCompileForInsideTest(el, pathway));
+        arcs = arcs.map((el) => arcCompileForInsideTest(el, pathway));
+        return { segments: segments, arcs: arcs };
+    };
+    const path1Orientation = pathOrientation(path1);
+    const path2Orientation = pathOrientation(path2);
+
     //YURRE: El propio concepto de winding no está definido para puntos que son vértices o caen en los lados...
 
     let pos_equal_eps = options.pos_equal_eps;
@@ -85,22 +104,19 @@ export function pathBoolean(path1, path2, op, options = { pos_equal_eps: geometr
                     return { posPaths: [blockClone(path2)], negPaths: [blockClone(path1)], r: "Pline1InsidePline2" };
                 } else if (is_path2_in_path1) {
                     return { posPaths: [], negPaths: [], r: "Pline1InsidePline2" };
-                } else if (is_path2_in_path1) {
-                    // negative space island created inside pline1
-                    return { posPaths: [blockClone(path1)], negPaths: [blockClone(path2)], r: "Pline2InsidePline1" };
                 } else {
                     // disjoint
                     return { posPaths: [blockClone(path1)], negPaths: [], r: "Disjoint" };
                 }
-            case "XOR":
-                if (is_path1_in_path2) {
-                    return { posPaths: [blockClone(path2)], negPaths: [blockClone(path1)], r: "Pline1InsidePline2" };
-                } else if (is_path2_in_path1) {
-                    return { posPaths: [blockClone(path1)], negPaths: [blockClone(path2)], r: "Pline2InsidePline1" };
-                } else {
-                    // disjoint
-                    return { posPaths: [blockClone(path1), blockClone(path2)], negPaths: [], r: "Disjoint" };
-                }
+            // case "XOR":
+            //     if (is_path1_in_path2) {
+            //         return { posPaths: [blockClone(path2)], negPaths: [blockClone(path1)], r: "Pline1InsidePline2" };
+            //     } else if (is_path2_in_path1) {
+            //         return { posPaths: [blockClone(path1)], negPaths: [blockClone(path2)], r: "Pline2InsidePline1" };
+            //     } else {
+            //         // disjoint
+            //         return { posPaths: [blockClone(path1), blockClone(path2)], negPaths: [], r: "Disjoint" };
+            //     }
         }
     }
     //Casos normales, existen intersecciones
@@ -114,12 +130,21 @@ export function pathBoolean(path1, path2, op, options = { pos_equal_eps: geometr
     }
     //YURRE: Al meter parte de la lógica de forma explícita la generación de cortes queda fuera
     let [path1Slices, path2Slices] = sliceAtIntersects(intrs, [path1, path2], pos_equal_eps);
+    const path1Compiled = compile(path1Slices, path1Orientation);
+    const path2Compiled = compile(path2Slices, path2Orientation);
+    let point_in_path1 = (point) => pointInsidePath(path1Compiled, point);
+    let point_in_path2 = (point) => pointInsidePath(path2Compiled, point);
     switch (operation) {
         case "OR": {
             // keep all slices of pline1 that are not in pline2 and all slices of pline2 that are not in pline1
             //YURRE: En lugar de una función con varios argumentos para filtrar, etc.... perfiero dejar el proceso explícito en cada operación
             // los que están en P1 OR están en P2
-            let pathSlices = path1Slices.filter((shape) => shape.ovp === undefined && !point_in_path2(blockMidpoint(shape)));
+            let pathSlices = path1Slices.filter((shape) => shape.ovp === undefined);
+            pathSlices = pathSlices.filter((shape) => {
+                console.log(shape);
+                //return !point_in_path2(blockMidpoint(shape));
+                return !pointInsidePath(path2Compiled, blockMidpoint(shape));
+            });
             pathSlices = pathSlices.concat(path2Slices.filter((shape) => shape.ovp === undefined && !point_in_path1(blockMidpoint(shape))));
             //los overlaps están repetidos en path1 y en path2, si están en la misma dirección metemos el tramo, si no, nada
             //pegamos los overlaps que son una pesadilla

@@ -128,9 +128,9 @@ export function arcSplitAtPoints(s, pointsOnSeg, eps = geometryPrecision) {
         points.pop(); //quito el último y dejo el original
     }
     points = [s.pi, ...points, s.pf];
-    const cc = s.way === 1 ? "antiClock" : "clock";
+
     for (let i = 1; i < points.length; i++) {
-        let a = createArc(arc2PC2SVG({ x: s.cx, y: s.cy }, s.r, points[i - 1], points[i], cc));
+        let a = createArc(arc2PC2SVG({ x: s.cx, y: s.cy }, s.r, points[i - 1], points[i], s.way));
         if (points[i - 1].ovp !== undefined) {
             a.ovp = points[i - 1].ovp;
             delete points[i].ovp;

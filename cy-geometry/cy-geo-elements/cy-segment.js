@@ -15,6 +15,17 @@ import {
 //Es decir la recta en formato interno se mantiene con ux*x + uy*y + c = 0 (ax+by+c = 0) con ux*ux + uy*uy = 1
 //La distancia punto (x,y) a recta (ax+by+c=0) se define como abs(ax+by+c)/(sqrt(a*a + b*b))
 //La distancia al origen (0,0) es d = abs(c)
+//La derivación se puede hacer de la forma paramétrica vectorial p = c + t*u donde u sería el vector director
+// separando en componentes y despejando t en una rama para sustituir en la otra tenemos finalmente
+// uy*x - ux*y + ux*cy -uy*cx = 0 =   (uy*x - ux*y) - (uy*cx - ux*cy)
+// Teniendo en cuenta que el vector normal a izquierdas sería nx,ny = -uy,ux la recta en realidad es
+// n.p - n.c = 0 donde el punto es el producto escalar , y donde n.c es obviamente constante y
+// además, el módulo |n.c| es la proyección del vector c sobre la normal a la recta y la distancia al origen
+// se tiene que c = |n.c|n , ya que n es de módulo unidad, c tiene signo!
+// de nx*x + ny*y + c = 0 evaluando en x0,y0 tenemos c = -nx*x0 - ny*y0
+// o bien, con nx,ny = -uy,ux, c = uy*x0 - ux*y0
+// @todo existe una indefinición en el usp de ux y uy y posiblemente inconsistencias en el uso a veces
+// como tangente y a veces como normal. Habría que repasar y hacerlo consistente
 
 //No sobrecargo el constructor básico. En su lugar exporto la createDrawElement, una sola función
 // con tipos y subtipos de parámetros.
@@ -38,14 +49,18 @@ export function createSegment(data) {
     return segment;
 }
 function segmentCalculate(segment) {
-    const dx = segment.x1 - segment.x0,
-        dy = segment.y1 - segment.y0;
+    const dx = segment.x1 - segment.x0;
+    const dy = segment.y1 - segment.y0;
     segment.d = Math.hypot(dx, dy);
     segment.ux = dx / segment.d;
     segment.uy = dy / segment.d;
-    segment.alfa = (Math.atan2(segment.uy, segment.ux) * 180) / Math.PI;
-    //pero hay que recalcular c, distancia de la recta al punto 0,0
-    segment.c = segment.y0 * segment.ux - segment.x0 * segment.uy;
+    //Decido que la normal es a izquierdas, consecuente con que en un arco antiClock
+    //para la tangente en un punto tenga la normal apuntando al centro
+    segment.nx = -segment.uy;
+    segment.ny = segment.ux;
+    segment.alfa = (Math.atan2(dy, dx) * 180) / Math.PI;
+    //pero hay que recalcular c, distancia de la recta al punto 0,0 c = uy*x0 - ux*y0 (con signo!)
+    segment.c = -segment.y0 * segment.ux + segment.x0 * segment.uy;
     segment.bbox = calculateBbox(segment);
 }
 function calculateBbox(segment) {
@@ -118,13 +133,13 @@ export function segmentSplitAtPoints(s, pointsOnSeg, eps = geometryPrecision) {
     return result;
 }
 //cambio la estructura del original, miro primero si son los vértices
-export function closestPoint(s, point, eps = geometryPrecision) {
-    if (fuzzy_eq_point(s.pi, point, eps)) return { x: s.pi.x, y: s.pi.y };
-    if (fuzzy_eq_point(s.pf, point, eps)) return { x: s.pf.x, y: s.pf.y };
-    const w = { x: point.x - s.pi.x, y: point.y - s.pi.y }; //y el producto escalar sería la proyección
-    const l = Math.hypot(w.x, w.y);
-    if (l * l > s.l2) return { x: s.pi.x + s.ux * l, y: s.pi.y + s.uy * l };
-}
+// export function closestPoint(s, point, eps = geometryPrecision) {
+//     if (fuzzy_eq_point(s.pi, point, eps)) return { x: s.pi.x, y: s.pi.y };
+//     if (fuzzy_eq_point(s.pf, point, eps)) return { x: s.pf.x, y: s.pf.y };
+//     const w = { x: point.x - s.pi.x, y: point.y - s.pi.y }; //y el producto escalar sería la proyección
+//     const l = Math.hypot(w.x, w.y);
+//     if (l * l > s.l2) return { x: s.pi.x + s.ux * l, y: s.pi.y + s.uy * l };
+// }
 export function segmentPointInsideOffset(s, point, offset, eps) {
     let absoff = Math.abs(offset) - eps;
     if (distancePointToLine(point, s) > absoff) return false;

@@ -30,6 +30,7 @@ import {
     arcSplitAtPoints,
 } from "./cy-geo-elements/cy-arc.js";
 import {
+    createCircle,
     circleTranslate,
     circleRotate,
     circleScale,
@@ -88,36 +89,49 @@ export function distancePointToPoint(x1, y1, x2, y2) {
 export function sqDistancePointToPoint(x1, y1, x2, y2) {
     return (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1);
 }
+export function pointInBbox(bBox, x, y) {
+    if (x > bBox.x1) return false;
+    if (x < bBox.x0) return false;
+    if (y > bBox.y1) return false;
+    if (y < bBox.y0) return false;
+    return true;
+}
 //Lo hacemos en formato ax+by+c=0, para líneas infinitas aunque no chequeamos aquí que lo sean.
-//nuestra línea es uy*x - ux*y + c = 0  (Ax+By+C=0 con A*A + B*B = 1)
+//Con la definición de nx,ny la recta es nx*x + ny*y + c = 0
+// equivalente  (Ax+By+C=0 con A*A + B*B = 1)
 //https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
 // la fórmula de distancia es d= |a*x0 + b*y0 + c| / sqrt(a*a + b*b). nuestro denominador es 1
 export function distancePointToSegment(x, y, s) {
-    return Math.abs(x * s.uy - y * s.ux + s.c);
+    return Math.abs(x * s.nx + y * s.ny + s.c);
 }
 
 //Otra función genérica para calcular corte de dos segmentos que vienen con su punto inicial y final....
-//Lo hacemos en formato ux*x+ux*y+c=0, para líneas infinitas aunque no chequeamos aquí que lo sean.
+//Lo hacemos en formato nx*x + ny*y + c = 0, para líneas infinitas aunque no chequeamos aquí que lo sean.
+// Dadas s1.nx*x + s1.ny*y + s1.c = 0 y  s2.nx*x + s2.ny*y + s2.c = 0
+// se calcula el discriminante d = s1.nx*s2.ny - s2.nx*s1.ny , si es nulo son pararlelas
+// la solución es x = (s1.nx*s2.c - s2.ny*s1.c) / d  , y = (s2.nx*s1.c - s1.nx*s2.c) / d
 export function cutSegmentToSegment(s1, s2) {
-    let discriminante = s1.uy * s2.ux - s2.uy * s1.ux;
+    let discriminante = s1.nx * s2.ny - s2.nx * s1.ny;
     if (fuzzy_eq_zero(discriminante)) return []; //EPSILON?
-    return [{ x: (-s2.ux * s1.c + s1.ux * s2.c) / discriminante, y: (s1.uy * s2.c - s1.c * s2.uy) / discriminante }];
+    return [{ x: (s1.ny * s2.c - s2.ny * s1.c) / discriminante, y: (s2.nx * s1.c - s1.nx * s2.c) / discriminante }];
 }
 
-// Lo hacemos en formato ax+by+c=0 con a*a + b*b = 1
+// Lo hacemos en formato ax+by+c=0 con a*a + b*b = 1 , nx*x + ny*y + c = 0
+// para y = mx + x0  se deriva como y = -nx/ny * x - c/ny
+// para x = my + y0  se deriva como x = -ny/nx * y - c/nx
 export function cutSegmentToCircle(s, c) {
-    // a revisar si es suficiente, me paso en formato infinito, b = -ux y a = uy
-    if (Math.abs(s.uy) >= Math.abs(s.ux)) {
+    // a revisar si es suficiente, me paso en formato infinito, (a=nx, b=ny)
+    if (Math.abs(s.nx) >= Math.abs(s.ny)) {
         //x = my + x0
         //calculo x despejando y:  x^2*(1+m^2) + 2x*(m*y0-cx-m*cy) + y0^2 - 2*y0*cy + rest
-        let m = s.ux / s.uy;
-        let x0 = -s.c / s.uy;
+        let m = -s.ny / s.nx;
+        let x0 = -s.c / s.nx;
         let solutions = _solveq(1 + m * m, 2 * (m * (x0 - c.cx) - c.cy), c.cy * c.cy + (x0 - c.cx) * (x0 - c.cx) - c.r * c.r);
         return solutions.map((s) => ({ y: s, x: x0 + m * s }));
     } else {
         //y = mx + y0
-        let m = s.uy / s.ux;
-        let y0 = s.c / s.ux;
+        let m = -s.nx / s.ny;
+        let y0 = -s.c / s.ny;
         let solutions = _solveq(1 + m * m, 2 * (m * (y0 - c.cy) - c.cx), (y0 - c.cy) * (y0 - c.cy) + c.cx * c.cx - c.r * c.r);
         return solutions.map((s) => ({ y: y0 + m * s, x: s }));
     }
@@ -125,39 +139,24 @@ export function cutSegmentToCircle(s, c) {
 
 export function pointProyectedToSegment(s, x1, y1) {
     //si no se define p, línea con el mismo p0 que la original
-    //Si s se define mediante uy*x - ux*y + c = 0.
+    //Si s se define mediante uy*x - ux*y + c = 0 = nx*x + ny*y + c.
+    //nx, ny definen la dirección de la perpendicular al segmento con el sentido hacia la izquierda
     //La perpendicular sería ux*x + uy*y + cp = 0 y calculamos cp con el punto que nos dan
-    const cp = -(s.ux * x1 + s.uy * y1);
+    const s2 = { nx: s.ux, ny: s.uy, c: -(s.ux * x1 + s.uy * y1) };
+    //const cp = -(s.ux * x1 + s.uy * y1);
+    //no genero el segmento completo porque conozco la rutina de corte que usa solo nx,ny,c
     //Despejando el punto de corte entre las dos líneas  obtenemos x0,y0 (que puede que no esté en el segmento...)
-    //gestiono posibles divisiones por números pequeños
-    let x0, y0;
-    if (Math.abs(s.ux) > Math.abs(s.uy)) {
-        x0 = -(s.c * s.uy + cp * s.ux);
-        y0 = (s.uy * x0 + s.c) / s.ux;
-    } else {
-        y0 = s.c * s.ux - cp * s.uy;
-        x0 = (s.ux * y0 - s.c) / s.uy;
-    }
-    return { x0: x0, y0: y0 };
+    const sol = cutSegmentToSegment(s, s2);
+    if (sol.length > 0)
+        //si no, son paralelas
+        return { x0: sol[0].x, y0: sol[0].y };
 }
 
 //específica para hacer un punto simétrico respecto a un segmento
 export function pointSymmetricSegment(s, x, y) {
     //si no se define p, línea con el mismo p0 que la original
     const proyected = pointProyectedToSegment(s, x, y);
-    // //Si s se define mediante uy*x - ux*y + c = 0.
-    // //La perpendicular sería ux*x + uy*y + cp = 0 y calculamos cp con el punto que nos dan
-    // const cp = - ( s.ux*x +s.uy*y);
-    // //Despejando el punto de corte entre las dos líneas  obtenemos x0,y0 (que puede que no esté en el segmento...)
-    // //gestiono posibles divisiones por números pequeños
-    // let x0,y0;
-    // if(Math.abs(s.ux) > Math.abs(s.uy) ){
-    //     x0 = -(s.c*s.uy + cp*s.ux);
-    //     y0 = (s.uy*x0 + s.c)/s.ux;
-    // } else {
-    //     y0 = (s.c*s.ux - cp*s.uy);
-    //     x0 = (s.ux*y0 - s.c)/s.uy;
-    // }
+
     //Y el punto simétrico estará en
     const xs = 2 * proyected.x0 - x,
         ys = 2 * proyected.y0 - y;
@@ -283,6 +282,41 @@ export function segmentsTangentToCircleAndCircle(c0, c1) {
     return solutions;
 }
 
+//Calculamos para las rectas y luego mapeamos al segmento, claro
+//circunferencia tangente a dos líneas y de radio r (en principio serán líneas que se cortan...)
+// los centros estarán a distancias +- r de cada una de ellas, así que hacemos sus puntos de corte
+//desplazar las lineas hacia ambos lados y hallar los cortes
+//La ecuación de una recta paralela a otra a distancia r es
+// ax+by+c +- r*sqrt(a^2+b^2) = 0   dos soluciones, pero a^2 + b^2 es 1 en nuestro sistema normalizado
+export function circleTangentToSegments(s0, s1, r) {
+    let res = []; //Clono las dos líneas porque voy a hallar paralelas, se puede usar el .clone
+    let sa = segmentLength.clone(s0);
+    let sb = segmentLength.clone(s1);
+    sa.c += r;
+    sb.c += r; //paralelos a los originales a distancia r
+    res = res.concat(cutSegmentToSegment(sa, sb)); //+r,+r
+
+    sb.c -= 2 * r;
+    res = res.concat(cutSegmentToSegment(sa, sb)); //+r,-r
+
+    sa.c -= 2 * r;
+    res = res.concat(cutSegmentToSegment(sa, sb)); //-r,-r
+
+    sb.c += 2 * r;
+    res = res.concat(cutSegmentToSegment(sa, sb)); //-r,+r
+
+    let solutions = [];
+    // res.forEach(p => {
+    //     let l = createCircle({cx:p.x, cy:p.y, r:r, x1:p.x+r, y1:p.y});
+    //     let tg = cutSegmentToSegment(l0, new Line(p.x, p.y, (180 / Math.PI) * Math.atan2(-l0.ux, l0.uy))); //mnormal = -1/m
+    //     l._points = l._points.concat(tg.map(p => new Point(p.x, p.y)));
+    //     tg = cutSegmentToSegment(l1, new Line(p.x, p.y, (180 / Math.PI) * Math.atan2(-l1.ux, l1.uy))); //mnormal = -1/m
+    //     l._points = l._points.concat(tg.map(p => new Point(p.x, p.y)));
+    //     solutions.push(l);
+    // });
+    return solutions;
+}
+
 export function areClose(x1, y1, x2, y2, tol) {
     return (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1) < tol * tol;
 }
@@ -297,9 +331,9 @@ export function rotateZ(x, y, alfa) {
 export function scale0(x, y, scale) {
     return [x * scale, y * scale];
 }
-export function transformPoint(x, y, M) {
-    return [M.a * x + M.c * y + M.e, M.b * x + M.d * y + M.f];
-}
+// export function transformPoint(x, y, M) {
+//     return [M.a * x + M.c * y + M.e, M.b * x + M.d * y + M.f];
+// }
 //NO se supone que ambas están ordenadas, a priori, se exporta por ahí
 export function checkBbox(b1, b2) {
     return { x0: Math.min(b1.x0, b2.x0), y0: Math.min(b1.y0, b2.y0), x1: Math.max(b1.x1, b2.x1), y1: Math.max(b1.y1, b2.y1) };
@@ -347,10 +381,11 @@ export function is_left_or_equal_to_segment(s, p) {
 }
 //Lo hacemos en formato ax+by+c=0, para líneas infinitas aunque no chequeamos aquí que lo sean.
 //nuestra línea es uy*x - ux*y + c = 0  (Ax+By+C=0 con A*A + B*B = 1)
+//o también nx*x + ny*y + c = 0
 //https://en.wikipedia.org/wiki/Distance_from_a_point_to_a_line
 // la fórmula de distancia es d= |a*x0 + b*y0 + c| / sqrt(a*a + b*b). nuestro denominador es 1
 export function distancePointToLine(p, l) {
-    return Math.abs(p.x * l.uy - p.y * l.ux + l.c);
+    return Math.abs(p.x * l.nx + p.y * l.ny + l.c);
 }
 
 export function circleFrom3Points(p1, p2, p3) {

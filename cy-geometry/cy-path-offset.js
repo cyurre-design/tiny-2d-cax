@@ -13,6 +13,9 @@ import { createArc, arcScale, arcPointInsideOffset, arcMidpoint } from "./cy-geo
 // usamos funciones que ya existan de librería...
 // offset positivo es por fuera y suponemos que el path es antiClock, si no, habría que revisar
 // Si el offset es > radio del arco, este se reduce a un punto. marcamos el flag de colapsado para tratar después
+// Como hemos definido en el segmento que nx,ny apuntan hacia la izquierda, necesitamos saber también el cw/ccw del path
+// Aquí se está asumiendo que es ccw, así que oddset positivo, hacia afuera, implica hacia -nx,-ny
+// Si lo hacemos genérico, que habría que, hay que pasar ese dato en la función o como propiedad del path
 function createUntrimmedRawOffsetSegments(path, offset) {
     let result = [];
     //YURRE: hay que insertar la info de collapsed y lo que haga falta
@@ -20,7 +23,7 @@ function createUntrimmedRawOffsetSegments(path, offset) {
         let ns;
         if (shape.type === "segment") {
             //YURRE: devolver segment con offset
-            ns = segmentTranslate(shape, shape.uy * offset, -shape.ux * offset);
+            ns = segmentTranslate(shape, -shape.nx * offset, -shape.ny * offset);
             ns.collapsed_arc = false;
         } else {
             //Arco

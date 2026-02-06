@@ -297,19 +297,28 @@ export function allSelfIntersectsAsBasic(path, include_overlapping, pos_equal_ep
 
 //YURRE: Junto en este fichero los tratamientos de cortes en paths
 //YURRE: función para dividir los paths que se pasan por los puntos de corte, que también se pasan
-//cada corte identifica su origen mediante los índices ip1, ip2 de path en el array de paths y ix1,ix2 de shapes dentro de cada path
+//cada corte identifica su origen mediante los índices ip1, ip2 (índice de path en el array de paths)
+// e ix1,ix2 (índice de shapes dentro de cada path)
 //Si ip1 e ip2 no están definidos se pone el caso "normal" de dos paths ,
 //Y si se pasa un solo path, pues el default es 0.
 //Se trata de usar la misma rutina general por simplificar el código aunque tarde algo más
+/**
+ *
+ * @param {Object} intrs el objeto de cortes, con los de tipo normal y los overlaps
+ * @param {Array} paths los paths que se pasan para cortar
+ * @param {Number} pos_equal_eps , lo de siempre
+ * @returns
+ */
 export function sliceAtIntersects(intrs, paths, pos_equal_eps = geometryPrecision) {
     //pathIntersects será un array donde en cada elemento cuelga otro array de intersecciones de cada path
-    //lo inicializo por sencillez. ATTON. La inicialización "a mano" es porque si no todos los "punteros" apuntan a un solo elemento vacío
+    //lo inicializo por sencillez. ATTON !!!. La inicialización "a mano" es porque si no todos los "punteros" apuntan a un solo elemento vacío
     //y al escribir en él se escriben todos
     let pathIntersects = Array(paths.length);
-    const ip2 = paths.length < 2 ? 0 : 1;
+    const ip2 = paths.length < 2 ? 0 : 1; //Si solo paso un path es porque hay cortes consigo mismo!? (ej: offset)
     for (let i = 0; i < pathIntersects.length; i++) pathIntersects[i] = Array(0);
     //pathIntersects = pathIntersects.map(el=>new Array()); //Esto por ejmplo lo hace mal, parece que llama una vez y luego copia el puntero
-    //Aglutino los del path1. Como he guardado el índice uso un array disperso en vez de un map, pasando de memoria
+    //Aglutino los del path1. Como he guardado el índice uso un array disperso en vez de un map
+    //En el bucle se agrupan los cortes en sus paths
     intrs.basic.forEach((cut) => {
         const p1 = cut.ip1 || 0; //Para los casos de solo dos paths no he metido esta info en los cortes
         const p2 = cut.ip2 || ip2;
@@ -330,6 +339,7 @@ export function sliceAtIntersects(intrs, paths, pos_equal_eps = geometryPrecisio
 
     //Para cada path y cada slice ordenamos cada posible array de slices por su distancia al origen
     for (let ip = 0; ip < pathIntersects.length; ip++) {
+        //para todo path
         if (pathIntersects[ip].length === 0) continue; //los paths que no tienen cortes
         const intersects = pathIntersects[ip];
         const path = paths[ip];
@@ -342,7 +352,7 @@ export function sliceAtIntersects(intrs, paths, pos_equal_eps = geometryPrecisio
         );
     }
 
-    //En línea con lo dicho de separa los procesos, ahora generamos los arrays de slices y dejamos el filtrado para luego
+    //En línea con lo dicho de separar los procesos, ahora generamos los arrays de slices y dejamos el filtrado para luego
     //Puesto que vamos a modificar los paths, clonamos cada elemento
     //Se puede hacer el atajo para los paths sin cortes, pero no sé si ahorramos gran cosa porque total clonamos...
     let pathSlices = [];
