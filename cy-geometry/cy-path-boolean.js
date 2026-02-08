@@ -7,6 +7,7 @@ import {
     pathOrientation,
     createPath,
     pointInsidePath,
+    pathReverse,
 } from "./cy-geo-elements/cy-path.js";
 
 //import { arcScale } from "./cy-geo-elements/cy-arc.js";
@@ -26,6 +27,9 @@ import {
 } */
 
 /// Perform boolean operation between two polylines using parameters given.
+// Parece que los paths deben tener una orientación relativa definida (la misma)
+// para que la lógica de asignación de los overlaps furrule...
+
 export function pathBoolean(path1, path2, op, options = { pos_equal_eps: geometryPrecision }) {
     if (path1.elements.length < 2 || !pathIsClosed(path1) || path2.elements.length < 2 || !pathIsClosed(path2)) {
         return { posPaths: [], negPaths: [], resultInfo: "InvalidInput" };
@@ -41,9 +45,8 @@ export function pathBoolean(path1, path2, op, options = { pos_equal_eps: geometr
 
     //YURRE: Oriento de operar porque simplifica el tratamiento de casos de overlap
     //PERO hay que hacerlo antes de buscar los cortes porque se guardan índices a los shapes que se cortan
-    // Añado los índices de los patah para homogeneizar el tratamiento con cajeras con islas
     // en condiciones más normales serán 0 y 1...
-    //if (pathOrientation(path1) !== pathOrientation(path2)) path2 = pathReverse(path2);
+    if (pathOrientation(path1) !== pathOrientation(path2)) path2 = pathReverse(path2);
     let intrs = findIntersects(path1, path2, options);
     //YURRE, quito puntos repes, creo
     intrs.basic = intrs.basic.filter((intr) => !intrs.overlapPoints.find((p) => fuzzy_eq_point(p, intr.point)));
@@ -177,7 +180,7 @@ export function pathBoolean(path1, path2, op, options = { pos_equal_eps: geometr
             if (path1Slices.length > 0)
                 //si existen overlaps miro si hay que pegarlo o no
                 path1Slices.forEach((slice) => {
-                    if (slice.sameDirection) pathSlices.push(slice);
+                    if (!slice.sameDirection) pathSlices.push(slice);
                 });
             return generatePaths(pathSlices);
         }
