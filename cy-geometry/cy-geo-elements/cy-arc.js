@@ -10,6 +10,7 @@ import {
     arc2PC2SVG,
     pointSymmetricSegment,
     angleOnArc,
+    normalize_radians,
     TAU,
 } from "../cy-geometry-library.js";
 
@@ -30,12 +31,6 @@ export function createArc(data = {}) {
     a.bbox = arcBoundingBox(a);
     return a;
 }
-
-// function angleOnArc(arc, a) {
-//     const s = Math.sign(arc.da);
-//     const d = (a - arc.ai) * s;
-//     return d >= 0 && d <= Math.abs(arc.da);
-// }
 
 function arcBoundingBox(arc, eps = geometryPrecision) {
     //caso frontera
@@ -61,7 +56,9 @@ export function arcMidpoint(a) {
     const midAngle = a.ai + a.da / 2;
     return { x: a.cx + a.r * Math.cos(midAngle), y: a.cy + a.r * Math.sin(midAngle) };
 }
-
+export function arcAngleFromStart(a, x, y) {
+    return normalize_radians(Math.atan2(y - a.cy, x - a.cx) - a.ai);
+}
 export function arcTranslate(a, dx, dy) {
     const [cx, cy] = translatePoint(a.cx, a.cy, dx, dy);
     const [x1, y1] = translatePoint(a.x1, a.y1, dx, dy);

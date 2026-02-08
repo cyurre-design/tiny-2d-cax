@@ -8,7 +8,7 @@ import {
     sqDistancePointToPoint,
     distancePointToPoint,
     geometryPrecision,
-    fuzzy_eq_point,
+    fuzzy_eq,
 } from "../cy-geometry-library.js";
 
 //Por motivos operativos se mantiene una formulación interna optimizada con el vector director y la distancia al origen.
@@ -108,10 +108,48 @@ export function segmentReverse(s) {
 export function segmentLength(s) {
     return s.d;
 }
+export function segmentLengthFromStart(s, x, y) {
+    return Math.hypot(x - s.x0, y - s.y0);
+}
+
+//Movida general, me paso el array de distancias a pi y un flag de overlap, solo en el primer punto deltramo
+//
+export function segmentSplitAtPoints(s, tramos, eps = geometryPrecision) {
+    let result = [];
+    const newSlice = (x0, y0, x1, y1, ovp, sameDirection) => {
+        let seg = createSegment({ x0, y0, x1, y1 });
+        if (ovp !== undefined) seg.ovp = ovp;
+        if (sameDirection !== undefined) seg.sameDirection = sameDirection;
+        return seg;
+    };
+    if (tramos.length === 0) return [s]; //Si no hay puntos, devuelvo el segmento entero
+    if (Math.abs(tramos[0].d) < eps) {
+        tramos[0].d = 0; //pero el ovp se lo dejo al punto, para luego poder identificar el bloque que es resultado de un overlap
+    } else tramos.unshift({ d: 0, ovp: false }); //Si el primer punto no es pi, añado el punto pi con distancia 0 y sin flag de overlap
+    if (fuzzy_eq(s.d, tramos[tramos.length - 1].d, eps)) {
+        tramos[tramos.length - 1].d = s.d;
+    } else tramos.push({ d: s.d, ovp: false }); //Si el último punto no es pf, añado el punto pf con distancia s.d y sin flag de overlap
+    for (let i = 1; i < tramos.length; i++) {
+        result.push(
+            newSlice(
+                s.x0 + s.ux * tramos[i - 1].d,
+                s.y0 + s.uy * tramos[i - 1].d,
+                s.x0 + s.ux * tramos[i].d,
+                s.y0 + s.uy * tramos[i].d,
+                tramos[i - 1].ovp,
+                tramos[i - 1].sameDirection,
+            ),
+        );
+    }
+    return result;
+}
+
+/* // Los puntos de corte ya vienen ordenados, así que se pueden tratar seguidos
+// El flag ovp (overlap) se pone en el bloque creado a partir del punto de corte, para luego poder identificar los bloques que son resultado de un overlap
 export function segmentSplitAtPoints(s, pointsOnSeg, eps = geometryPrecision) {
     let result = [];
-    let points = pointsOnSeg;
-    if (points.length !== 0 && fuzzy_eq_point(s.pi, points[0], eps)) {
+    if (points.length === 0) return [s]; //Si no hay puntos, devuelvo el segmento entero
+    if (fuzzy_eq_point(s.pi, points[0], eps)) {
         if (points[0].ovp !== undefined) s.pi.ovp = points[0].ovp;
         points.shift(); //quito el primero y dejo el orginal
     }
@@ -131,7 +169,7 @@ export function segmentSplitAtPoints(s, pointsOnSeg, eps = geometryPrecision) {
         }
     }
     return result;
-}
+} */
 //cambio la estructura del original, miro primero si son los vértices
 // export function closestPoint(s, point, eps = geometryPrecision) {
 //     if (fuzzy_eq_point(s.pi, point, eps)) return { x: s.pi.x, y: s.pi.y };

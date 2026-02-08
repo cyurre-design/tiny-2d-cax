@@ -41,6 +41,8 @@ export function pathBoolean(path1, path2, op, options = { pos_equal_eps: geometr
 
     //YURRE: Oriento de operar porque simplifica el tratamiento de casos de overlap
     //PERO hay que hacerlo antes de buscar los cortes porque se guardan índices a los shapes que se cortan
+    // Añado los índices de los patah para homogeneizar el tratamiento con cajeras con islas
+    // en condiciones más normales serán 0 y 1...
     //if (pathOrientation(path1) !== pathOrientation(path2)) path2 = pathReverse(path2);
     let intrs = findIntersects(path1, path2, options);
     //YURRE, quito puntos repes, creo
@@ -139,45 +141,43 @@ export function pathBoolean(path1, path2, op, options = { pos_equal_eps: geometr
             // keep all slices of pline1 that are not in pline2 and all slices of pline2 that are not in pline1
             //YURRE: En lugar de una función con varios argumentos para filtrar, etc.... perfiero dejar el proceso explícito en cada operación
             // los que están en P1 OR están en P2
-            let pathSlices = path1Slices.filter((shape) => shape.ovp === undefined);
-            pathSlices = pathSlices.filter((shape) => {
-                console.log(shape);
-                //return !point_in_path2(blockMidpoint(shape));
-                return !pointInsidePath(path2Compiled, blockMidpoint(shape));
-            });
-            pathSlices = pathSlices.concat(path2Slices.filter((shape) => shape.ovp === undefined && !point_in_path1(blockMidpoint(shape))));
+            let pathSlices = path1Slices.filter((shape) => !shape.ovp && !point_in_path2(blockMidpoint(shape)));
+            pathSlices = pathSlices.concat(path2Slices.filter((shape) => !shape.ovp && !point_in_path1(blockMidpoint(shape))));
             //los overlaps están repetidos en path1 y en path2, si están en la misma dirección metemos el tramo, si no, nada
-            //pegamos los overlaps que son una pesadilla
-            path1Slices
-                .filter((shape) => shape.ovp !== undefined)
-                .forEach((slice) => {
-                    if (intrs.overlapping[slice.ovp].sameDirection) pathSlices.push(slice);
+            //pegamos los overlaps que son una pesadilla.
+            path1Slices = path1Slices.filter((shape) => shape.ovp);
+            if (path1Slices.length > 0)
+                //si existen overlaps miro si hay que pegarlo o no
+                path1Slices.forEach((slice) => {
+                    if (slice.sameDirection) pathSlices.push(slice);
                 });
             return generatePaths(pathSlices);
         }
         case "AND": {
             // keep all slices from pline1 that are in pline2 and all slices from pline2 that are in pline1
             // están en P1 AND están en P2
-            let pathSlices = path1Slices.filter((shape) => shape.ovp === undefined && point_in_path2(blockMidpoint(shape)));
-            pathSlices = pathSlices.concat(path2Slices.filter((shape) => shape.ovp === undefined && point_in_path1(blockMidpoint(shape))));
+            let pathSlices = path1Slices.filter((shape) => !shape.ovp && point_in_path2(blockMidpoint(shape)));
+            pathSlices = pathSlices.concat(path2Slices.filter((shape) => !shape.ovp && point_in_path1(blockMidpoint(shape))));
             //los overlaps están repetidos en path1 y en path2, si están en la misma dirección metemos el tramo, si no, nada
-            path1Slices
-                .filter((shape) => shape.ovp !== undefined)
-                .forEach((slice) => {
-                    if (intrs.overlapping[slice.ovp].sameDirection) pathSlices.push(slice);
+            path1Slices = path1Slices.filter((shape) => shape.ovp);
+            if (path1Slices.length > 0)
+                //si existen overlaps miro si hay que pegarlo o no
+                path1Slices.forEach((slice) => {
+                    if (slice.sameDirection) pathSlices.push(slice);
                 });
             return generatePaths(pathSlices);
         }
         case "NOT": {
             // keep all slices from pline1 that are not in pline2 and all slices on pline2 that are in pline1
             // están en P1 y NO están en P2
-            let pathSlices = path1Slices.filter((shape) => shape.ovp === undefined && !point_in_path2(blockMidpoint(shape)));
-            pathSlices = pathSlices.concat(path2Slices.filter((shape) => shape.ovp === undefined && point_in_path1(blockMidpoint(shape))));
+            let pathSlices = path1Slices.filter((shape) => !shape.ovp && !point_in_path2(blockMidpoint(shape)));
+            pathSlices = pathSlices.concat(path2Slices.filter((shape) => !shape.ovp && point_in_path1(blockMidpoint(shape))));
             //los overlaps están repetidos en path1 y en path2, si están en la misma dirección metemos el tramo, si no, nada
-            path1Slices
-                .filter((shape) => shape.ovp !== undefined)
-                .forEach((slice) => {
-                    if (!intrs.overlapping[slice.ovp].sameDirection) pathSlices.push(slice);
+            path1Slices = path1Slices.filter((shape) => shape.ovp);
+            if (path1Slices.length > 0)
+                //si existen overlaps miro si hay que pegarlo o no
+                path1Slices.forEach((slice) => {
+                    if (slice.sameDirection) pathSlices.push(slice);
                 });
             return generatePaths(pathSlices);
         }

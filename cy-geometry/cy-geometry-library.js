@@ -16,6 +16,7 @@ import {
     segmentLength,
     segmentMidpoint,
     segmentSplitAtPoints,
+    segmentLengthFromStart,
 } from "./cy-geo-elements/cy-segment.js";
 import {
     arcTranslate,
@@ -28,6 +29,7 @@ import {
     arcLength,
     arcMidpoint,
     arcSplitAtPoints,
+    arcAngleFromStart,
 } from "./cy-geo-elements/cy-arc.js";
 import {
     createCircle,
@@ -144,7 +146,7 @@ export function pointProyectedToSegment(s, x1, y1) {
     //La perpendicular sería ux*x + uy*y + cp = 0 y calculamos cp con el punto que nos dan
     const s2 = { nx: s.ux, ny: s.uy, c: -(s.ux * x1 + s.uy * y1) };
     //const cp = -(s.ux * x1 + s.uy * y1);
-    //no genero el segmento completo porque conozco la rutina de corte que usa solo nx,ny,c
+    //no genero el segmento completo porque conozco que la rutina de corte usa solo nx,ny,c
     //Despejando el punto de corte entre las dos líneas  obtenemos x0,y0 (que puede que no esté en el segmento...)
     const sol = cutSegmentToSegment(s, s2);
     if (sol.length > 0)
@@ -832,6 +834,23 @@ export function blockMidpoint(block) {
         /* eslint no-fallthrough: ["error", { "allowEmptyCase": true }] */
         case "point":
         case "path":
+        default:
+            console.log("no contemplado");
+    }
+}
+export function blockLengthFromStart(block, x, y) {
+    switch (block.type) {
+        case "segment":
+            return segmentLengthFromStart(block, x, y);
+        case "arc":
+            return arcAngleFromStart(block, x, y);
+        case "circle":
+
+        case "polygon":
+        //           return polygonLengthFromStart(block, x, y);
+        case "path":
+        //           return pathLengthFromStart(block, x, y);
+        //case 'bezier': return bezierLengthFromStart(block, x, y);
         default:
             console.log("no contemplado");
     }

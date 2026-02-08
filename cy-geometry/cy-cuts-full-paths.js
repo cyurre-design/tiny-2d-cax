@@ -1,21 +1,16 @@
 //YURRE: Traducción LIBRE, paso las polylíneas a paths...
 //De forma general una polilínea podría tener vértices repes?
 
-import { geometryPrecision, fuzzy_eq_point, sqDistancePointToPoint, blockSplitAtPoints, blockClone } from "./cy-geometry-library.js";
+import { geometryPrecision, fuzzy_eq_point, blockSplitAtPoints, blockLengthFromStart } from "./cy-geometry-library.js";
 import { Cut } from "./cy-cut-types.js";
 import { arc_arc_intr } from "./cy-cuts-circle-circle.js";
 import { segment_arc_intr } from "./cy-cuts-segment-circle.js";
 import { line_line_intr } from "./cy-cuts-segment-segment.js";
 import { pathIsClosed } from "./cy-geo-elements/cy-path.js";
-///
-/// In the case of overlapping intersects `point1` is always closest to the start of the second
-/// segment (`start_index2`) and `point2` furthest from the start of the second segment.
-///
-/// In the case of two intersects on one segment the intersects will be added as two
-/// [PlineBasicIntersect] in the order of distance from the start of the second segment.
-///
-//He extendido a Bsegments y BArcs, pero la rutina es genérica, hay que mirar
+
 // Cortes entre dos paths, cada path tiene una serie de blocks (segmentos y arcos)
+// Se devuelve información importante de cada corte, como los shapes que se cortan, los paths a los que pertenecen,
+//  el punto de corte, etc... para facilitar el tratamiento posterior
 export function path_seg_intr(v, u, pos_equal_eps = geometryPrecision) {
     let v_is_line = v.type === "segment";
     let u_is_line = u.type === "segment";
@@ -36,11 +31,11 @@ export function path_seg_intr(v, u, pos_equal_eps = geometryPrecision) {
     if (v_is_line) {
         // v is segment, u is arc, es lo que espera la rutina pero vuelven ordenados según el segmento (u)
         let res = segment_arc_intr(v, u, pos_equal_eps);
-        if (res.r !== Cut.TwoIntersects) return res; //Ya viene como queremos
-        // return points ordered according to segment direction
-        //YURRE: ¿Hay que ordenar según el arco por ser el segundo parámetro??? eso parece: siendo un arco, no sé yo si la distancia es un buen método...
-        if (sqDistancePointToPoint(res.point1.x, res.point1.y, u.pi.x, u.pi.y) < sqDistancePointToPoint(res.point2.x, res.point2.y, u.pi.x, u.pi.y))
-            return res;
+        if (res.r !== Cut.TwoIntersects)
+            return res; //Ya viene como queremos
+        //@todo, creo que se ordenan luego como dios manda
+        // if (sqDistancePointToPoint(res.point1.x, res.point1.y, u.pi.x, u.pi.y) < sqDistancePointToPoint(res.point2.x, res.point2.y, u.pi.x, u.pi.y))
+        //     return res;
         else return { r: Cut.TwoIntersects, point1: res.point2, point2: res.point1 };
     }
     if (u_is_line) {
@@ -53,6 +48,10 @@ export function path_seg_intr(v, u, pos_equal_eps = geometryPrecision) {
 
 //YURRE: Esta función se llama desde el nivel superior (boolean, offset) y vamos a suponer que
 // los paths que nos mandan son closed. En los casos de uso normales es así
+
+//He decidido meter en intrs referencias a los paths en vez de índices por claridaa, seguramente es algo más lento...
+//pero he aumentado mucho la claridad
+
 export function findIntersects(path1, path2, options) {
     if (path1.elements.length === 0 || path2.elements.length === 0) {
         //el caso de 1 segmento cada uno es teóricamente válido,pa ná
@@ -63,17 +62,16 @@ export function findIntersects(path1, path2, options) {
     let overlapping_intersects = []; // los de solapamiento parcial entre dos bloques
     let overlapping_points = []; // los puntos de solapamiento, caso de bloque adyacentes
     //YURRE: La rutina es brutalmente ineficiente, O(N*M) siendo N y M el número de bloques de cada path
-    //Por otra parte está completamente reesrita, en vez de hash uso objetos, que hacen eso internamente
     //Filosofia de varios pasos simples aunque parezca menos óptimo
     //YURRE: Da la impresión de que los sistemas de bboxes (flatbush, rbush) no sirven porque podemos tener por ejemplo
     //un segmento horizontal y otro vertical (o casi, es un ejemplo) en el que los bboxes de cada uno no contienen
     //ninguno de los puntos del otro bbox, ni por supuesto el bbox completo
     //Por otra parte en algun benchmark salen casos en que el bruteforce no es inferior a los avanzados...
     //Hacemos una optimización adhoc antes de llamar a las rutinas de corte, que tendrían su propia optimización
-    //Los puntos que son puntos finales de un shape no los hecho porque saldrán también como inicial del siguiente
-    path1.elements.forEach((shape1, i1) => {
-        path2.elements.forEach((shape2, i2) => {
-            //separo por legibilidad, detecto loa aabb que no pueden intersecar seguro
+    //Los puntos que son puntos finales de un shape no los echo porque saldrán también como inicial del siguiente
+    path1.elements.forEach((shape1) => {
+        path2.elements.forEach((shape2) => {
+            //separo por legibilidad, detecto los aabb que no pueden intersecar seguro
             //uso las propias variables para optimizar, en lugar de pasar los argumentos a la función
             const are_disjoint = () => {
                 if (shape1.bbox.x0 > shape2.bbox.x1) return true;
@@ -89,14 +87,14 @@ export function findIntersects(path1, path2, options) {
                     case Cut.TangentIntersect:
                     case Cut.OneIntersect:
                         if (!fuzzy_eq_point(shape1.pf, res.point, eps) && !fuzzy_eq_point(shape2.pf, res.point, eps))
-                            basic_intersects.push({ shape1: shape1, ix1: i1, shape2: shape2, ix2: i2, point: res.point });
+                            basic_intersects.push({ shape1: shape1, path1: path1, shape2: shape2, path2: path2, point: res.point });
                         break;
                     case Cut.TwoIntersects:
                         {
                             if (!fuzzy_eq_point(shape1.pf, res.point1, eps) && !fuzzy_eq_point(shape2.pf, res.point1, eps))
-                                basic_intersects.push({ shape1: shape1, ix1: i1, shape2: shape2, ix2: i2, point: res.point1 });
+                                basic_intersects.push({ shape1: shape1, path1: path1, shape2: shape2, path2: path2, point: res.point1 });
                             if (!fuzzy_eq_point(shape1.pf, res.point2, eps) && !fuzzy_eq_point(shape2.pf, res.point2, eps))
-                                basic_intersects.push({ shape1: shape1, ix1: i1, shape2: shape2, ix2: i2, point: res.point2 });
+                                basic_intersects.push({ shape1: shape1, path1: path1, shape2: shape2, path2: path2, point: res.point2 });
                         }
                         break;
                     case Cut.OverlappingLines:
@@ -104,9 +102,9 @@ export function findIntersects(path1, path2, options) {
                         overlapping_points.push(res.point1, res.point2);
                         overlapping_intersects.push({
                             shape1: shape1,
-                            ix1: i1,
+                            path1: path1,
                             shape2: shape2,
-                            ix2: i2,
+                            path2: path2,
                             sameDirection: res.sameDirection,
                             point1: res.point1,
                             point2: res.point2,
@@ -153,7 +151,7 @@ function visitLocalIntersects(path, pos_equal_eps = geometryPrecision) {
         }
         return { basic: intrs, overlapping: overlapping_intrs };
     }
-    // testing for intersection between v1->v2 and v2->v3 segments,
+
     //Creo que el último no hay que darle la vuelta...
     for (let i1 = 0, i2 = 1; i1 < path.elements.length - 1; i1++, i2++) {
         let shape1 = path.elements[i1];
@@ -170,24 +168,16 @@ function visitLocalIntersects(path, pos_equal_eps = geometryPrecision) {
                 break;
             case Cut.TangentIntersect:
             case Cut.OneIntersect:
-                if (!fuzzy_eq_point(res.point, shape1.pf)) intrs.push({ shape1: shape1, ix1: i1, shape2: shape2, ix2: i2, point: res.point });
+                if (!fuzzy_eq_point(res.point, shape1.pf)) intrs.push({ shape1: shape1, shape2: shape2, point: res.point });
                 break;
             case Cut.TwoIntersects: {
-                if (!fuzzy_eq_point(res.point1, shape1.pf)) intrs.push({ shape1: shape1, ix1: i1, shape2: shape2, ix2: i2, point: res.point1 });
-                if (!fuzzy_eq_point(res.point2, shape1.pf)) intrs.push({ shape1: shape1, ix1: i1, shape2: shape2, ix2: i2, point: res.point2 });
+                if (!fuzzy_eq_point(res.point1, shape1.pf)) intrs.push({ shape1: shape1, shape2: shape2, point: res.point1 });
+                if (!fuzzy_eq_point(res.point2, shape1.pf)) intrs.push({ shape1: shape1, shape2: shape2, point: res.point2 });
                 break;
             }
             case Cut.OverlappingLines:
             case Cut.OverlappingArcs:
-                overlapping_intrs.push({
-                    shape1: shape1,
-                    ix1: i1,
-                    shape2: shape2,
-                    ix2: i2,
-                    sameDirection: res.sameDirection,
-                    point1: res.point1,
-                    point2: res.point2,
-                });
+                overlapping_intrs.push({ shape1: shape1, shape2: shape2, sameDirection: res.sameDirection, point1: res.point1, point2: res.point2 });
                 overlapping_points.push(res.point1, res.point2);
                 break;
         }
@@ -195,16 +185,6 @@ function visitLocalIntersects(path, pos_equal_eps = geometryPrecision) {
     return { basic: intrs, overlapping: overlapping_intrs };
 }
 
-/// Visits all global self intersects of the polyline. Global self intersects are defined as between
-/// two polyline segments that do not share a vertex.
-///
-/// In the case of two intersects on one segment the intersects will be added as two
-/// [PlineBasicIntersect] in the order of distance from the start of the second segment.
-///
-/// In the case of an intersect at the very start of a polyline segment the vertex index of the
-/// start of that segment is recorded (unless the polyline is open and the intersect is at the very
-/// end of the polyline, then the second to last vertex index is used to maintain that it represents
-/// the start of a polyline segment).
 function visitGlobalSelfIntersects(path, pos_equal_eps = geometryPrecision) {
     let intrs = [];
     let overlapping_intrs = [];
@@ -245,15 +225,12 @@ function visitGlobalSelfIntersects(path, pos_equal_eps = geometryPrecision) {
                     break; //donothing
                 case Cut.TangentIntersect:
                 case Cut.OneIntersect: //Hay que salta puntos que sean puntos finales porque volverán como iniciales en otro tramo
-                    if (!fuzzy_eq_point(res.point, shape1.pf, pos_equal_eps))
-                        intrs.push({ shape1: shape1, ix1: i1, shape2: shape2, ix2: i2, point: res.point });
+                    if (!fuzzy_eq_point(res.point, shape1.pf, pos_equal_eps)) intrs.push({ shape1: shape1, shape2: shape2, point: res.point });
                     break;
                 case Cut.TwoIntersects:
                     {
-                        if (!fuzzy_eq_point(res.point1, shape1.pf, pos_equal_eps))
-                            intrs.push({ shape1: shape1, ix1: i1, shape2: shape2, ix2: i2, point: res.point1 });
-                        if (!fuzzy_eq_point(res.point2, shape1.pf, pos_equal_eps))
-                            intrs.push({ shape1: shape1, ix1: i1, shape2: shape2, ix2: i2, point: res.point2 });
+                        if (!fuzzy_eq_point(res.point1, shape1.pf, pos_equal_eps)) intrs.push({ shape1: shape1, shape2: shape2, point: res.point1 });
+                        if (!fuzzy_eq_point(res.point2, shape1.pf, pos_equal_eps)) intrs.push({ shape1: shape1, shape2: shape2, point: res.point2 });
                     }
                     break;
                 case Cut.OverlappingLines:
@@ -261,9 +238,7 @@ function visitGlobalSelfIntersects(path, pos_equal_eps = geometryPrecision) {
                     if (!fuzzy_eq_point(res.point1, shape1.pf, pos_equal_eps))
                         overlapping_intrs.push({
                             shape1: shape1,
-                            ix1: i1,
                             shape2: shape2,
-                            ix2: i2,
                             sameDirection: res.sameDirection,
                             point1: res.point1,
                             point2: res.point2,
@@ -284,23 +259,21 @@ export function allSelfIntersectsAsBasic(path, include_overlapping, pos_equal_ep
     let intrs = { basic: local.basic.concat(global.basic), overlapping: [] };
     if (include_overlapping) {
         local.overlapping_intrs.forEach((int) => {
-            intrs.basic.push({ shape1: int.shape1, ix1: int.ix1, shape2: int.shape2, ix2: int.ix2, point: int.point1 });
-            intrs.basic.push({ shape1: int.shape1, ix1: int.ix1, shape2: int.shape2, ix2: int.ix2, point: int.point2 });
+            intrs.basic.push({ shape1: int.shape1, shape2: int.shape2, point: int.point1 });
+            intrs.basic.push({ shape1: int.shape1, shape2: int.shape2, point: int.point2 });
         });
         global.overlapping_intrs.forEach((int) => {
-            intrs.basic.push({ shape1: int.shape1, ix1: int.ix1, shape2: int.shape2, ix2: int.ix2, point: int.point1 });
-            intrs.basic.push({ shape1: int.shape1, ix1: int.ix1, shape2: int.shape2, ix2: int.ix2, point: int.point2 });
+            intrs.basic.push({ shape1: int.shape1, shape2: int.shape2, point: int.point1 });
+            intrs.basic.push({ shape1: int.shape1, shape2: int.shape2, point: int.point2 });
         });
     }
     return intrs;
 }
 
 //YURRE: Junto en este fichero los tratamientos de cortes en paths
+// He modificado totalmente la función original, uso los paths y shapes en vez de índices, y la función de corte es general para cortes normales y overlaps
 //YURRE: función para dividir los paths que se pasan por los puntos de corte, que también se pasan
-//cada corte identifica su origen mediante los índices ip1, ip2 (índice de path en el array de paths)
-// e ix1,ix2 (índice de shapes dentro de cada path)
-//Si ip1 e ip2 no están definidos se pone el caso "normal" de dos paths ,
-//Y si se pasa un solo path, pues el default es 0.
+//cada corte identifica su origen mediante path1 y path2, shape y shape2
 //Se trata de usar la misma rutina general por simplificar el código aunque tarde algo más
 /**
  *
@@ -310,68 +283,51 @@ export function allSelfIntersectsAsBasic(path, include_overlapping, pos_equal_ep
  * @returns
  */
 export function sliceAtIntersects(intrs, paths, pos_equal_eps = geometryPrecision) {
-    //pathIntersects será un array donde en cada elemento cuelga otro array de intersecciones de cada path
-    //lo inicializo por sencillez. ATTON !!!. La inicialización "a mano" es porque si no todos los "punteros" apuntan a un solo elemento vacío
-    //y al escribir en él se escriben todos
-    let pathIntersects = Array(paths.length);
-    const ip2 = paths.length < 2 ? 0 : 1; //Si solo paso un path es porque hay cortes consigo mismo!? (ej: offset)
-    for (let i = 0; i < pathIntersects.length; i++) pathIntersects[i] = Array(0);
-    //pathIntersects = pathIntersects.map(el=>new Array()); //Esto por ejmplo lo hace mal, parece que llama una vez y luego copia el puntero
-    //Aglutino los del path1. Como he guardado el índice uso un array disperso en vez de un map
-    //En el bucle se agrupan los cortes en sus paths
-    intrs.basic.forEach((cut) => {
-        const p1 = cut.ip1 || 0; //Para los casos de solo dos paths no he metido esta info en los cortes
-        const p2 = cut.ip2 || ip2;
-        if (pathIntersects[p1][cut.ix1] === undefined) pathIntersects[p1][cut.ix1] = []; //inicializo
-        pathIntersects[p1][cut.ix1].push(cut.point);
-        if (pathIntersects[p2][cut.ix2] === undefined) pathIntersects[p2][cut.ix2] = []; //inicializo
-        pathIntersects[p2][cut.ix2].push(cut.point);
-    });
-    //No quiero perder info de overlap, así que extiendo la definición del punto
-    intrs.overlapping.forEach((cut, i) => {
-        const p1 = cut.ip1 || 0; //Para los casos de solo uno o dos paths no he metido esta info en los cortes
-        const p2 = cut.ip2 || ip2;
-        if (pathIntersects[p1][cut.ix1] === undefined) pathIntersects[p1][cut.ix1] = []; //inicializo
-        pathIntersects[p1][cut.ix1].push({ x: cut.point1.x, y: cut.point1.y, ovp: i }, { x: cut.point2.x, y: cut.point2.y, ovp: i });
-        if (pathIntersects[p2][cut.ix2] === undefined) pathIntersects[p2][cut.ix2] = []; //inicializo
-        pathIntersects[p2][cut.ix2].push({ x: cut.point1.x, y: cut.point1.y, ovp: i }, { x: cut.point2.x, y: cut.point2.y, ovp: i });
-    });
-
-    //Para cada path y cada slice ordenamos cada posible array de slices por su distancia al origen
-    for (let ip = 0; ip < pathIntersects.length; ip++) {
-        //para todo path
-        if (pathIntersects[ip].length === 0) continue; //los paths que no tienen cortes
-        const intersects = pathIntersects[ip];
-        const path = paths[ip];
-        intersects.forEach(
-            (points, ix) =>
-                (points = points.sort((a, b) => {
-                    let pi = path.elements[ix].pi;
-                    return sqDistancePointToPoint(a.x, a.y, pi.x, pi.y) - sqDistancePointToPoint(b.x, b.y, pi.x, pi.y);
-                })),
-        );
-    }
-
-    //En línea con lo dicho de separar los procesos, ahora generamos los arrays de slices y dejamos el filtrado para luego
-    //Puesto que vamos a modificar los paths, clonamos cada elemento
-    //Se puede hacer el atajo para los paths sin cortes, pero no sé si ahorramos gran cosa porque total clonamos...
-    let pathSlices = [];
-    paths.forEach((path, ip) => {
-        let slices = [];
-        path.elements.forEach((shape, ix) => {
-            if (!pathIntersects[ip][ix]) slices.push(blockClone(shape));
-            else {
-                //Hay que dividirlo
-                const points = pathIntersects[ip][ix]; //un elemento puede tener varios cortes
-                slices.push(...blockSplitAtPoints(shape, points, pos_equal_eps));
+    let slices = [];
+    paths.forEach((path) => {
+        const newElements = [];
+        path.elements.forEach((shape, i) => {
+            let cutPoints = [];
+            //se supone que los puntos vienen ordenados según direccion (pi) y que no hay repetidos,
+            //  pero puede haber varios cortes en el mismo shape, así que tengo que recorrer todos los cortes para ese shape
+            const cuts = intrs.basic.filter((cut) => cut.shape1 === shape || cut.shape2 === shape); //  Por referencia el path ya es el correcto
+            if (cuts.length > 0) {
+                cutPoints = cuts.map((cut) => ({ d: blockLengthFromStart(shape, cut.point.x, cut.point.y), ov: false }));
             }
+            //los overlaps vienen en parejas, y creo que matemáticamente no puede haber un corte normal entre dos shapes que se solapan,
+            // así que si hay un overlap ya sé qué tengo que cortar. Puede haber varios de todo, un lío.
+            // por otra parte, cut almacena shape1 y shape2, las dos valen y los puntos de corte son comunes
+            // pero los valores de d serán distintos, porque el punto de corte no es el mismo para los dos shapes, así que hay que calcularlo para cada uno
+            const overlaps = intrs.overlapping.filter((cut) => cut.shape1 === shape || cut.shape2 === shape); // Por referencia el path ya es el correcto
+            if (overlaps.length > 0) {
+                overlaps.forEach((cut) => {
+                    let d1 = blockLengthFromStart(shape, cut.point1.x, cut.point1.y);
+                    let d2 = blockLengthFromStart(shape, cut.point2.x, cut.point2.y);
+                    cutPoints = cutPoints.concat(
+                        d1 < d2
+                            ? [
+                                  { d: d1, ovp: true, sameDirection: cut.sameDirection },
+                                  { d: d2, ovp: false },
+                              ]
+                            : [
+                                  { d: d2, ovp: true, sameDirection: cut.sameDirection },
+                                  { d: d1, ovp: false },
+                              ],
+                    );
+                });
+            }
+            //en cutpoints el acumulado de normal y overlaps, ordenados por distancia al pi del shape, con un booleano que indica si es un punto de solapamiento o no
+            if (cutPoints.length > 0) {
+                //Hay que cortar, ordeno los puntos por distancia al pi del shape, para cortar en orden
+                cutPoints.sort((a, b) => a.d - b.d);
+                newElements.push(...blockSplitAtPoints(path.elements[i], cutPoints, pos_equal_eps));
+            }
+            //Si no hay que cortar, lo añado tal cual
+            else newElements.push(path.elements[i]);
         });
-
-        pathSlices.push(slices);
+        slices.push(newElements);
     });
-
-    //Devuelvo dos arrays de segmentos y arcos con los que hay que construir la operación booleana
-    return pathSlices;
+    return slices;
 }
 
 // Rutina complementaria, aquí se pegan los trozos una vez eliminados los que no valen
