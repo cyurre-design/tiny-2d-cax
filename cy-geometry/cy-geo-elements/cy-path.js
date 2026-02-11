@@ -312,129 +312,56 @@ export function pathRemoveRedundant(path, options = { pos_equal_eps: geometryPre
  * Hago el if arriba del todo porque a la larga termina siendo  más sencillo de mantener
  */
 
-/* ============================================================
-   2) COMPILACIÓN
-   ============================================================ */
-
-// ---------- Segmentos ----------
-// Analizando un poco, de la definción de recta que usamos con ux*x + uy*y + c = 0 se desprende que
-// dado un punto p (px,py) , dicho punto está en el semiplano a la izquierda del vector definido por ux,uy
-// si nx*px + ny*py + c >= 0 (el igual es obviamente para la recta)
-// pero que la izquierda sea el interior o el exterior lo determina el pathway
-
 /**
  *
- * @param {Object} s el segmento
- * @param {string} way el flag de orientación del path, internamente deberíamos pasarlo a boolean por velocidad
- * @returns Object con la normal al segmento apuntando hacia dentro (izquierda en ccw, derecha en cw)
- */
-export function segmentCompileForInsideTest(s, pathway = "antiClock") {
-    if (pathway === "antiClock") return { nx: s.nx, ny: s.ny, c: s.c };
-    else return { nx: -s.nx, ny: -s.ny, c: -s.c };
-}
-
-// ---------- Arcos ----------
-// Datos de entrada:
-//  P0 = punto inicial
-//  P1 = punto final
-//  C  = centro
-//  r  = radio
-//  ccwArc = sentido del arco geométrico
-//  pathCCW = sentido global del path
-/**
- *
- * @param {Object} arc del que vamos a extraer o calcular lo que queremos
- * @param {string} way el flag de orientación del path
- * @returns Object con lo que se necesita ya preparado
- */
-export function arcCompileForInsideTest(arc, pathway = "antiClock") {
-    const v0x = arc.x1 - arc.cx;
-    const v0y = arc.y1 - arc.cy;
-    const v1x = arc.x2 - arc.cx;
-    const v1y = arc.y2 - arc.cy;
-
-    // arco largo (> 180°) lo tenemos calculado en el objeto desde la creación
-    const longArc = arc.fS;
-    // --- tangente en P0 ---
-    // primero según el way del arco
-    let tx, ty;
-    if (arc.way === "antiClock") {
-        tx = -v0y;
-        ty = v0x;
-    } else {
-        tx = v0y;
-        ty = -v0x;
-    }
-
-    // ajustar a orientación global del path
-    if (pathway !== "antiClock") {
-        tx = -tx;
-        ty = -ty;
-    }
-    // vector x1,y1 -> cx, cy
-    const ux = arc.cx - arc.x1;
-    const uy = arc.cy - arc.y1;
-    // test de concavidad/convexidad interior
-    const side = tx * uy - ty * ux;
-    // inward = interior está dentro del círculo
-    const inward = pathway === "antiClock" ? side > 0 : side < 0;
-    return {
-        cx: arc.cx,
-        cy: arc.cy,
-        r2: arc.r * arc.r,
-        v0x: v0x,
-        v0y: v0y,
-        v1x: v1x,
-        v1y: v1y,
-        ccw: arc.way === pathway, // coherente con el recorrido
-        longArc: longArc,
-        inward,
-    };
-}
-
-/* ============================================================
-   3) TESTS RUNTIME (MUY RÁPIDOS)
-   ============================================================ */
-/**
- *
- * @param {Object} s es un segmento "compilado", osea, la normal hacia dentro y la distancia al centro
+ * @param {Object} s es un segmento
  * @param {Object} p el punto a testear
+ * @param {String} pathway si es 'clock' o 'antiClock', para saber qué lado es el "dentro" del arco, ojo con el sentido de los productos vectoriales
  * @returns Boolean true si está "dentro " o sea, en el semiplano definido por la recta
  */
-function insideSegment(s, p) {
-    return s.nx * p.x + s.ny * p.y + s.c >= 0;
+function insideSegment(s, p, pathway) {
+    const test = s.nx * p.x + s.ny * p.y + s.c;
+    return pathway === "antiClock" ? test >= 0 : test <= 0;
 }
 
+//La idea es que encuentre el false en cuanto pueda, por eso tanto if
 /**
  *
- * @param {Object} a el "arco compilado" , Aquí a no es el arco original sino el objeto "compilado"
- * @param {Object} p el punto que queremos saber si está dentro o fuera
- * @returns Boolena, dentro o fuera
+ * @param {Object} a  arco
+ * @param {Object} p punto a testear
+ * @param {String} pathway si es 'clock' o 'antiClock', para saber qué lado es el "dentro" del arco, ojo con el sentido de los productos vectoriales
+ * @returns Boolean true si está "dentro "
  */
-function insideArc(a, p) {
+function insideArc(a, p, pathway) {
+    const sameDirection = a.way === pathway; //un booleano
     const dx = p.x - a.cx;
     const dy = p.y - a.cy;
-
-    const d2 = dx * dx + dy * dy;
-
-    // círculo (convexo o cóncavo)
-    if (a.inward) {
-        if (d2 > a.r2) return false;
+    const vect1 = (a.x1 - a.cx) * dy - (a.y1 - a.cy) * dx;
+    const vect2 = (a.x2 - a.cx) * dy - (a.y2 - a.cy) * dx;
+    if (a.fA === 0) {
+        //Calculo los productos vectoriales y miro si está dentro o fuera
+        if (a.way === "antiClock") {
+            if (vect1 < 0 || vect2 > 0) return false;
+        } else {
+            if (vect1 > 0 || vect2 < 0) return false;
+        }
+        //Aquí está dentro del arco, miro radio
+        if (dx * dx + dy * dy > a.r * a.r) return !sameDirection;
+        return sameDirection;
     } else {
-        if (d2 < a.r2) return false;
+        //Si está dentro del arco pequeño es que está fuera del grande, se invierte
+        if (a.way === "antiClock") {
+            if (vect1 < 0 && vect2 > 0) return false;
+        } else {
+            if (vect1 > 0 && vect2 < 0) return false;
+        }
+        //Aquí está dentro del arco, miro radio
+        if (dx * dx + dy * dy > a.r * a.r) return !sameDirection; //si es convexa, dentro, si es cóncava, fuera
+        return sameDirection;
     }
-
-    const c0 = a.v0x * dy - a.v0y * dx;
-    const c1 = dx * a.v1y - dy * a.v1x;
-
-    if (!a.long) {
-        // arco corto
-        return a.ccw ? c0 >= 0 && c1 >= 0 : c0 <= 0 && c1 <= 0;
-    } else {
-        // arco largo
-        return a.ccw ? !(c0 < 0 && c1 < 0) : !(c0 > 0 && c1 > 0);
-    }
+    //caso del ángulo largo, el mismo test pero con el sentido invertido, si es convexa, dentro, si es cóncava, fuera
 }
+
 /**
  * Hay que recordar que para que el punto esté dentro tiene que pasar el test frente a TODOS
  * los elementos del path, así que en cuanto uno no cumple podemos salir
@@ -442,45 +369,16 @@ function insideArc(a, p) {
  * @param {*} p
  * @returns
  */
-export function pointInsidePath(compiled, p) {
-    for (const s of compiled.segments) {
-        if (!insideSegment(s, p)) return false;
-    }
-    for (const a of compiled.arcs) {
-        if (!insideArc(a, p)) return false;
+export function pointInsidePath(path, p, orientation) {
+    for (const el of path.elements) {
+        if (el.type === "segment") {
+            if (!insideSegment(el, p, orientation)) return false;
+        } else {
+            if (!insideArc(el, p, orientation)) return false;
+        }
     }
     return true;
 }
-
-// export function pathIsPointInsidePath(path, p, orientation) {
-//     const pathway = orientation || pathOrientation(path);
-//     if(pathway === 'antiClock'){
-//         path.elements.forEach(el => {
-//             if(el.type === 'segment')
-//                 if(!is_left_to_segment(el, p)) return false;
-//             else{
-//                 if(el.way === 'anticlock'){
-//                     if(!pointWithinArcSweep(el, p)) return false;
-//                 } else {
-//                     if(pointWithinArcSweep(el, p)) return false;
-//                 }
-//             }
-//         })
-//     } else {
-//         path.elements.forEach(el => {
-//             if(el.type === 'segment')
-//                 if(is_left_to_segment(el, p)) return false;
-//             else{
-//                 if(el.way === 'antiClock'){
-//                     if(pointWithinArcSweep(el, p)) return false;
-//                 } else {
-//                     if(!pointWithinArcSweep(el, p)) return false;
-//                 }
-//             }
-//         })
-
-//     }
-// }
 
 //métodos exclusivos de path
 // export function pathConcat(p1, p2) { //de fin de this a comienzo de path

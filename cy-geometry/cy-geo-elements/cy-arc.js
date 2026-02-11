@@ -3,7 +3,7 @@ import {
     geometryPrecision,
     sqDistancePointToPoint,
     translatePoint,
-    fuzzy_eq_point,
+    fuzzy_eq,
     pointWithinArcSweep,
     rotateZ,
     scale0,
@@ -57,7 +57,8 @@ export function arcMidpoint(a) {
     return { x: a.cx + a.r * Math.cos(midAngle), y: a.cy + a.r * Math.sin(midAngle) };
 }
 export function arcAngleFromStart(a, x, y) {
-    return normalize_radians(Math.atan2(y - a.cy, x - a.cx) - a.ai);
+    const delta = normalize_radians(Math.atan2(y - a.cy, x - a.cx) - a.ai);
+    return a.way === "antiClock" ? delta : delta - TAU;
 }
 export function arcTranslate(a, dx, dy) {
     const [cx, cy] = translatePoint(a.cx, a.cy, dx, dy);
@@ -113,42 +114,56 @@ export function arcReverse(a) {
 export function arcLength(a) {
     return Math.abs(a.da) * a.r;
 }
-//YURRE: AL final testeo aquí que los puntos no coinciden con pi o pf porque es donde el "this" está "más cerca"
-export function arcSplitAtPoints(s, pointsOnSeg, eps = geometryPrecision) {
-    let result = [];
-    let points = pointsOnSeg;
-    if (points.length !== 0 && fuzzy_eq_point(s.pi, points[0], eps)) {
-        if (points[0].ovp !== undefined) s.pi.ovp = points[0].ovp;
-        points.shift(); //quito el primero y dejo el orginal
-    }
-    if (points.length !== 0 && fuzzy_eq_point(s.pf, points[points.length - 1], eps)) {
-        points.pop(); //quito el último y dejo el original
-    }
-    points = [s.pi, ...points, s.pf];
 
-    for (let i = 1; i < points.length; i++) {
-        let a = createArc(arc2PC2SVG({ x: s.cx, y: s.cy }, s.r, points[i - 1], points[i], s.way));
-        if (points[i - 1].ovp !== undefined) {
-            a.ovp = points[i - 1].ovp;
-            delete points[i].ovp;
-        }
-        result.push(a);
+//He pasado de puntos a ángulo desde ai, y puede ser negativo en los clock, hay que tenerlo en cuenta para el orden de los puntos,
+// al loro con el signo de los ángulos y el way . El mismo código que el segmento pero con trigonometría, aunque el orden de los puntos es más complicado
+// El pf será el de mayor valor absoluto y el signo será con el way
+export function arcSplitAtPoints(a, tramos, eps = geometryPrecision) {
+    let result = [];
+    const newSlice = (cx, cy, ai, af, way, ovp, sameDirection) => {
+        let seg = createArc(
+            arc2PC2SVG(
+                { x: cx, y: cy },
+                a.r,
+                { x: cx + a.r * Math.cos(ai), y: cy + a.r * Math.sin(ai) },
+                { x: cx + a.r * Math.cos(af), y: cy + a.r * Math.sin(af) },
+                way,
+            ),
+        );
+        if (ovp !== undefined) seg.ovp = ovp;
+        if (sameDirection !== undefined) seg.sameDirection = sameDirection;
+        return seg;
+    };
+
+    if (tramos.length === 0) return [a]; //Si no hay puntos, devuelvo el arco entero
+    //Todos los ángulos tienen que tener el mismo signo, el de da
+    if (a.way === "clock") tramos = tramos.reverse(); //Si es clock, el orden de los puntos va a ser decreciente
+    if (Math.abs(tramos[0].d) < eps) {
+        tramos[0].d = 0; //pero el ovp se lo dejo al punto, para luego poder identificar el bloque que es resultado de un overlap
+    } else tramos.unshift({ d: 0, ovp: false }); //Si el primer punto no es pi, añado el punto pi con distancia 0 y sin flag de overlap
+    //Podrían ser ambos negativos, pero el orden de los puntos siempre va a ser el mismo, el que tenga mayor valor absoluto será el pf
+    if (fuzzy_eq(a.da, tramos[tramos.length - 1].d, eps)) {
+        tramos[tramos.length - 1].d = a.da;
+    } else tramos.push({ d: a.da, ovp: false }); //Si el último punto no es pf, añado el punto pf con distancia s.d y sin flag de overlap
+    for (let i = 1; i < tramos.length; i++) {
+        result.push(newSlice(a.cx, a.cy, a.ai + tramos[i - 1].d, a.ai + tramos[i].d, a.way, tramos[i - 1].ovp, tramos[i - 1].sameDirection));
     }
     return result;
 }
-export function arcClosestPoint(a, point, eps = geometryPrecision) {
-    //if(fuzzy_eq_point(this, point, eps))    //el this.x y this.y son el centro
-    //    return {x:this.pi.x, y:this.pi.y};
-    if (pointWithinArcSweep(a, point, eps)) {
-        let v = { x: point.x - a.cx, y: point.y - a.cy };
-        const m = a.r / Math.hypot(v.x, v.y); //escalado
-        return { x: a.cx + m * v.x, y: a.cy + m * v.y };
-    }
-    //Si no está en el ángulo barrido, el punto más cercano es uno de los extremos.
-    const dpi = sqDistancePointToPoint(a.pi.x, a.pi.y, point.x, point.y);
-    const dpf = sqDistancePointToPoint(a.pf.x, a.pf.y, point.x, point.y);
-    return dpi < dpf ? a.pi : a.pf;
-}
+
+// export function arcClosestPoint(a, point, eps = geometryPrecision) {
+//     //if(fuzzy_eq_point(this, point, eps))    //el this.x y this.y son el centro
+//     //    return {x:this.pi.x, y:this.pi.y};
+//     if (pointWithinArcSweep(a, point, eps)) {
+//         let v = { x: point.x - a.cx, y: point.y - a.cy };
+//         const m = a.r / Math.hypot(v.x, v.y); //escalado
+//         return { x: a.cx + m * v.x, y: a.cy + m * v.y };
+//     }
+//     //Si no está en el ángulo barrido, el punto más cercano es uno de los extremos.
+//     const dpi = sqDistancePointToPoint(a.pi.x, a.pi.y, point.x, point.y);
+//     const dpf = sqDistancePointToPoint(a.pf.x, a.pf.y, point.x, point.y);
+//     return dpi < dpf ? a.pi : a.pf;
+// }
 export function arcPointInsideOffset(a, point, offset, eps) {
     let absoff = Math.abs(offset) - eps;
     let absoff2 = absoff * absoff;

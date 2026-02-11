@@ -2,7 +2,7 @@ import { findIntersects, sliceAtIntersects, stitchSlices } from "./cy-cuts-full-
 import { geometryPrecision, fuzzy_eq_point, blockMidpoint, blockClone } from "./cy-geometry-library.js";
 import {
     pathIsClosed,
-    segmentCompileForInsideTest,
+    //segmentCompileForInsideTest,
     arcCompileForInsideTest,
     pathOrientation,
     createPath,
@@ -51,15 +51,6 @@ export function pathBoolean(path1, path2, op, options = { pos_equal_eps: geometr
     //YURRE, quito puntos repes, creo
     intrs.basic = intrs.basic.filter((intr) => !intrs.overlapPoints.find((p) => fuzzy_eq_point(p, intr.point)));
 
-    // Rehecho completamente, eliminando el winding number que era muy costoso
-    //"Compilo" los paths para que luego el pointInsidePath vaya más rápido
-    const compile = (shapes, pathway) => {
-        let segments = shapes.filter((el) => el.type === "segment");
-        let arcs = shapes.filter((el) => el.type === "arc");
-        segments = segments.map((el) => segmentCompileForInsideTest(el, pathway));
-        arcs = arcs.map((el) => arcCompileForInsideTest(el, pathway));
-        return { segments: segments, arcs: arcs };
-    };
     const path1Orientation = pathOrientation(path1);
     const path2Orientation = pathOrientation(path2);
 
@@ -135,10 +126,10 @@ export function pathBoolean(path1, path2, op, options = { pos_equal_eps: geometr
     }
     //YURRE: Al meter parte de la lógica de forma explícita la generación de cortes queda fuera
     let [path1Slices, path2Slices] = sliceAtIntersects(intrs, [path1, path2], pos_equal_eps);
-    const path1Compiled = compile(path1Slices, path1Orientation);
-    const path2Compiled = compile(path2Slices, path2Orientation);
-    let point_in_path1 = (point) => pointInsidePath(path1Compiled, point);
-    let point_in_path2 = (point) => pointInsidePath(path2Compiled, point);
+    //const path1Compiled = compile(path1.elements, path1Orientation);
+    //const path2Compiled = compile(path2.elements, path2Orientation);
+    let point_in_path1 = (point) => pointInsidePath(path1, point, path1Orientation);
+    let point_in_path2 = (point) => pointInsidePath(path2, point, path2Orientation);
     switch (operation) {
         case "OR": {
             // keep all slices of pline1 that are not in pline2 and all slices of pline2 that are not in pline1
