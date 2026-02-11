@@ -1,14 +1,6 @@
 import { findIntersects, sliceAtIntersects, stitchSlices } from "./cy-cuts-full-paths.js";
 import { geometryPrecision, fuzzy_eq_point, blockMidpoint, blockClone } from "./cy-geometry-library.js";
-import {
-    pathIsClosed,
-    //segmentCompileForInsideTest,
-    arcCompileForInsideTest,
-    pathOrientation,
-    createPath,
-    pointInsidePath,
-    pathReverse,
-} from "./cy-geo-elements/cy-path.js";
+import { pathIsClosed, pathOrientation, createPath, pointInsidePath, pathReverse } from "./cy-geo-elements/cy-path.js";
 
 //import { arcScale } from "./cy-geo-elements/cy-arc.js";
 
