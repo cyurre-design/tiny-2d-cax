@@ -304,7 +304,7 @@ export function sliceAtIntersects(intrs, paths, pos_equal_eps = geometryPrecisio
                     let d1 = blockLengthFromStart(shape, cut.point1.x, cut.point1.y);
                     let d2 = blockLengthFromStart(shape, cut.point2.x, cut.point2.y);
                     cutPoints = cutPoints.concat(
-                        d1 < d2
+                        Math.abs(d1) < Math.abs(d2)
                             ? [
                                   { d: d1, ovp: true, sameDirection: cut.sameDirection },
                                   { d: d2, ovp: false },

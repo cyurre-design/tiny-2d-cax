@@ -4,6 +4,7 @@ import {
     sqDistancePointToPoint,
     translatePoint,
     fuzzy_eq,
+    fuzzy_eq_zero,
     pointWithinArcSweep,
     rotateZ,
     scale0,
@@ -58,7 +59,7 @@ export function arcMidpoint(a) {
 }
 export function arcAngleFromStart(a, x, y) {
     const delta = normalize_radians(Math.atan2(y - a.cy, x - a.cx) - a.ai);
-    return a.way === "antiClock" ? delta : delta - TAU;
+    return a.way === "antiClock" ? delta : fuzzy_eq_zero(delta) ? 0 : delta - TAU;
 }
 export function arcTranslate(a, dx, dy) {
     const [cx, cy] = translatePoint(a.cx, a.cy, dx, dy);
