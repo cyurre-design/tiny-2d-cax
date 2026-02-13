@@ -8,6 +8,8 @@ import { createArc } from "./cy-geo-elements/cy-arc.js";
 import { createPolygon } from "./cy-geo-elements/cy-polygon.js";
 import { createPath } from "./cy-geo-elements/cy-path.js";
 import { createBezier } from "./cy-geo-elements/cy-bezier.js";
+import { createArcEllipse } from "./cy-geo-elements/cy-arc-ellipse.js";
+
 //import './cy-geo-elements/biarc.js'
 
 //igual, pero el constructor garantiza x0 <x1 e y0 < y1
@@ -41,6 +43,11 @@ export function getRelevantPoints(b) {
                 { x0: b.cx, y0: b.cy },
                 { x0: b.x1, y0: b.y1 },
                 { x0: b.x2, y0: b.y2 },
+            ];
+        case "arc-ellipse":
+            return [
+                { x0: b.x0, y0: b.y0 },
+                { x0: b.x1, y0: b.y1 },
             ];
         case "polygon":
             return [{ x0: b.cx, y0: b.cy }].concat(b.segments.map((p) => ({ x0: p.x0, y0: p.y0 })));
@@ -274,6 +281,9 @@ export function createDrawElement(type, data) {
                 default:
                     element = Object.assign({}, { error: true });
             }
+            break;
+        case "arcEllipse":
+            element = createArcEllipse(data);
             break;
         case "bbox":
             element = createBbox(data);

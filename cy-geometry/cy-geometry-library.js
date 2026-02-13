@@ -32,7 +32,15 @@ import {
     arcAngleFromStart,
 } from "./cy-geo-elements/cy-arc.js";
 import {
-    createCircle,
+    arcEllipseTranslate,
+    arcEllipseRotate,
+    arcEllipseScale,
+    arcEllipseSymmetryX,
+    arcEllipseSymmetryY,
+    arcEllipseSymmetryL,
+    arcEllipseReverse,
+} from "./cy-geo-elements/cy-arc-ellipse.js";
+import {
     circleTranslate,
     circleRotate,
     circleScale,
@@ -680,6 +688,8 @@ export function blockTranslate(block, dx, dy) {
             return circleTranslate(block, dx, dy);
         case "arc":
             return arcTranslate(block, dx, dy);
+        case "arc-ellipse":
+            return arcEllipseTranslate(block, dx, dy);
         case "polygon":
             return polygonTranslate(block, dx, dy);
         case "path":
@@ -700,6 +710,8 @@ export function blockRotate(block, x, y, alfa) {
             return circleRotate(block, x, y, alfa);
         case "arc":
             return arcRotate(block, x, y, alfa);
+        case "arc-ellipse":
+            return arcEllipseRotate(block, x, y, alfa);
         case "polygon":
             return polygonRotate(block, x, y, alfa);
         case "path":
@@ -718,6 +730,8 @@ export function blockScale(block, x, y, scale) {
             return circleScale(block, x, y, scale);
         case "arc":
             return arcScale(block, x, y, scale);
+        case "arc-ellipse":
+            return arcEllipseScale(block, x, y, scale);
         case "polygon":
             return polygonScale(block, x, y, scale);
         case "path":
@@ -736,6 +750,8 @@ export function blockSymmetryX(block, y) {
             return circleSymmetryX(block, y);
         case "arc":
             return arcSymmetryX(block, y);
+        case "arc-ellipse":
+            return arcEllipseSymmetryX(block, y);
         case "polygon":
             return polygonSymmetryX(block, y);
         case "path":
@@ -754,6 +770,8 @@ export function blockSymmetryY(block, x) {
             return circleSymmetryY(block, x);
         case "arc":
             return arcSymmetryY(block, x);
+        case "arc-ellipse":
+            return arcEllipseSymmetryY(block, x);
         case "polygon":
             return polygonSymmetryY(block, x);
         case "path":
@@ -772,6 +790,8 @@ export function blockSymmetryL(block, s) {
             return circleSymmetryL(block, s);
         case "arc":
             return arcSymmetryL(block, s);
+        case "arc-ellipse":
+            return arcEllipseSymmetryL(block, s);
         case "polygon":
             return polygonSymmetryL(block, s);
         case "path":
@@ -790,6 +810,8 @@ export function blockReverse(block) {
             return () => {};
         case "arc":
             return arcReverse(block);
+        case "arc-ellipse":
+            return arcEllipseReverse(block);
         case "polygon":
             return () => {};
         case "path":

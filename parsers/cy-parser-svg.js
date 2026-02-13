@@ -203,7 +203,7 @@ function pathsToGeometry(data) {
                             ctrl[6] += cpy; //final point
                         }
                         if (Math.abs(ctrl[0] - ctrl[1]) < geometryPrecision)
-                            //rx===ry => angulo es 0, quedan fA, fS
+                            //r1===r2 => angulo es 0, quedan fA, fS
                             elements.push(
                                 createDrawElement("arc", {
                                     subType: "2PR",
@@ -217,8 +217,20 @@ function pathsToGeometry(data) {
                                 }),
                             );
                         else
-                            //    elements.push(new ellipticalArc(x,y,...ctrl)); TODO
-                            elements.push(createDrawElement("segment", { subType: "PP", x0: cpx, y0: cpy, x1: ctrl[5], y1: ctrl[6] }));
+                            elements.push(
+                                createDrawElement("arcEllipse", {
+                                    subType: "",
+                                    x0: cpx,
+                                    y0: cpy,
+                                    x1: ctrl[5],
+                                    y1: ctrl[6],
+                                    r1: ctrl[0],
+                                    r2: ctrl[1],
+                                    a: ctrl[2],
+                                    fA: ctrl[3],
+                                    fS: ctrl[4],
+                                }),
+                            );
                         [cpx, cpy] = [ctrl[5], ctrl[6]];
                     }
                     break;
