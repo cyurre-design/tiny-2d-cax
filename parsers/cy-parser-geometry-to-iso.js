@@ -1,4 +1,5 @@
 import { bezierApproximate } from "../cy-geometry/cy-geo-elements/cy-bezier.js";
+import { arcEllipseApproximate } from "../cy-geometry/cy-geo-elements/cy-arc-ellipse.js";
 
 //YURRE: para casa, paso cabecera, pre y post, que parece mucho más fácil de getsionar.
 // tal vez podría haber un pre y un post para los patrones...
@@ -18,6 +19,7 @@ let defaults = {
     pre: ``,
     post: ``,
     decimals: 2,
+    tolerance: 0.01,
 };
 let myRound = (x) => Math.round(x * 10000) / 10000;
 export function setGCodeDefaults(data) {
@@ -77,10 +79,15 @@ function singlePathToIso(path = { elements: [] }) {
             case "bezier":
                 {
                     //este hay que aproximarlo
-                    let arcs = bezierApproximate(el, defaults.bezierTolerance || 0.1); //esto hay que afinar la tolerancia
+                    let arcs = bezierApproximate(el, defaults.tolerance || 0.1); //esto hay que afinar la tolerancia
                     arcs.forEach((a) => (str += arc2iso(a)));
                 }
                 break;
+            case "arc-ellipse": {
+                //este hay que aproximarlo
+                let arcs = arcEllipseApproximate(el, defaults.tolerance || 0.001); //esto hay que afinar la tolerancia
+                arcs.forEach((a) => (str += arc2iso(a)));
+            }
         }
     });
     return str;

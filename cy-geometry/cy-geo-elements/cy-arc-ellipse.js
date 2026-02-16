@@ -1,48 +1,17 @@
 "use strict";
-import { rotateZ, scale0 } from "../cy-geometry-library.js";
-import { normalize_radians, translatePoint, pointSymmetricSegment } from "../cy-geometry-library.js";
-
-// const maxTestPoints = 8; //esto lo dejo fuera y calculado
-// let testPoints = Array.from({ length: maxTestPoints }, (_, i) => i / maxTestPoints);
-// let coefs = {};
-// testPoints.forEach((tp) => (coefs[tp] = [(1 - tp) * (1 - tp) * (1 - tp), (1 - tp) * (1 - tp) * tp, (1 - tp) * tp * tp, tp * tp * tp]));
-
-// function bezierInterpolateq(tp){
-//         let cf = coefs[tp];
-//         return new Point(
-//             cf[0]*this.x + cf[1]*this.cp1x + cf[2]*this.cp2x + cf[3]*this.pf.x,
-//             cf[0]*this.y + cf[1]*this.cp1y + cf[2]*this.cp2y + cf[3]*this.pf.y,
-//         )
-//     }
-//Debemos garantizar la continuidad por construcción y todo será más sencillo
-
-//es una polilínea
-//chequeos: length >= 2 para closed, length >= 1 open
-
-//elevación de grado, dada una c. de bezier de grado n con n+1 puntos  de control, se obtiene la misma, en grado n+1 por
-// Q(i) = (i / (n+1))P(i-1) + (1 - (i / (n+1)))P(i) para 1<= i <= n
-//Como la curva es de n=2 necesitamos dos nuevos puntos de control cp1 y cp2
-// cp1 = Q1 = (1/3)*P0 + (1-1/3)*P1 = 1/3(P0 + 2P1)
-// cp2 = Q2 = (1/3)*P1 + (1-1/3)*P2 = 1/3(P1 + 2P2)
+import { fuzzy_eq_zero, rotateZ, scale0 } from "../cy-geometry-library.js";
+import { arc2PC2SVG, translatePoint, pointSymmetricSegment } from "../cy-geometry-library.js";
+import { createArc } from "./cy-arc.js";
+import { calculateBiarc } from "./cy-biarc.js";
 /**
  * @todo chequear con más detalle?
- * @param {Object} data , debería venir x0,y0, cp1, cp2, x1,y1. Si no viene cp2 es cuadrática y la convertimos en cúbica
+ * @param {Object} data , debería venir lo de svg, pi, pf, rx,ry,phi,fA,fS, (o way?)
  * @returns
  */
 export function createArcEllipse(data = {}) {
     //copio valores, NO referencias, por si acaso
-    const eArc = {
+    const ea = {
         type: "arc-ellipse",
-        x0: data.x0,
-        y0: data.y0,
-        x1: data.x1,
-        y1: data.y1,
-        r1: data.r1,
-        r2: data.r2,
-        a: data.a, //ángulo de rotación del eje mayor respecto al eje x, en grados
-        fA: data.fA,
-        fS: data.fS,
-        way: data.fS === 0 ? "antiClock" : "clock",
         get pi() {
             return { x: this.x0, y: this.y0 };
         },
@@ -50,59 +19,74 @@ export function createArcEllipse(data = {}) {
             return { x: this.x1, y: this.y1 };
         },
     };
-    Object.assign(eArc, fromEndpointToCenter(eArc));
-    eArc.bbox = getBoundingBox(eArc);
-    return eArc;
+    Object.assign(ea, data); //esta hace copia de los datos
+    ea.way = ea.fS === 0 ? "antiClock" : "clock";
+    ea.rx = Math.abs(ea.rx);
+    ea.ry = Math.abs(ea.ry);
+    //esta modifica el propio objeto
+    fromEndpointToCenter(ea);
+    ea.bbox = getBoundingBox(ea);
+    return ea;
+}
+function arcEllipseInterpolate(ea, t) {
+    return {
+        x: ea.rx * Math.cos(t),
+        y: ea.ry * Math.sin(t),
+    };
 }
 // De la página de referencia (implementation notes) de la especificación SVG, F.6.5 Elliptical arc implementation notes
 // Dados puntos inicial y final, ambos radios, phi, fA y fS, se obtiene el centro de la elipse y los ángulos de inicio y final del arco,
 // SVG denomina a los puntos inicial y final x1 y x2 en vez de x0,x1...
 // por coherencia llamo ai y da a los ángulos inicial e incremento.
 
-function fromEndpointToCenter(data) {
-    const phi = (data.a * Math.PI) / 180;
+function fromEndpointToCenter(ea) {
+    //se pone el centro a mitad de camino de pi y pf y se rota
+    const phi = (ea.a * Math.PI) / 180;
     const cosphi = Math.cos(phi);
     const sinphi = Math.sin(phi);
-    const dx = 0.5 * (data.x1 - data.x0);
-    const dy = 0.5 * (data.y1 - data.y0);
+    const dx = 0.5 * (ea.x0 - ea.x1);
+    const dy = 0.5 * (ea.y0 - ea.y1);
     const x1p = cosphi * dx + sinphi * dy;
     const y1p = -sinphi * dx + cosphi * dy;
-
-    let rx = Math.abs(data.r1);
-    let ry = Math.abs(data.r2);
+    const x1p2 = x1p * x1p;
+    const y1p2 = y1p * y1p;
     // Corrección si radios insuficientes
-    const lambda = (x1p * x1p) / (rx * rx) + (y1p * y1p) / (ry * ry);
+    const rx2 = ea.rx * ea.rx;
+    const ry2 = ea.ry * ea.ry;
+    const lambda = x1p2 / ea.rx2 + y1p2 / ea.ry2;
     if (lambda > 1) {
         const s = Math.sqrt(lambda);
-        rx *= s;
-        ry *= s;
+        ea.rx *= s;
+        ea.ry *= s;
     }
-    const sign = data.fA === data.fS ? -1 : 1;
-
-    const num = rx * rx * ry * ry - rx * rx * y1p * y1p - ry * ry * x1p * x1p;
-    const den = rx * rx * y1p * y1p + ry * ry * x1p * x1p;
+    const sign = ea.fA === ea.fS ? -1 : 1;
+    const num = rx2 * ry2 - rx2 * y1p2 - ry2 * x1p2;
+    const den = rx2 * y1p2 + ry2 * x1p2;
     const coef = sign * Math.sqrt(Math.max(0, num / den));
-    const cxp = (coef * (rx * y1p)) / ry;
-    const cyp = (coef * -(ry * x1p)) / rx;
-    //centro de la elipse
-    const cx = cosphi * cxp - sinphi * cyp + (data.x0 + data.x1) / 2;
-    const cy = sinphi * cxp + cosphi * cyp + (data.y0 + data.y1) / 2;
+    const cxp = (coef * (ea.rx * y1p)) / ea.ry;
+    const cyp = (coef * -(ea.ry * x1p)) / ea.rx;
+    //centro de la elipse deshaciendo la rotación y el traslado
+    ea.cx = cosphi * cxp - sinphi * cyp + (ea.x0 + ea.x1) / 2;
+    ea.cy = sinphi * cxp + cosphi * cyp + (ea.y0 + ea.y1) / 2;
     // ángulos
     function angle(u, v) {
-        const dot = u[0] * v[0] + u[1] * v[1];
-        const det = u[0] * v[1] - u[1] * v[0];
+        const dot = u.x * v.x + u.y * v.y; //coseno
+        const det = u.x * v.y - u.y * v.x; //seno
         return Math.atan2(det, dot);
     }
+    //el cálculo con valores rotados no parece ir bien
+    //lo hago con los originales...
+    //const v0 = { x: (ea.x0 - ea.cx) / ea.rx, y: (ea.y0 - ea.cy) / ea.ry };
+    //const v1 = { x: (ea.x1 - ea.cx) / ea.rx, y: (ea.y1 - ea.cy) / ea.ry };
 
-    const v1 = [(x1p - cxp) / rx, (y1p - cyp) / ry];
-    const v2 = [(-x1p - cxp) / rx, (-y1p - cyp) / ry];
+    const v0 = { x: (x1p - cxp) / ea.rx, y: (y1p - cyp) / ea.ry };
+    const v1 = { x: (-x1p - cxp) / ea.rx, y: (-y1p - cyp) / ea.ry };
 
-    const ai = angle([1, 0], v1);
-    let da = angle(v1, v2);
+    ea.ai = angle({ x: 1, y: 0 }, v0);
+    ea.da = angle(v0, v1);
 
-    if (!data.fS && da > 0) da -= 2 * Math.PI;
-    if (data.fS && da < 0) da += 2 * Math.PI;
-    return { cx, cy, ai, da };
+    if (ea.fS && ea.da > 0) ea.da -= 2 * Math.PI;
+    if (!ea.fS && ea.da < 0) ea.da += 2 * Math.PI;
 }
 
 function getBoundingBox(ea) {
@@ -115,8 +99,8 @@ function getBoundingBox(ea) {
         const ct = Math.cos(t);
         const st = Math.sin(t);
         return {
-            x: ea.cx + ea.r1 * ct * cosphi - ea.r2 * st * sinphi,
-            y: ea.cy + ea.r1 * ct * sinphi + ea.r2 * st * cosphi,
+            x: ea.cx + ea.rx * ct * cosphi - ea.ry * st * sinphi,
+            y: ea.cy + ea.rx * ct * sinphi + ea.ry * st * cosphi,
         };
     }
 
@@ -128,37 +112,23 @@ function getBoundingBox(ea) {
     }
     // STEP 2: candidatos
     let pts = [point(ea.ai), point(tita2)];
-    const tx = Math.atan2(-ea.r2 * sinphi, ea.r1 * cosphi);
-    const ty = Math.atan2(ea.r2 * cosphi, ea.r1 * sinphi);
+    const tx = Math.atan2(-ea.ry * sinphi, ea.rx * cosphi);
+    const ty = Math.atan2(ea.ry * cosphi, ea.rx * sinphi);
+
+    const bbox = { x0: Infinity, y0: Infinity, x1: -Infinity, y1: -Infinity };
 
     [tx, tx + Math.PI, ty, ty + Math.PI].forEach((t) => {
         if (within(t)) pts.push(point(t));
     });
-    let minX = Infinity,
-        minY = Infinity,
-        maxX = -Infinity,
-        maxY = -Infinity;
     pts.forEach((p) => {
-        minX = Math.min(minX, p.x);
-        minY = Math.min(minY, p.y);
-        maxX = Math.max(maxX, p.x);
-        maxY = Math.max(maxY, p.y);
+        bbox.x0 = Math.min(bbox.x0, p.x);
+        bbox.y0 = Math.min(bbox.y0, p.y);
+        bbox.x1 = Math.max(bbox.x1, p.x);
+        bbox.y1 = Math.max(bbox.y1, p.y);
     });
 
-    return { x0: minX, y0: minY, x1: maxX, y1: maxY };
+    return bbox;
 }
-//interpola al punto t
-// function interpolate(ea, t) {
-//     let it = 1 - t;
-//     return {
-//         x: it * it * it * ea.x0 + 3 * it * it * t * ea.cp1x + 3 * it * t * t * ea.cp2x + t * t * t * ea.x1,
-//         y: it * it * it * ea.y0 + 3 * it * it * t * ea.cp1y + 3 * it * t * t * ea.cp2y + t * t * t * ea.y1,
-//     };
-// }
-
-// function isClosed(bz) {
-//     return (sqDistancePointToPoint(bz.x0, bz.y0, bz.x1, bz.y1) <= geometryPrecision2);
-//     }
 /**
  *
  * @param {Object arcEllipse} ea
@@ -169,7 +139,18 @@ function getBoundingBox(ea) {
 export function arcEllipseTranslate(ea, dx, dy) {
     const [x0, y0] = translatePoint(ea.x0, ea.y0, dx, dy);
     const [x1, y1] = translatePoint(ea.x1, ea.y1, dx, dy);
-    return createArcEllipse({ x0: x0, y0: y0, x1: x1, y1: y1, r1: ea.r1, r2: ea.r2, a: ea.a, fA: ea.fA, fS: ea.fS, way: ea.way });
+    return createArcEllipse({
+        x0: x0,
+        y0: y0,
+        x1: x1,
+        y1: y1,
+        r1: ea.r1,
+        r2: ea.r2,
+        a: ea.a,
+        fA: ea.fA,
+        fS: ea.fS,
+        way: ea.way,
+    });
 }
 export function arcEllipseSymmetryX(ea, y) {
     return createArcEllipse({
@@ -253,85 +234,230 @@ export function arcEllipseReverse(ea) {
     });
 }
 
-// function splitAt(bz, t) {
-//     let s1 = t < 0 ? 0 : t > 1 ? 1 : t;
-//     let s2 = 1 - s1;
-//     //de Casteljeau
-//     let m0x = s2 * bz.x0 + s1 * bz.cp1x,
-//         m0y = s2 * bz.y0 + s1 * bz.cp1y;
-//     let m1x = s2 * bz.cp1x + s1 * bz.cp2x,
-//         m1y = s2 * bz.cp1y + s1 * bz.cp2y;
-//     let m2x = s2 * bz.cp2x + s1 * bz.x1,
-//         m2y = s2 * bz.cp2y + s1 * bz.y1;
-//     //segundo orden
-//     let q0x = s2 * m0x + s1 * m1x,
-//         q0y = s2 * m0y + s1 * m1y;
-//     let q1x = s2 * m1x + s1 * m2x,
-//         q1y = s2 * m1y + s1 * m2y;
-//     //tercer orden
-//     let px = s2 * q0x + s1 * q1x,
-//         py = s2 * q0y + s1 * q1y;
-
-//     let left = createBezier({ x0: bz.x0, y0: bz.y0, cp1x: m0x, cp1y: m0y, cp2x: q0x, cp2y: q0y, x1: px, y1: py });
-//     let right = createBezier({ x0: px, y0: py, cp1x: q1x, cp1y: q1y, cp2x: m2x, cp2y: m2y, x1: bz.x1, y1: bz.y1 });
-//     return [left, right];
-// }
-
-//condiciones de hermite + incenter (transition point)
-//https://dlacko.org/blog/2016/10/19/approximating-bezier-curves-by-biarcs/
-
 /**
- * El vector de pi a cp1 es t1 = (cp1x-x0, cp1y - y0),
- * el normal en pi sería n1 = (-t1.y, t1.x) = (x0-(-(cp1y - y0)), y0 - (cp1x-x0))
- * o sea n = (x0 + cp1y - y0, y0 - cp1x - x0)
- * El punto medio de pi con g sería mpig = (0.5*(x0 + g.x), 0.5*(y0 + g.y))
- * El vector que une i con g sería pig = (g.x - x0, g.y - y0)
- * El vector normal al mismo sería (-pig.y, pig.x)
- * El vector que une el punto medio de pi a cp1 con g sería
- * (g.x - pm.x, g.y - pm.y)  = (g.x - 0.5*(x0 + cp1x), g.y - 0.5*(y0 + cp1y))
- * y en el corte estará el centro
- * @param {*} bz
- * @param {*} g
+ *
+ * @param {Number} a    semieje mayor
+ * @param {Number} b    semieje menor
+ * @param {Number} t0  parámetro inicial la elipse, el "ángulo" , normalmente a1
+ * @param {Number} t1  parámetro final de la elipse, ai + da
+ * @param {Number} maxDeltaK precisión requerida
  * @returns
  */
-// function calculateBiarc(bz, g) {
-//   }
+function ellipseAdaptiveByCurvature(a, b, t0, t1, maxDeltaK = 0.002) {
+    function curvature(t) {
+        const s = Math.sin(t);
+        const c = Math.cos(t);
+        const d = a * a * s * s + b * b * c * c;
+        return (a * b) / Math.pow(d, 1.5);
+    }
 
-// export function arcEllipseApproximate(bz, tolerance = 0.01) {
-//     let tramos = splitAtInflexionPoints(bz, tolerance); //devuelve array de beziers, se supone
-//     let biarcs = []; //lo que voy a devolver
+    let pts = [t0];
+    let t = t0;
 
-//     while (tramos.length > 0 && tramos.length < 6) {
-//         let bz = tramos.shift();
-//         const g = calculateIncenter(bz); //pueden ser paralelos las líneas de control
-//         if (!g) {
-//             tramos = splitAt(bz, 0.5).concat(tramos);
-//             continue;
-//         }
-//         //caculate Biarc
-//         let biarc = calculateBiarc(bz, g);
-//         //            biarcs.push(biarc);
-//         //Calculate the maximum error , vamos a dividir donde sea máximo
-//         let err = testPoints.map((t) => interpolate(bz, t));
-//         err = err.map((p) =>
-//             Math.min(
-//                 Math.abs(distancePointToPoint(p.x, p.y, biarc.a.cx, biarc.a.cy) - biarc.a.r),
-//                 Math.abs(distancePointToPoint(p.x, p.y, biarc.b.cx, biarc.b.cy) - biarc.b.r),
-//             ),
-//         );
-//         let emax = Math.max(...err);
-//         if (emax < tolerance) {
-//             //ok
-//             biarcs.push(biarc);
-//         } else {
-//             const t = testPoints[err.indexOf(emax)];
-//             tramos = splitAt(bz, t).concat(tramos);
-//         }
+    while (t < t1) {
+        let k0 = curvature(t);
+
+        // estimación inicial paso
+        let dt = (t1 - t) / 10;
+
+        // Newton–Raphson sobre Δκ (incremento de curvatura)
+        for (let i = 0; i < 6; i++) {
+            let k1 = curvature(t + dt);
+            let dk = k1 - k0;
+
+            if (Math.abs(dk) < 1e-12) break;
+
+            dt *= maxDeltaK / Math.abs(dk);
+        }
+
+        if (t + dt > t1) dt = t1 - t;
+
+        t += dt;
+        pts.push(t);
+    }
+
+    return pts;
+}
+
+//derivada de una elipse girada como las de svg, podemos pasarle el arcEllipse
+function ellipseDerivativeRot(ea, t) {
+    const c = Math.cos(t);
+    const s = Math.sin(t);
+    const cp = Math.cos(ea.a);
+    const sp = Math.sin(ea.a);
+    if (!fuzzy_eq_zero(ea.a))
+        return {
+            x: -ea.rx * s * cp - ea.ry * c * sp,
+            y: -ea.rx * s * sp + ea.ry * c * cp,
+        };
+    else return ea.fS === 0 ? { x: -ea.rx * s, y: ea.ry * c } : { x: ea.rx * s, y: -ea.ry * c };
+}
+
+/**
+ * Es importante observar que esto solo depende de a y b en realidad, porque t0,t1 podrían ser la elipse completa
+ * Así que incluso es factible pensar en una tabla. De hecho, una aproximación a partir de una circunferencia
+ * tiene pinta de ir a funcionar bien... nos dará más puntos en la parte de más curvatura y menos en la otra...
+ * @param {Object} ea arco de elipse
+ * @param {Number} chordalError error cordal
+ * @returns Array of "points" in the parameter t (angle from the center of the ellipse)
+ */
+
+export function arcEllipseCoarseApproximation(ea, chordalError = 0.01) {
+    const N = 10;
+    const deltaT = ea.da / N;
+    const points = [];
+    for (let i = 0, t = ea.ai; i <= N; i++, t += deltaT) {
+        points.push(t); //SOLO PARA PROBAR
+    }
+    return points;
+}
+// export function arcEllipseCoarseApproximation(ea, chordalError = 0.01) {
+//     const a = ea.rx;
+//     const b = ea.ry;
+//     const t0 = ea.ai;
+//     const t1 = ea.ai + ea.da;
+//     const eps = chordalError;
+
+//     function curvature(t) {
+//         const s = Math.sin(t),
+//             c = Math.cos(t);
+//         const d = a * a * s * s + b * b * c * c;
+//         return (a * b) / Math.pow(d, 1.5);
 //     }
-//     let arcs = [];
-//     biarcs.forEach((b) => {
-//         arcs.push(b.a);
-//         arcs.push(b.b);
-//     });
-//     return arcs;
+
+//     function arcError(t, dt) {
+//         const k = curvature(t);
+//         const R = 1 / k;
+//         // error aproximado arco circular
+//         return R * (1 - Math.cos(dt / 2));
+//     }
+
+//     let ts = [t0];
+//     let t = t0;
+
+//     while (t < t1) {
+//         let dt = 0.1; // paso inicial razonable
+
+//         // ajustar iterativamente
+//         for (let i = 0; i < 5; i++) {
+//             let err = arcError(t, dt);
+
+//             if (err === 0) break;
+
+//             dt *= Math.cbrt(eps / err);
+//         }
+
+//         if (t + dt > t1) dt = t1 - t;
+
+//         t += dt;
+//         ts.push(t);
+//     }
+//     console.log(ts);
+
+//     return ts;
 // }
+function pointArcDistance(P, arc) {
+    const v = { x: P.x - arc.c.x, y: P.y - arc.c.y };
+    const d = Math.hypot(v.x, v.y);
+    return Math.abs(d - arc.r);
+}
+
+function biarcError(ea, t0, t1, biarc) {
+    const samples = [0.25, 0.5, 0.75];
+    let maxErr = 0;
+
+    for (const s of samples) {
+        const t = t0 + (t1 - t0) * s;
+        const P = arcEllipseInterpolate(ea, t);
+
+        const e0 = pointArcDistance(P, biarc.arc0);
+        const e1 = pointArcDistance(P, biarc.arc1);
+
+        maxErr = Math.max(maxErr, Math.min(e0, e1));
+    }
+
+    return maxErr;
+}
+/**
+ *
+ * @param {Object} ea arco de elipse que quermos aproximar con arcos
+ * @param {Number} t0 valor inicial del parámetro (ai en el pi)
+ * @param {Number} t1 valor final, (ai + da en el pf)
+ * @param {Number} tol  error cordal
+ * @param {Array} out  de valores de parámetro
+ * @returns
+ */
+function fitAdaptive(ea, t0, t1, tol, out) {
+    const P0 = arcEllipseInterpolate(ea, t0);
+    const P1 = arcEllipseInterpolate(ea, t1);
+    const T0 = ellipseDerivativeRot(ea, t0);
+    const T1 = ellipseDerivativeRot(ea, t1);
+
+    const biarc = calculateBiarc(P0, P1, T0, T1, ea.way);
+
+    if (!biarc) {
+        out.push({ line: true, p0: P0, p1: P1 });
+        return;
+    }
+
+    const err = biarcError(ea, t0, t1, biarc);
+    console.log(err);
+
+    if (err <= tol) {
+        out.push(biarc);
+        return;
+    }
+    console.log("subdivido");
+    const tm = (t0 + t1) / 2;
+
+    fitAdaptive(ea, t0, tm, tol, out);
+    fitAdaptive(ea, tm, t1, tol, out);
+}
+/**
+ * Todas las funciones internas suponen una elipse centrada en 0,0 y sin rotar
+ * Es mucho más sencillo realizarlo así porque además se presta al uso de tablas y optimizaciones
+ * @param {Object arcEllipse} ea
+ * @param {Number} eps error cordal
+ * @returns
+ */
+export function arcEllipseApproximate(ea, eps) {
+    let points = arcEllipseCoarseApproximation(ea, 10 * eps);
+    let out = [];
+    for (let i = 1; i < points.length; i++) {
+        const t0 = points[i - 1];
+        const t1 = points[i];
+        fitAdaptive(ea, t0, t1, eps, out);
+    }
+    //En out tengo un array de "biarcs" simplificados, pero el algoritmo trabaja sobre una elipse
+    //sin rotar ni trasladar. Como no vamos a trabajar con los biarcs propiamente dichos, devolvemos arcos
+    //Hay que filtrar los arcos que son casi iguales y tal, @todo
+    const arcs = [];
+    out.forEach((biarc) => {
+        let a = biarc.arc0;
+        arcs.push(
+            createArc(
+                arc2PC2SVG(
+                    { x: ea.cx + a.c.x, y: ea.cy + a.c.y },
+                    a.r,
+                    { x: ea.cx + a.p0.x, y: ea.cy + a.p0.y },
+                    { x: ea.cx + a.p1.x, y: ea.cy + a.p1.y },
+                    ea.way,
+                ),
+            ),
+        );
+        a = biarc.arc1;
+        arcs.push(
+            createArc(
+                arc2PC2SVG(
+                    { x: ea.cx + a.c.x, y: ea.cy + a.c.y },
+                    a.r,
+                    { x: ea.cx + a.p0.x, y: ea.cy + a.p0.y },
+                    { x: ea.cx + a.p1.x, y: ea.cy + a.p1.y },
+                    ea.way,
+                ),
+            ),
+        );
+    });
+    return arcs;
+    //console.log(out);
+}

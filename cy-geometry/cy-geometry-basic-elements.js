@@ -48,6 +48,7 @@ export function getRelevantPoints(b) {
             return [
                 { x0: b.x0, y0: b.y0 },
                 { x0: b.x1, y0: b.y1 },
+                { x0: b.cx, y0: b.cy },
             ];
         case "polygon":
             return [{ x0: b.cx, y0: b.cy }].concat(b.segments.map((p) => ({ x0: p.x0, y0: p.y0 })));

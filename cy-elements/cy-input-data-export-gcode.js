@@ -50,7 +50,7 @@ export default class CyInputDataExportGcode extends HTMLElement {
                 <textarea  id="data-${t}-pre" class="data _75" contenteditable="plaintext-only" maxlength="50" ></textarea>
                 </div>`;
         h += `<div class = "row">
-                <span class="_40">Bezier Tol.</span><input class="_20" type="number" min="0.01" max="1" step="0.01" value="0.1" id="data-${t}-tol"/>
+                <span class="_40">Tolerance</span><input class="_20" type="number" min="0.01" max="1" step="0.01" value="0.1" id="data-${t}-tol"/>
                 <span class="_30">decimals</span><input class="_10" type="number" min="1" max="5" step="1" value="4" id="data-${t}-decs"/></div>
                 </div>`;
         return h;

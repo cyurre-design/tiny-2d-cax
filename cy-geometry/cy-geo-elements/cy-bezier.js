@@ -3,7 +3,7 @@ import { geometryPrecision, rotateZ, scale0 } from "../cy-geometry-library.js";
 import { createSegment } from "./cy-segment.js";
 import { createArc } from "./cy-arc.js";
 import { _solveq, translatePoint, distancePointToPoint, pointSymmetricSegment, cutSegmentToSegment, arc2PC2SVG } from "../cy-geometry-library.js";
-import { createBiarc /*, biarcInterpolate*/ } from "./cy-biarc.js";
+import { createBiarc } from "./cy-biarc.js";
 
 const maxTestPoints = 8; //esto lo dejo fuera y calculado
 let testPoints = Array.from({ length: maxTestPoints }, (_, i) => i / maxTestPoints);

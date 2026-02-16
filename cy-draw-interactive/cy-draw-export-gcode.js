@@ -108,7 +108,7 @@ export class DrawExportGcode extends DrawBasic {
         const value = newData[0].v;
         switch (idn) {
             case "tol":
-                this.data.bezierTolerance = +value;
+                this.data.tolerance = +value;
                 break;
             case "decs":
                 this.data.decimals = +value;
