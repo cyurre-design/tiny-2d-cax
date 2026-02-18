@@ -30,32 +30,60 @@ export function createArcEllipse(data = {}) {
     ea.bbox = getBoundingBox(ea);
     return ea;
 }
+function rotateAndTranslate(ea, p) {
+    if (ea.a === 0) return { x: ea.cx + p.x, y: ea.cy + p.y };
+    else
+        return {
+            x: ea.cx + ea.cosphi * p.x - ea.sinphi * p.y,
+            y: ea.cy + ea.sinphi * p.x + ea.cosphi * p.y,
+        };
+}
+//NO INTERPOLA LA DE VERDAD, NO GIRA NI SUMA CENTRO
+//esto permitiría trabajar con tablas por ejemplo para el coarse
+//A cambio, una vez aproximada hay que girar lo que queda
 function arcEllipseInterpolate(ea, t) {
     const ct = Math.cos(t),
         st = Math.sin(t);
-    // return {
-    //     x: ea.cx + ea.cosphi * ea.rx * ct - ea.sinphi * ea.ry * st,
-    //     y: ea.cy + ea.sinphi * ea.rx * ct + ea.cosphi * ea.ry * st,
-    // };
     return {
-        x: ea.cx + ea.rx * ct,
-        y: ea.cy + ea.ry * st,
+        x: ea.rx * ct,
+        y: ea.ry * st,
     };
 }
+//     //evito el phi porque casi siempre será 0
+//     if (ea.a !== 0)
+//         return {
+//             x: ea.cx + ea.cosphi * ea.rx * ct - ea.sinphi * ea.ry * st,
+//             y: ea.cy + ea.sinphi * ea.rx * ct + ea.cosphi * ea.ry * st,
+//         };
+//     else
+//         return {
+//             x: ea.cx + ea.rx * ct,
+//             y: ea.cy + ea.ry * st,
+//         };
+// }
 
 // De la página de referencia (implementation notes) de la especificación SVG, F.6.5 Elliptical arc implementation notes
 // Dados puntos inicial y final, ambos radios, phi, fA y fS, se obtiene el centro de la elipse y los ángulos de inicio y final del arco,
 // SVG denomina a los puntos inicial y final x1 y x2 en vez de x0,x1...
 // por coherencia llamo ai y da a los ángulos inicial e incremento.
+
 function fromEndpointToCenter(ea) {
     //se pone el centro a mitad de camino de pi y pf y se rota
     const phi = (ea.a * Math.PI) / 180;
-    ea.cosphi = Math.cos(phi);
-    ea.sinphi = Math.sin(phi);
     const dx = 0.5 * (ea.x0 - ea.x1);
     const dy = 0.5 * (ea.y0 - ea.y1);
-    const x1p = ea.cosphi * dx + ea.sinphi * dy;
-    const y1p = -ea.sinphi * dx + ea.cosphi * dy;
+
+    let x1p, y1p;
+    if (ea.a !== 0) {
+        //se sospecha que será 0 muy a menudo ?!
+        ea.cosphi = Math.cos(phi);
+        ea.sinphi = Math.sin(phi);
+        x1p = ea.cosphi * dx + ea.sinphi * dy;
+        y1p = -ea.sinphi * dx + ea.cosphi * dy;
+    } else {
+        x1p = dx;
+        y1p = dy;
+    }
     const x1p2 = x1p * x1p;
     const y1p2 = y1p * y1p;
     // Corrección si radios insuficientes
@@ -76,9 +104,14 @@ function fromEndpointToCenter(ea) {
     const cxp = (coef * (ea.rx * y1p)) / ea.ry;
     const cyp = (coef * -(ea.ry * x1p)) / ea.rx;
     //centro de la elipse deshaciendo la rotación y el traslado
-    ea.cx = ea.cosphi * cxp - ea.sinphi * cyp + (ea.x0 + ea.x1) / 2;
-    ea.cy = ea.sinphi * cxp + ea.cosphi * cyp + (ea.y0 + ea.y1) / 2;
-    // ángulos
+    if (ea.a !== 0) {
+        ea.cx = ea.cosphi * cxp - ea.sinphi * cyp + (ea.x0 + ea.x1) / 2;
+        ea.cy = ea.sinphi * cxp + ea.cosphi * cyp + (ea.y0 + ea.y1) / 2;
+    } else {
+        ea.cx = cxp + (ea.x0 + ea.x1) / 2;
+        ea.cy = cyp + (ea.y0 + ea.y1) / 2;
+    }
+    // ángulos, se calculan en coordenadas sin rotar ni trasladar....
     function angle(u, v) {
         const dot = u.x * v.x + u.y * v.y; //coseno
         const det = u.x * v.y - u.y * v.x; //seno
@@ -90,8 +123,8 @@ function fromEndpointToCenter(ea) {
     ea.ai = angle({ x: 1, y: 0 }, v0);
     ea.da = angle(v0, v1);
 
-    if (ea.fS && ea.da > 0) ea.da -= 2 * Math.PI;
-    if (!ea.fS && ea.da < 0) ea.da += 2 * Math.PI;
+    //if (ea.fS && ea.da > 0) ea.da -= 2 * Math.PI;
+    //if (!ea.fS && ea.da < 0) ea.da += 2 * Math.PI;
 }
 
 function getBoundingBox(ea) {
@@ -284,7 +317,7 @@ function ellipseAdaptiveByCurvature(a, b, t0, t1, maxDeltaK = 0.002) {
     return pts;
 }
 
-//derivada de una elipse girada como las de svg, podemos pasarle el arcEllipse
+//derivada de una elipse como las de svg, podemos pasarle el arcEllipse
 function ellipseDerivativeRot(ea, t) {
     const c = Math.cos(t);
     const s = Math.sin(t);
@@ -373,8 +406,8 @@ function biarcError(ea, t0, t1, biarc) {
         const t = t0 + (t1 - t0) * s;
         const P = arcEllipseInterpolate(ea, t);
 
-        const e0 = pointArcDistance(P, biarc.arc0);
-        const e1 = pointArcDistance(P, biarc.arc1);
+        const e0 = pointArcDistance(P, biarc[0]);
+        const e1 = pointArcDistance(P, biarc[1]);
 
         maxErr = Math.max(maxErr, Math.min(e0, e1));
     }
@@ -423,21 +456,21 @@ function fitAdaptive(ea, t0, t1, tol, out) {
  * @param {Number} eps error cordal
  * @returns
  */
-
+// TEST con segmentos
+// export function arcEllipseApproximate(ea, eps) {
+//     let points = arcEllipseCoarseApproximation(ea, 10 * eps);
+//     let out = [];
+//     let p0 = arcEllipseInterpolate(ea, points[0]);
+//     let p1;
+//     for (let i = 1; i < points.length; i++) {
+//         p1 = arcEllipseInterpolate(ea, points[i]);
+//         out.push(createSegment({ x0: p0.x, y0: p0.y, x1: p1.x, y1: p1.y }));
+//         p0 = p1;
+//         // fitAdaptive(ea, t0, t1, eps, out);
+//     }
+//     return out;
+// }
 export function arcEllipseApproximate(ea, eps) {
-    let points = arcEllipseCoarseApproximation(ea, 10 * eps);
-    let out = [];
-    let p0 = arcEllipseInterpolate(ea, points[0]);
-    let p1;
-    for (let i = 1; i < points.length; i++) {
-        p1 = arcEllipseInterpolate(ea, points[i]);
-        out.push(createSegment({ x0: p0.x, y0: p0.y, x1: p1.x, y1: p1.y }));
-        p0 = p1;
-        // fitAdaptive(ea, t0, t1, eps, out);
-    }
-    return out;
-}
-/* export function arcEllipseApproximate(ea, eps) {
     let points = arcEllipseCoarseApproximation(ea, 10 * eps);
     let out = [];
     for (let i = 1; i < points.length; i++) {
@@ -449,33 +482,40 @@ export function arcEllipseApproximate(ea, eps) {
     //sin rotar ni trasladar. Como no vamos a trabajar con los biarcs propiamente dichos, devolvemos arcos
     //Hay que filtrar los arcos que son casi iguales y tal, @todo
     const arcs = [];
-    out.forEach((biarc) => {
-        let a = biarc.arc0;
+    //
+    out = out.flat(); //un array de arcos
+    out.forEach((arc) => {
         arcs.push(
-            createArc(
-                arc2PC2SVG(
-                    { x: ea.cx + a.c.x, y: ea.cy + a.c.y },
-                    a.r,
-                    { x: ea.cx + a.p0.x, y: ea.cy + a.p0.y },
-                    { x: ea.cx + a.p1.x, y: ea.cy + a.p1.y },
-                    ea.way,
-                ),
-            ),
-        );
-        a = biarc.arc1;
-        arcs.push(
-            createArc(
-                arc2PC2SVG(
-                    { x: ea.cx + a.c.x, y: ea.cy + a.c.y },
-                    a.r,
-                    { x: ea.cx + a.p0.x, y: ea.cy + a.p0.y },
-                    { x: ea.cx + a.p1.x, y: ea.cy + a.p1.y },
-                    ea.way,
-                ),
-            ),
+            createArc(arc2PC2SVG(rotateAndTranslate(ea, arc.c), arc.r, rotateAndTranslate(ea, arc.p0), rotateAndTranslate(ea, arc.p1), ea.way)),
         );
     });
+    // out.forEach((biarc) => {
+    //     biarc.for
+    //     let a = biarc.arc0;
+    //     arcs.push(
+    //         createArc(
+    //             arc2PC2SVG(
+    //                 { x: ea.cx + a.c.x, y: ea.cy + a.c.y },
+    //                 a.r,
+    //                 { x: ea.cx + a.p0.x, y: ea.cy + a.p0.y },
+    //                 { x: ea.cx + a.p1.x, y: ea.cy + a.p1.y },
+    //                 ea.way,
+    //             ),
+    //         ),
+    //     );
+    //     a = biarc.arc1;
+    //     arcs.push(
+    //         createArc(
+    //             arc2PC2SVG(
+    //                 { x: ea.cx + a.c.x, y: ea.cy + a.c.y },
+    //                 a.r,
+    //                 { x: ea.cx + a.p0.x, y: ea.cy + a.p0.y },
+    //                 { x: ea.cx + a.p1.x, y: ea.cy + a.p1.y },
+    //                 ea.way,
+    //             ),
+    //         ),
+    //     );
+    // });
     return arcs;
     //console.log(out);
 }
- */

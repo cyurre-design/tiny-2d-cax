@@ -70,22 +70,22 @@ export function calculateBiarc(pi, pf, ti, tf, way) {
     nm = norm(left(pg)); // perpendicular al segmento de g a pf
     const c1 = cutOfParametricLines(mid(g, pf), pf, nm, nf);
     const r1 = distancePointToPoint(c1.x, c1.y, pf.x, pf.y);
-    return {
-        arc0: {
+    return [
+        {
             p0: pi,
             p1: g,
             r: r0,
             c: c0,
             way: way,
         },
-        arc1: {
+        {
             p0: g,
             p1: pf,
             r: r1,
             c: c1,
             way: way,
         },
-    };
+    ];
 }
 
 // function arcInterpolate(arc, t) {
