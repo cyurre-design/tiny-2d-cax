@@ -42,7 +42,8 @@ export function getSvgPathFromBlocks(blocks, pointDimension = 5) {
             case "cut-point":
                 return `M ${b.x0 - x} ${b.y0} l ${2 * x} 0 m ${-x} ${-x} l 0 ${2 * x}`;
             case "arc-ellipse":
-                return `M ${b.x0} ${b.y0} A ${b.rx} ${b.ry} ${b.a} ${b.fA} ${b.fS === 0 ? 1 : 0} ${b.x1} ${b.y1}`;
+                //Parece que dar la vuelta al Y afecta al sentido de giro del círculo????
+                return `M ${b.x0} ${b.y0} A ${b.rx} ${b.ry} ${b.a} ${b.fA} ${b.fS} ${b.x1} ${b.y1}`;
             case "arrow":
                 return `M ${b.x0 + x * b.dy} ${b.y0 - x * b.dx} L ${b.x0 + 2 * x * b.dx} ${b.y0 + 2 * x * b.dy} L ${b.x0 - x * b.dy} ${b.y0 + x * b.dx} Z `;
         }

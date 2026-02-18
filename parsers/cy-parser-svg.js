@@ -19,6 +19,9 @@ function pathsToGeometry(data) {
     //     console.log('arco');
     //     return([data[5],data[6]]);
     // }
+
+    //MOVIDA , decido darle la vuelta a todas las cotas Y para simplificar el tratamiento y la coherencia entre
+    //lo que se ve en el svg (que la Y crece hacia abajo ) y nuestro sistema de coordenadas "normal"
     function parsePath(d) {
         //recibo un string, que puede incluir cr,lf, etc... que son whitespace
         //además, los signos '-' sirven de separadores...
@@ -51,6 +54,7 @@ function pathsToGeometry(data) {
                     }
                     cpx = inc ? cpx + parseFloat(cmd.shift()) : parseFloat(cmd.shift());
                     cpy = inc ? cpy + parseFloat(cmd.shift()) : parseFloat(cmd.shift());
+                    cpy = -cpy;
                     ((pathInitialX = cpx), (pathInitialY = cpy));
                 //El move puede tener cotas por detrás que son una polylínea, reuso el case
                 //fallthrough, no break
@@ -64,6 +68,7 @@ function pathsToGeometry(data) {
                             rx += cpx;
                             ry += cpy;
                         }
+                        ry = -ry;
                         elements.push(createDrawElement("segment", { subType: "PP", x0: cpx, y0: cpy, x1: rx, y1: ry }));
                         [cpx, cpy] = [rx, ry];
                     }
@@ -82,6 +87,7 @@ function pathsToGeometry(data) {
                     while (cmd.length !== 0) {
                         //aunque no tiene sentido, se pueden poner varias cotas seguidas
                         ry = parseFloat(cmd.shift()) + (inc ? cpy : 0);
+                        ry = -ry;
                         elements.push(createDrawElement("segment", { subType: "PP", x0: cpx, y0: cpy, x1: cpx, y1: ry }));
                     }
                     cpy = ry;
@@ -99,6 +105,9 @@ function pathsToGeometry(data) {
                             ctrl[4] += cpx;
                             ctrl[5] += cpy; //final point
                         }
+                        ctrl[1] = -ctrl[1];
+                        ctrl[3] = -ctrl[3];
+                        ctrl[5] = -ctrl[5];
                         elements.push(
                             createDrawElement("bezier", {
                                 x0: cpx,
@@ -111,7 +120,7 @@ function pathsToGeometry(data) {
                                 y1: ctrl[5],
                             }),
                         ); //vienen x1,y1,x2,y2,x,y
-                        [cpx, cpy] = [ctrl[4], ctrl[5]];
+                        [cpx, cpy] = [ctrl[4], ctrl[5]]; //el ctrl5 ya viene con el signo al revés
                     }
                     break;
                 case "S": //cubic bezier, pueden venir varias pero son independientes
@@ -127,6 +136,8 @@ function pathsToGeometry(data) {
                             ctrl[2] += cpx;
                             ctrl[3] += cpy; //final point
                         }
+                        ctrl[1] = -ctrl[1];
+                        ctrl[3] = -ctrl[3];
                         elements.push(
                             createDrawElement("bezier", {
                                 subType: "C",
@@ -154,6 +165,8 @@ function pathsToGeometry(data) {
                             ctrl[2] += cpx;
                             ctrl[3] += cpy; //final point
                         }
+                        ctrl[1] = -ctrl[1];
+                        ctrl[3] = -ctrl[3];
                         elements.push(
                             createDrawElement("bezier", {
                                 subType: "Q",
@@ -179,6 +192,7 @@ function pathsToGeometry(data) {
                             ctrl[0] += cpx;
                             ctrl[1] += cpy; //final point, el control point se calcula con el p. anterior
                         }
+                        ctrl[1] = -ctrl[1];
                         elements.push(
                             createDrawElement("bezier", {
                                 x0: cpx,
@@ -193,7 +207,7 @@ function pathsToGeometry(data) {
                     }
                     break;
                 case "A":
-                case "a":
+                case "a": //Dar la vuelta al Y impkica cambiar el clock pro antiClock, parece
                     if (cmd.length % 7 !== 0) return "error";
                     while (cmd.length !== 0) {
                         let ctrl = cmd.splice(0, 7).map((el) => parseFloat(el)); //hay dos flags
@@ -202,7 +216,9 @@ function pathsToGeometry(data) {
                             ctrl[5] += cpx;
                             ctrl[6] += cpy; //final point
                         }
+                        ctrl[6] = -ctrl[6];
                         if (Math.abs(ctrl[0] - ctrl[1]) < geometryPrecision)
+                            //Circunferencia
                             //r1===r2 => angulo es 0, quedan fA, fS
                             elements.push(
                                 createDrawElement("arc", {
@@ -213,12 +229,14 @@ function pathsToGeometry(data) {
                                     y1: ctrl[6],
                                     r: ctrl[3] === 0 ? ctrl[0] : -ctrl[0],
                                     fA: ctrl[3],
-                                    fS: ctrl[4],
+                                    fS: ctrl[4] === 0 ? 1 : 0,
                                 }),
                             );
+                        //Elipse
                         else
                             elements.push(
                                 createDrawElement("arcEllipse", {
+                                    //el ángulo va al revés pero lo ponemos en la creación
                                     subType: "",
                                     x0: cpx,
                                     y0: cpy,
@@ -226,9 +244,9 @@ function pathsToGeometry(data) {
                                     y1: ctrl[6],
                                     rx: ctrl[0],
                                     ry: ctrl[1],
-                                    a: ctrl[2],
+                                    a: -ctrl[2],
                                     fA: ctrl[3],
-                                    fS: ctrl[4],
+                                    fS: ctrl[4] === 0 ? 1 : 0,
                                 }),
                             );
                         [cpx, cpy] = [ctrl[5], ctrl[6]];

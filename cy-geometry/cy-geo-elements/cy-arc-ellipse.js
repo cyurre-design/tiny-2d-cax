@@ -3,6 +3,7 @@ import { fuzzy_eq_zero, rotateZ, scale0 } from "../cy-geometry-library.js";
 import { arc2PC2SVG, translatePoint, pointSymmetricSegment } from "../cy-geometry-library.js";
 import { createArc } from "./cy-arc.js";
 import { calculateBiarc } from "./cy-biarc.js";
+import { createSegment } from "./cy-segment.js";
 /**
  * @todo chequear con más detalle?
  * @param {Object} data , debería venir lo de svg, pi, pf, rx,ry,phi,fA,fS, (o way?)
@@ -20,7 +21,8 @@ export function createArcEllipse(data = {}) {
         },
     };
     Object.assign(ea, data); //esta hace copia de los datos
-    ea.way = ea.fS === 0 ? "antiClock" : "clock";
+    //ea.a = ea.a;
+    ea.way = ea.fS === 1 ? "antiClock" : "clock";
     ea.rx = Math.abs(ea.rx);
     ea.ry = Math.abs(ea.ry);
     //esta modifica el propio objeto
@@ -29,35 +31,43 @@ export function createArcEllipse(data = {}) {
     return ea;
 }
 function arcEllipseInterpolate(ea, t) {
+    const ct = Math.cos(t),
+        st = Math.sin(t);
+    // return {
+    //     x: ea.cx + ea.cosphi * ea.rx * ct - ea.sinphi * ea.ry * st,
+    //     y: ea.cy + ea.sinphi * ea.rx * ct + ea.cosphi * ea.ry * st,
+    // };
     return {
-        x: ea.rx * Math.cos(t),
-        y: ea.ry * Math.sin(t),
+        x: ea.cx + ea.rx * ct,
+        y: ea.cy + ea.ry * st,
     };
 }
+
 // De la página de referencia (implementation notes) de la especificación SVG, F.6.5 Elliptical arc implementation notes
 // Dados puntos inicial y final, ambos radios, phi, fA y fS, se obtiene el centro de la elipse y los ángulos de inicio y final del arco,
 // SVG denomina a los puntos inicial y final x1 y x2 en vez de x0,x1...
 // por coherencia llamo ai y da a los ángulos inicial e incremento.
-
 function fromEndpointToCenter(ea) {
     //se pone el centro a mitad de camino de pi y pf y se rota
     const phi = (ea.a * Math.PI) / 180;
-    const cosphi = Math.cos(phi);
-    const sinphi = Math.sin(phi);
+    ea.cosphi = Math.cos(phi);
+    ea.sinphi = Math.sin(phi);
     const dx = 0.5 * (ea.x0 - ea.x1);
     const dy = 0.5 * (ea.y0 - ea.y1);
-    const x1p = cosphi * dx + sinphi * dy;
-    const y1p = -sinphi * dx + cosphi * dy;
+    const x1p = ea.cosphi * dx + ea.sinphi * dy;
+    const y1p = -ea.sinphi * dx + ea.cosphi * dy;
     const x1p2 = x1p * x1p;
     const y1p2 = y1p * y1p;
     // Corrección si radios insuficientes
-    const rx2 = ea.rx * ea.rx;
-    const ry2 = ea.ry * ea.ry;
+    let rx2 = ea.rx * ea.rx;
+    let ry2 = ea.ry * ea.ry;
     const lambda = x1p2 / ea.rx2 + y1p2 / ea.ry2;
     if (lambda > 1) {
         const s = Math.sqrt(lambda);
         ea.rx *= s;
         ea.ry *= s;
+        rx2 = ea.rx * ea.rx;
+        ry2 = ea.ry * ea.ry;
     }
     const sign = ea.fA === ea.fS ? -1 : 1;
     const num = rx2 * ry2 - rx2 * y1p2 - ry2 * x1p2;
@@ -66,19 +76,14 @@ function fromEndpointToCenter(ea) {
     const cxp = (coef * (ea.rx * y1p)) / ea.ry;
     const cyp = (coef * -(ea.ry * x1p)) / ea.rx;
     //centro de la elipse deshaciendo la rotación y el traslado
-    ea.cx = cosphi * cxp - sinphi * cyp + (ea.x0 + ea.x1) / 2;
-    ea.cy = sinphi * cxp + cosphi * cyp + (ea.y0 + ea.y1) / 2;
+    ea.cx = ea.cosphi * cxp - ea.sinphi * cyp + (ea.x0 + ea.x1) / 2;
+    ea.cy = ea.sinphi * cxp + ea.cosphi * cyp + (ea.y0 + ea.y1) / 2;
     // ángulos
     function angle(u, v) {
         const dot = u.x * v.x + u.y * v.y; //coseno
         const det = u.x * v.y - u.y * v.x; //seno
         return Math.atan2(det, dot);
     }
-    //el cálculo con valores rotados no parece ir bien
-    //lo hago con los originales...
-    //const v0 = { x: (ea.x0 - ea.cx) / ea.rx, y: (ea.y0 - ea.cy) / ea.ry };
-    //const v1 = { x: (ea.x1 - ea.cx) / ea.rx, y: (ea.y1 - ea.cy) / ea.ry };
-
     const v0 = { x: (x1p - cxp) / ea.rx, y: (y1p - cyp) / ea.ry };
     const v1 = { x: (-x1p - cxp) / ea.rx, y: (-y1p - cyp) / ea.ry };
 
@@ -144,8 +149,8 @@ export function arcEllipseTranslate(ea, dx, dy) {
         y0: y0,
         x1: x1,
         y1: y1,
-        r1: ea.r1,
-        r2: ea.r2,
+        rx: ea.rx,
+        ry: ea.ry,
         a: ea.a,
         fA: ea.fA,
         fS: ea.fS,
@@ -158,8 +163,8 @@ export function arcEllipseSymmetryX(ea, y) {
         y0: 2 * y - ea.y0,
         x1: ea.x1,
         y1: 2 * y - ea.y1,
-        r1: ea.r1,
-        r2: ea.r2,
+        rx: ea.rx,
+        ry: ea.ry,
         a: ea.a,
         fA: ea.fA,
         fS: ea.fS === 0 ? 1 : 0,
@@ -172,8 +177,8 @@ export function arcEllipseSymmetryY(ea, x) {
         y0: ea.y0,
         x1: 2 * x - ea.x1,
         y1: ea.y1,
-        r1: ea.r1,
-        r2: ea.r2,
+        rx: ea.rx,
+        ry: ea.ry,
         a: -ea.a,
         fA: ea.fA,
         fS: ea.fS === 0 ? 1 : 0,
@@ -188,8 +193,8 @@ export function arcEllipseSymmetryL(ea, s) {
         y0: y0,
         x1: x1,
         y1: y1,
-        r1: ea.r1,
-        r2: ea.r2,
+        rx: ea.rx,
+        ry: ea.ry,
         a: -ea.a,
         fA: ea.fA,
         fS: ea.fS === 0 ? 1 : 0,
@@ -201,7 +206,7 @@ export function arcEllipseRotate(ea, x, y, alfa) {
     const [x0, y0] = rotateZ(ea.x0 - x, ea.y0 - y, alfa);
     const [x1, y1] = rotateZ(ea.x1 - x, ea.y1 - y, alfa);
     const na = ea.a + (alfa * 180) / Math.PI;
-    return createArcEllipse({ x0: x0 + x, y0: y0 + y, x1: x1 + x, y1: y1 + y, r1: ea.r1, r2: ea.r2, a: na, fA: ea.fA, fS: ea.fS, way: ea.way });
+    return createArcEllipse({ x0: x0 + x, y0: y0 + y, x1: x1 + x, y1: y1 + y, rx: ea.rx, ry: ea.ry, a: na, fA: ea.fA, fS: ea.fS, way: ea.way });
 }
 export function arcEllipseScale(ea, x, y, scale) {
     const [x0, y0] = scale0(ea.x0 - x, ea.y0 - y, scale);
@@ -211,8 +216,8 @@ export function arcEllipseScale(ea, x, y, scale) {
         y0: y0 + y,
         x1: x1 + x,
         y1: y1 + y,
-        r1: ea.r1 * scale,
-        r2: ea.r2 * scale,
+        rx: ea.rx * scale,
+        ry: ea.ry * scale,
         a: ea.a,
         fA: ea.fA,
         fS: ea.fS,
@@ -225,8 +230,8 @@ export function arcEllipseReverse(ea) {
         y0: ea.y1,
         x1: ea.x0,
         y1: ea.y0,
-        r1: ea.r1,
-        r2: ea.r2,
+        rx: ea.rx,
+        ry: ea.ry,
         a: ea.a + Math.PI,
         fA: ea.fA,
         fS: 1 - ea.fS,
@@ -283,14 +288,12 @@ function ellipseAdaptiveByCurvature(a, b, t0, t1, maxDeltaK = 0.002) {
 function ellipseDerivativeRot(ea, t) {
     const c = Math.cos(t);
     const s = Math.sin(t);
-    const cp = Math.cos(ea.a);
-    const sp = Math.sin(ea.a);
-    if (!fuzzy_eq_zero(ea.a))
+    /*    if (!fuzzy_eq_zero(ea.a))
         return {
-            x: -ea.rx * s * cp - ea.ry * c * sp,
-            y: -ea.rx * s * sp + ea.ry * c * cp,
+            x: -ea.rx * s * ea.cosphi - ea.ry * c * ea.sinphi,
+            y: -ea.rx * s * ea.sinphi + ea.ry * c * ea.cosphi,
         };
-    else return ea.fS === 0 ? { x: -ea.rx * s, y: ea.ry * c } : { x: ea.rx * s, y: -ea.ry * c };
+    else*/ return ea.fS === 0 ? { x: -ea.rx * s, y: ea.ry * c } : { x: ea.rx * s, y: -ea.ry * c };
 }
 
 /**
@@ -420,7 +423,21 @@ function fitAdaptive(ea, t0, t1, tol, out) {
  * @param {Number} eps error cordal
  * @returns
  */
+
 export function arcEllipseApproximate(ea, eps) {
+    let points = arcEllipseCoarseApproximation(ea, 10 * eps);
+    let out = [];
+    let p0 = arcEllipseInterpolate(ea, points[0]);
+    let p1;
+    for (let i = 1; i < points.length; i++) {
+        p1 = arcEllipseInterpolate(ea, points[i]);
+        out.push(createSegment({ x0: p0.x, y0: p0.y, x1: p1.x, y1: p1.y }));
+        p0 = p1;
+        // fitAdaptive(ea, t0, t1, eps, out);
+    }
+    return out;
+}
+/* export function arcEllipseApproximate(ea, eps) {
     let points = arcEllipseCoarseApproximation(ea, 10 * eps);
     let out = [];
     for (let i = 1; i < points.length; i++) {
@@ -461,3 +478,4 @@ export function arcEllipseApproximate(ea, eps) {
     return arcs;
     //console.log(out);
 }
+ */
