@@ -4,6 +4,7 @@ import { arc2PC2SVG, translatePoint, pointSymmetricSegment } from "../cy-geometr
 import { createArc } from "./cy-arc.js";
 import { calculateBiarc } from "./cy-biarc.js";
 import { createSegment } from "./cy-segment.js";
+import { dpp } from "../cy-v2d.js";
 /**
  * @todo chequear con más detalle?
  * @param {Object} data , debería venir lo de svg, pi, pf, rx,ry,phi,fA,fS, (o way?)
@@ -21,7 +22,6 @@ export function createArcEllipse(data = {}) {
         },
     };
     Object.assign(ea, data); //esta hace copia de los datos
-    //ea.a = ea.a;
     ea.way = ea.fS === 1 ? "antiClock" : "clock";
     ea.rx = Math.abs(ea.rx);
     ea.ry = Math.abs(ea.ry);
@@ -30,6 +30,7 @@ export function createArcEllipse(data = {}) {
     ea.bbox = getBoundingBox(ea);
     return ea;
 }
+
 function rotateAndTranslate(ea, p) {
     if (ea.a === 0) return { x: ea.cx + p.x, y: ea.cy + p.y };
     else
@@ -167,13 +168,7 @@ function getBoundingBox(ea) {
 
     return bbox;
 }
-/**
- *
- * @param {Object arcEllipse} ea
- * @param {Number} x
- * @param {Number} y
- * @returns {Object arcEllipse}
- */
+
 export function arcEllipseTranslate(ea, dx, dy) {
     const [x0, y0] = translatePoint(ea.x0, ea.y0, dx, dy);
     const [x1, y1] = translatePoint(ea.x1, ea.y1, dx, dy);
@@ -392,11 +387,7 @@ export function arcEllipseCoarseApproximation(ea, chordalError = 0.01) {
 
 //     return ts;
 // }
-function pointArcDistance(P, arc) {
-    const v = { x: P.x - arc.c.x, y: P.y - arc.c.y };
-    const d = Math.hypot(v.x, v.y);
-    return Math.abs(d - arc.r);
-}
+const pointArcDistance = (P, arc) => Math.abs(dpp(P, arc.c) - arc.r);
 
 function biarcError(ea, t0, t1, biarc) {
     const samples = [0.25, 0.5, 0.75];
@@ -489,33 +480,5 @@ export function arcEllipseApproximate(ea, eps) {
             createArc(arc2PC2SVG(rotateAndTranslate(ea, arc.c), arc.r, rotateAndTranslate(ea, arc.p0), rotateAndTranslate(ea, arc.p1), ea.way)),
         );
     });
-    // out.forEach((biarc) => {
-    //     biarc.for
-    //     let a = biarc.arc0;
-    //     arcs.push(
-    //         createArc(
-    //             arc2PC2SVG(
-    //                 { x: ea.cx + a.c.x, y: ea.cy + a.c.y },
-    //                 a.r,
-    //                 { x: ea.cx + a.p0.x, y: ea.cy + a.p0.y },
-    //                 { x: ea.cx + a.p1.x, y: ea.cy + a.p1.y },
-    //                 ea.way,
-    //             ),
-    //         ),
-    //     );
-    //     a = biarc.arc1;
-    //     arcs.push(
-    //         createArc(
-    //             arc2PC2SVG(
-    //                 { x: ea.cx + a.c.x, y: ea.cy + a.c.y },
-    //                 a.r,
-    //                 { x: ea.cx + a.p0.x, y: ea.cy + a.p0.y },
-    //                 { x: ea.cx + a.p1.x, y: ea.cy + a.p1.y },
-    //                 ea.way,
-    //             ),
-    //         ),
-    //     );
-    // });
     return arcs;
-    //console.log(out);
 }

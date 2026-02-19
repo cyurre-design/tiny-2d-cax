@@ -1,20 +1,7 @@
 "use strict";
 
 import { distancePointToPoint, fuzzy_eq_zero } from "../cy-geometry-library.js";
-
-// -------- utilidades vectoriales ----------
-const dot = (a, b) => a.x * b.x + a.y * b.y;
-const sub = (a, b) => ({ x: a.x - b.x, y: a.y - b.y });
-const add = (a, b) => ({ x: a.x + b.x, y: a.y + b.y });
-const mul = (a, s) => ({ x: a.x * s, y: a.y * s });
-const len = (v) => Math.hypot(v.x, v.y);
-const left = (v) => ({ x: -v.y, y: v.x });
-const inv = (v) => ({ x: -v.x, y: -v.y });
-const mid = (a, b) => ({ x: 0.5 * (a.x + b.x), y: 0.5 * (a.y + b.y) });
-const norm = (v) => {
-    const l = len(v);
-    return { x: v.x / l, y: v.y / l };
-};
+import { dot, sub, add, mul, len, left, inv, mid, norm } from "../cy-v2d.js";
 
 //se supone que le pasamos los do arcos tangentes, se puede pasar la rutina de cálculos
 export function createBiarc(a, b) {
