@@ -1,5 +1,6 @@
 "use strict";
 
+import "./cy-canvas-layer-background.js";
 import "./cy-canvas-layer-axes.js";
 import "./cy-canvas-layer-draw.js";
 import "./cy-canvas-layer-draft.js";
@@ -55,6 +56,7 @@ export default class CyCanvasViewer extends HTMLElement {
     createTemplate() {
         let template = `
             <div id="container">
+                <cy-canvas-layer-background id="background" name="background"></cy-canvas-layer-background>
                 <cy-canvas-layer-axes id="axes" name="axes"></cy-canvas-layer-axes>
                 <cy-canvas-layer-draw id="draw" name="draw" tabindex:'1'></cy-canvas-layer-draw>
                 <cy-canvas-layer-draft id="draft" name="draft" tabindex:'1'></cy-canvas-layer-draft>
@@ -101,6 +103,7 @@ export default class CyCanvasViewer extends HTMLElement {
     connectedCallback() {
         this.dom.innerHTML = this.createStyle() + this.createTemplate();
 
+        this.layerBackground = this.dom.querySelector("#background");
         this.layerAxes = this.dom.querySelector("#axes");
         this.layerDraw = this.dom.querySelector("#draw");
         this.layerDraft = this.dom.querySelector("#draft");

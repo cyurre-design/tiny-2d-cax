@@ -1,4 +1,3 @@
-
 //import {saveProject}
 
 // const exporters = {
@@ -94,119 +93,113 @@
 //   return handle;
 // }
 
-
 //
 export async function saveCNC(fileHandle = null, data = ``) {
+    try {
+        // Si no se pasa fileHandle, pedimos uno al usuario
+        if (!fileHandle) {
+            fileHandle = await window.showSaveFilePicker({
+                suggestedName: `project.nc`,
+                types: [
+                    {
+                        description: "CNC file",
+                        accept: { "text/plain": [".pxy", ".nc"] },
+                    },
+                ],
+            });
+        }
 
-  try {
-    // Si no se pasa fileHandle, pedimos uno al usuario
-    if (!fileHandle) {
-      fileHandle = await window.showSaveFilePicker({
-        suggestedName: `project.nc`,
-        types: [
-          {
-            description: 'CNC file',
-            accept: { 'text/plain': ['.pxy', '.nc'] },
-          },
-        ],
-      });
+        const writable = await fileHandle.createWritable();
+        await writable.write(data);
+        await writable.close();
+
+        console.log("💾 Proyecto guardado correctamente");
+    } catch (err) {
+        console.error("❌ Error al guardar el proyecto:", err);
     }
-
-    const writable = await fileHandle.createWritable();
-    await writable.write(data);
-    await writable.close();
-
-    console.log("💾 Proyecto guardado correctamente");
-  } catch (err) {
-    console.error("❌ Error al guardar el proyecto:", err);
-  }
 }
-
-
-
-
-
 
 //Pasar el nombre de proyecto como sugerencia del  svg?
 export async function saveSvg(fileHandle = null, data = ``) {
+    try {
+        // Si no se pasa fileHandle, pedimos uno al usuario
+        if (!fileHandle) {
+            fileHandle = await window.showSaveFilePicker({
+                suggestedName: `project.svg`,
+                types: [
+                    {
+                        description: "SVG file",
+                        accept: { "image/svg+xml": [".svg"] },
+                    },
+                ],
+            });
+        }
 
-  try {
-    // Si no se pasa fileHandle, pedimos uno al usuario
-    if (!fileHandle) {
-      fileHandle = await window.showSaveFilePicker({
-        suggestedName: `project.svg`,
-        types: [
-          {
-            description: 'SVG file',
-            accept: { 'image/svg+xml': ['.svg'] },
-          },
-        ],
-      });
+        const writable = await fileHandle.createWritable();
+        await writable.write(data);
+        await writable.close();
+
+        console.log("💾 Proyecto guardado correctamente");
+    } catch (err) {
+        console.error("❌ Error al guardar el proyecto:", err);
     }
-
-    const writable = await fileHandle.createWritable();
-    await writable.write(data);
-    await writable.close();
-
-    console.log("💾 Proyecto guardado correctamente");
-  } catch (err) {
-    console.error("❌ Error al guardar el proyecto:", err);
-  }
 }
-
 
 export async function saveProject(fileHandle = null, data = ``) {
+    try {
+        // Si no se pasa fileHandle, pedimos uno al usuario
+        if (!fileHandle) {
+            fileHandle = await window.showSaveFilePicker({
+                suggestedName: `project.json`,
+                types: [
+                    {
+                        description: "Proyecto CAD",
+                        accept: { "application/json": [".json"] },
+                    },
+                ],
+            });
+        }
 
-  try {
-    // Si no se pasa fileHandle, pedimos uno al usuario
-    if (!fileHandle) {
-      fileHandle = await window.showSaveFilePicker({
-        suggestedName: `project.json`,
-        types: [
-          {
-            description: "Proyecto CAD",
-            accept: { "application/json": [".json"] },
-          },
-        ],
-      });
+        const writable = await fileHandle.createWritable();
+        await writable.write(data);
+        await writable.close();
+
+        console.log("💾 Proyecto guardado correctamente");
+    } catch (err) {
+        console.error("❌ Error al guardar el proyecto:", err);
     }
-
-    const writable = await fileHandle.createWritable();
-    await writable.write(data);
-    await writable.close();
-
-    console.log("💾 Proyecto guardado correctamente");
-  } catch (err) {
-    console.error("❌ Error al guardar el proyecto:", err);
-  }
 }
 
+export async function loadProject(fileHandle = null) {
+    try {
+        if (!fileHandle) {
+            [fileHandle] = await window.showOpenFilePicker({
+                types: [
+                    {
+                        description: "Proyecto CAD",
+                        accept: {
+                            "application/json": [".json"],
+                            "text/plain": [".nc", ".pxy"],
+                            "image/svg+xml": [".svg"],
+                            "image/x-dxf": [".dxf"],
+                            "image/png": [".png"],
+                            "image/jpeg": [".jpg"],
+                        },
+                    },
+                ],
+                excludeAcceptAllOption: true,
+            });
+        }
 
-export async function loadProject(fileHandle = null, ) {
-  try {
-    if (!fileHandle) {
-      [fileHandle] = await window.showOpenFilePicker({
-        types: [
-          {
-            description: "Proyecto CAD",
-            accept: {
-              "application/json": [".json"],
-              "text/plain"      : [".nc", ".pxy"],
-              "image/svg+xml"   : [".svg"],
-              "image/x-dxf"     : [".dxf"],
-              "image/png"       : [".png"],
-              "image/jpeg"      : [".jpg"]
-            },
-          },
-        ],
-        excludeAcceptAllOption: true,
-      });
+        const file = await fileHandle.getFile();
+        let text;
+        if (file.type === "image/jpeg") {
+            text = await createImageBitmap(file);
+        } else {
+            text = await file.text();
+        }
+        return { name: fileHandle.name, text: text };
+    } catch (err) {
+        console.error("❌ Error al cargar el proyecto:", err);
     }
-
-    const file = await fileHandle.getFile();
-    const text = await file.text();
-    return({name: fileHandle.name, text:text});
-  } catch (err) {
-    console.error("❌ Error al cargar el proyecto:", err);
-  }
 }
