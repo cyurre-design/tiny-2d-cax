@@ -34,7 +34,7 @@ export function getSvgPathFromBlocks(blocks, pointDimension = 5) {
                 //Parece que dar la vuelta al Y afecta al sentido de giro del círculo????
                 return `M ${b.x1} ${b.y1} A ${b.r} ${b.r}  0 ${b.fA} ${b.fS === 0 ? 1 : 0} ${b.x2} ${b.y2}`;
             case "bezier":
-                return `M ${b.x0} ${b.y0} C ${b.cp1x} ${b.cp1y} ${b.cp2x} ${b.cp2y} ${b.x1} ${b.y1}`;
+                return `M ${b.x0} ${b.y0} C ${b.cp1.x} ${b.cp1.y} ${b.cp2.x} ${b.cp2.y} ${b.x1} ${b.y1}`;
             case "bbox":
                 return `M ${b.x0} ${b.y0} H ${b.x1} V ${b.y1} H ${b.x0} V ${b.y0} `;
             case "point":
