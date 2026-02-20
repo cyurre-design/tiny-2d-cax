@@ -2,8 +2,8 @@
 import { fuzzy_eq, fuzzy_eq_zero, geometryPrecision } from "../cy-geometry-library.js";
 import { createSegment } from "./cy-segment.js";
 import { createArc } from "./cy-arc.js";
-import { _solveq, pointSymmetricSegment, arc2PC2SVG } from "../cy-geometry-library.js";
-import { calculateBiarc, calculateIncenterFromHermite } from "./cy-biarc.js";
+import { pointSymmetricSegment, arc2PC2SVG } from "../cy-geometry-library.js";
+import { calculateBiarc } from "./cy-biarc.js";
 import { v2d, dot, dpp, cross, sub, add, mul, len, left, inv, mid, norm, rotL } from "../cy-v2d.js";
 
 // function bezierInterpolateq(tp){
@@ -84,17 +84,12 @@ function bezierDerivative(bz, t) {
     const it2 = 3 * (1 - t) * (1 - t);
     const t2 = 3 * t * t;
     const tit = 6 * t * (1 - t);
-    let tang = mul(sub(bz.cp1, bz.pi), it2);
-    tang = add(tang, mul(sub(bz.cp2, bz.cp1), tit));
-    tang = add(tang, mul(sub(bz.pf, bz.cp2), t2));
+    let tang = mul(bz.A0, it2); //let tang = mul(sub(bz.cp1, bz.pi), it2);
+    tang = add(tang, mul(bz.A1, tit)); //tang = add(tang, mul(sub(bz.cp2, bz.cp1), tit));
+    tang = add(tang, mul(bz.A2, t2)); //tang = add(tang, mul(sub(bz.pf, bz.cp2), t2));
     return norm(tang);
     //return add(add(mul(sub(bz.cp1, bz.pi), it2), mul(sub(bz.cp2, bz.cp1), tit)), mul(sub(bz.pf, bz.cp2), t2));
 }
-//calcula el incentro del triángulo de un bezier (restringido en ángulo)
-//he puesto el cálculo en biarc, se usa también en la elipse
-// function calculateIncenter(bz) {
-//     return calculateIncenterFromHermite(bz.pi, bz.pf, bz.ti, bz.tf);
-// }
 
 function calculateConvexHull(bz) {
     bz.A0 = sub(bz.cp1, bz.pi); //{ x: bz.cp1.x - bz.x0, y: bz.cp1y - bz.y0 };
@@ -130,17 +125,10 @@ function calculateInflexionPoints(bz) {
         return []; //en realidad es una recta degenerada, deberíamos saberlo antes...
     }
 }
-//esto se puede hacer con el vectorial del convex hull SI no hay inflexiones
-//da igual en ese caso qué par de vectores se cojan
-// function isClockWise(bz) {
-//     const p1 = sub(bz.cp1, bz.pi); //{ x: bz.cp1.x - bz.x0, y: bz.cp1y - bz.y0 };
-//     const p2 = sub(bz.pf, bz.cp1); //{ x: bz.x1 - bz.cp1.x, y: bz.y1 - bz.cp1y };
-//     //const cross = p1.x * p2.y - p1.y * p2.x;
-//     return cross(p1, p2) >= 0 ? "antiClock" : "clock";
-// }
+//Se puede hacer más simple si sabemos que no tiene puntos de inflexión...
 function isClockWise(bz) {
-    /// The orientation of the Bezier curve
-    /// </summary>
+    /// The orientation of the Bezier curve, creo que es lo del signo del área del convexhull
+    ///
     let sum = 0;
     sum += (bz.cp1.x - bz.x0) * (bz.cp1.y + bz.y0);
     sum += (bz.cp2.x - bz.cp1.x) * (bz.cp2.y + bz.cp1.y);
@@ -243,55 +231,6 @@ function splitAt(bz, t) {
 //condiciones de hermite + incenter (transition point)
 //https://dlacko.org/blog/2016/10/19/approximating-bezier-curves-by-biarcs/
 
-/**
- * El vector de pi a cp1 es t1 = (cp1x-x0, cp1y - y0),
- * el normal en pi sería n1 = (-t1.y, t1.x) = (x0-(-(cp1y - y0)), y0 - (cp1x-x0))
- * o sea n = (x0 + cp1y - y0, y0 - cp1x - x0)
- * El punto medio de pi con g sería mpig = (0.5*(x0 + g.x), 0.5*(y0 + g.y))
- * El vector que une i con g sería pig = (g.x - x0, g.y - y0)
- * El vector normal al mismo sería (-pig.y, pig.x)
- * El vector que une el punto medio de pi a cp1 con g sería
- * (g.x - pm.x, g.y - pm.y)  = (g.x - 0.5*(x0 + cp1x), g.y - 0.5*(y0 + cp1y))
- * y en el corte estará el centro
- * @param {*} bz
- * @param {*} g
- * @returns
- */
-// function calculateBiarc(bz, g) {
-//     const way = isClockWise(bz);
-
-//     //arco con bz.pi cp1, g  {x:bz.cp1x, y:bz.cp1y}, g, way);
-//     let t = { x: bz.cp1x - bz.x0, y: bz.cp1y - bz.y0 };
-//     let n1 = { x: -t.y, y: t.x };
-//     let s1 = createSegment({ subType: "PP", x0: bz.x0, y0: bz.y0, x1: bz.x0 + n1.x, y1: bz.y0 + n1.y }); //perpendicular a bx en punto inicial
-
-//     let pg = { x: g.x - bz.x0, y: g.y - bz.y0 }; //vector bz.pi -> g
-//     let n2 = { x: -pg.y, y: pg.x };
-//     let pgm = { x: 0.5 * (g.x + bz.x0), y: 0.5 * (g.y + bz.y0) }; //punto medio de ese vector
-//     let s2 = createSegment({ subType: "PP", x0: pgm.x, y0: pgm.y, x1: pgm.x + n2.x, y1: pgm.y + n2.y }); //perpendicular en el punto medio de bx.pi a cp1
-
-//     //el centro en el corte de ambas normales
-//     let c = cutSegmentToSegment(s1, s2)[0]; //se devuelve array por defecto aunque solo puede haber un corte
-//     //tenemos centro (c) y dos puntos (pi,g), para el arco hace falta way que es general del bezier
-//     let r = distancePointToPoint(c.x, c.y, bz.x0, bz.y0);
-//     const a1 = createArc(arc2PC2SVG(c, r, { x: bz.x0, y: bz.y0 }, g, way));
-
-//     //El segundo arco es casi igual
-//     t = { x: bz.x1 - bz.cp2x, y: bz.y1 - bz.cp2y };
-//     n1 = { x: -t.y, y: t.x };
-//     s1 = createSegment({ subType: "PP", x0: bz.x1, y0: bz.y1, x1: bz.x1 + n1.x, y1: bz.y1 + n1.y }); //perpendicular a bx en punto inicial
-//     pg = { x: g.x - bz.x1, y: g.y - bz.y1 }; //vector bz.pf -> g
-//     n2 = { x: -pg.y, y: pg.x };
-//     pgm = { x: 0.5 * (g.x + bz.x1), y: 0.5 * (g.y + bz.y1) }; //punto medio de ese vector
-//     s2 = createSegment({ subType: "PP", x0: pgm.x, y0: pgm.y, x1: pgm.x + n2.x, y1: pgm.y + n2.y }); //perpendicular en el punto medio de bx.pi a cp1
-//     //el centro en el corte de ambas normales
-//     c = cutSegmentToSegment(s1, s2)[0]; //se devuelve array por defecto aunque solo puede haber un corte
-//     //tenemos centro (c) y dos puntos (g, pf), para el arco hace falta way que es general del bezier
-//     r = distancePointToPoint(c.x, c.y, bz.x1, bz.y1);
-//     const a2 = createArc(arc2PC2SVG(c, r, g, { x: bz.x1, y: bz.y1 }, way));
-//     return createBiarc(a1, a2);
-// }
-
 function splitAtInflexionPoints(bz, tolerance = 0.01) {
     let tramos = [];
     if (dpp(bz.pi, bz.pf) < geometryPrecision) {
@@ -382,7 +321,11 @@ export function bezierApproximate(bz, tolerance = 0.01) {
     //
     out = out.flat(); //un array de arcos
     out.forEach((arc) => {
-        arcs.push(createArc(arc2PC2SVG(arc.c, arc.r, arc.p0, arc.p1, bz.way)));
+        if (arc.line) {
+            arcs.push(createSegment({ x0: arc.pi.x, y0: arc.pi.y, x1: arc.pf.x, y1: arc.pf.y }));
+        } else {
+            arcs.push(createArc(arc2PC2SVG(arc.c, arc.r, arc.p0, arc.p1, bz.way)));
+        }
     });
     return arcs;
 }

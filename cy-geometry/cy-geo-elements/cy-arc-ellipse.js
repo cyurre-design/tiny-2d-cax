@@ -268,7 +268,7 @@ export function arcEllipseReverse(ea) {
 }
 
 /**
- *
+ * @todo sería más elegante y fina, pero no sé si merece la pena
  * @param {Number} a    semieje mayor
  * @param {Number} b    semieje menor
  * @param {Number} t0  parámetro inicial la elipse, el "ángulo" , normalmente a1
@@ -276,44 +276,44 @@ export function arcEllipseReverse(ea) {
  * @param {Number} maxDeltaK precisión requerida
  * @returns
  */
-function ellipseAdaptiveByCurvature(a, b, t0, t1, maxDeltaK = 0.002) {
-    function curvature(t) {
-        const s = Math.sin(t);
-        const c = Math.cos(t);
-        const d = a * a * s * s + b * b * c * c;
-        return (a * b) / Math.pow(d, 1.5);
-    }
+// function ellipseAdaptiveByCurvature(a, b, t0, t1, maxDeltaK = 0.002) {
+//     function curvature(t) {
+//         const s = Math.sin(t);
+//         const c = Math.cos(t);
+//         const d = a * a * s * s + b * b * c * c;
+//         return (a * b) / Math.pow(d, 1.5);
+//     }
 
-    let pts = [t0];
-    let t = t0;
+//     let pts = [t0];
+//     let t = t0;
 
-    while (t < t1) {
-        let k0 = curvature(t);
+//     while (t < t1) {
+//         let k0 = curvature(t);
 
-        // estimación inicial paso
-        let dt = (t1 - t) / 10;
+//         // estimación inicial paso
+//         let dt = (t1 - t) / 10;
 
-        // Newton–Raphson sobre Δκ (incremento de curvatura)
-        for (let i = 0; i < 6; i++) {
-            let k1 = curvature(t + dt);
-            let dk = k1 - k0;
+//         // Newton–Raphson sobre Δκ (incremento de curvatura)
+//         for (let i = 0; i < 6; i++) {
+//             let k1 = curvature(t + dt);
+//             let dk = k1 - k0;
 
-            if (Math.abs(dk) < 1e-12) break;
+//             if (Math.abs(dk) < 1e-12) break;
 
-            dt *= maxDeltaK / Math.abs(dk);
-        }
+//             dt *= maxDeltaK / Math.abs(dk);
+//         }
 
-        if (t + dt > t1) dt = t1 - t;
+//         if (t + dt > t1) dt = t1 - t;
 
-        t += dt;
-        pts.push(t);
-    }
+//         t += dt;
+//         pts.push(t);
+//     }
 
-    return pts;
-}
+//     return pts;
+// }
 
 //derivada de una elipse como las de svg, podemos pasarle el arcEllipse
-function ellipseDerivativeRot(ea, t) {
+function ellipseDerivative(ea, t) {
     const c = Math.cos(t);
     const s = Math.sin(t);
     /*    if (!fuzzy_eq_zero(ea.a))
@@ -392,21 +392,17 @@ const pointArcDistance = (P, arc) => Math.abs(dpp(P, arc.c) - arc.r);
 function biarcError(ea, t0, t1, biarc) {
     const samples = [0.25, 0.5, 0.75];
     let maxErr = 0;
-
     for (const s of samples) {
         const t = t0 + (t1 - t0) * s;
         const P = arcEllipseInterpolate(ea, t);
-
         const e0 = pointArcDistance(P, biarc[0]);
         const e1 = pointArcDistance(P, biarc[1]);
-
         maxErr = Math.max(maxErr, Math.min(e0, e1));
     }
-
     return maxErr;
 }
 /**
- *
+ *  He copiado el código casi entero en bezier, en el futuro se pueden generalizar a cualquier curva
  * @param {Object} ea arco de elipse que quermos aproximar con arcos
  * @param {Number} t0 valor inicial del parámetro (ai en el pi)
  * @param {Number} t1 valor final, (ai + da en el pf)
@@ -417,24 +413,19 @@ function biarcError(ea, t0, t1, biarc) {
 function fitAdaptive(ea, t0, t1, tol, out) {
     const P0 = arcEllipseInterpolate(ea, t0);
     const P1 = arcEllipseInterpolate(ea, t1);
-    const T0 = ellipseDerivativeRot(ea, t0);
-    const T1 = ellipseDerivativeRot(ea, t1);
+    const T0 = ellipseDerivative(ea, t0);
+    const T1 = ellipseDerivative(ea, t1);
 
     const biarc = calculateBiarc(P0, P1, T0, T1, ea.way);
-
     if (!biarc) {
         out.push({ line: true, p0: P0, p1: P1 });
         return;
     }
-
     const err = biarcError(ea, t0, t1, biarc);
-    console.log(err);
-
     if (err <= tol) {
         out.push(biarc);
         return;
     }
-    console.log("subdivido");
     const tm = (t0 + t1) / 2;
 
     fitAdaptive(ea, t0, tm, tol, out);
@@ -476,9 +467,13 @@ export function arcEllipseApproximate(ea, eps) {
     //
     out = out.flat(); //un array de arcos
     out.forEach((arc) => {
-        arcs.push(
-            createArc(arc2PC2SVG(rotateAndTranslate(ea, arc.c), arc.r, rotateAndTranslate(ea, arc.p0), rotateAndTranslate(ea, arc.p1), ea.way)),
-        );
+        if (arc.line) {
+            arcs.push(createSegment({ x0: arc.pi.x, y0: arc.pi.y, x1: arc.pf.x, y1: arc.pf.y }));
+        } else {
+            arcs.push(
+                createArc(arc2PC2SVG(rotateAndTranslate(ea, arc.c), arc.r, rotateAndTranslate(ea, arc.p0), rotateAndTranslate(ea, arc.p1), ea.way)),
+            );
+        }
     });
     return arcs;
 }
