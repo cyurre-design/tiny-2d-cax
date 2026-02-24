@@ -107,7 +107,7 @@ export default class CyCanvasViewer extends HTMLElement {
         this.layerAxes = this.dom.querySelector("#axes");
         this.layerDraw = this.dom.querySelector("#draw");
         this.layerDraft = this.dom.querySelector("#draft");
-        this.canvasLayers = [this.layerAxes, this.layerDraw, this.layerDraft];
+        this.canvasLayers = [this.layerBackground, this.layerAxes, this.layerDraw, this.layerDraft];
         // Para intentar unificar los layers
         this.axesLayer = this.layerAxes.axesLayer;
         this.gridLayer = this.layerAxes.gridLayer;
@@ -123,10 +123,10 @@ export default class CyCanvasViewer extends HTMLElement {
         //Inicialización de la de draft, le ponemos atributos específicos de color y tal (TODO settings)
         //los colores y grosores vienen del estilo. Si se ponen en un json de settings puede ir aquí..
         /**@todo decidir si esto es estilo, son, clas.... */
-        ((this.layerDraft.pathColor = "yellow"),
-            (this.layerDraft.pathWidth = 3),
-            (this.layerDraft.selectedPathWidth = 4),
-            (this.layerDraft.selectedPathColor = "magenta"));
+        this.layerDraft.pathColor = "yellow";
+        this.layerDraft.pathWidth = 3;
+        this.layerDraft.selectedPathWidth = 4;
+        this.layerDraft.selectedPathColor = "magenta";
         this.interactiveDrawing = new CyInteractiveDraw(this.canvasHandler, this.layerDraft);
         /**@listens zoom-end cambios en la relación window - viewport , o sea, coordenadas mundo y bitamp */
         this.addEventListener("zoom_end", (e) => this._redrawLayers());
@@ -172,7 +172,10 @@ export default class CyCanvasViewer extends HTMLElement {
     //         break;
     //   }
     // }
-
+    setBackground(image) {
+        const dim = this.layerBackground.setImage(image);
+        this.canvasHandler.view("fgZoomInDrag", { x: 0, y: 0 }, { w: 1.1 * dim.w, h: 1.1 * dim.h });
+    }
     /**
      * Obtenemos el box que engloba todo lo que hay en la geometría y simulamos el evento de zoom con ventana
      * @todo que e comando esté en el canvasHandler de forma original . Llma a l función o emitir un event esecífico !

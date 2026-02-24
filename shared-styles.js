@@ -7,7 +7,7 @@ sharedStyles.replaceSync(`
     margin: 0;
     border: none;
     padding: 0;
-    justify-content: flex-start;
+    justify-content: space-between;
     width:100%;
   }
 .column{
