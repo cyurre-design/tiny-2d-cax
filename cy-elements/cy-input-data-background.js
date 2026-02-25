@@ -1,5 +1,14 @@
 import { sharedStyles } from "../shared-styles.js";
-import { inputDataInit, initialDataBasic, inputDataUpdate, inputDataSubtype, setEventHandlers, TA } from "./cy-input-data-templates.js";
+import {
+    inputDataInit,
+    initialDataBasic,
+    inputDataUpdate,
+    inputDataSubtype,
+    setEventHandlers,
+    TSA,
+    TX0Y0,
+    TENTER,
+} from "./cy-input-data-templates.js";
 export default class CyInputDataBackground extends HTMLElement {
     constructor() {
         super();
@@ -22,7 +31,9 @@ export default class CyInputDataBackground extends HTMLElement {
         let t = `background`;
         let h = `<div id=${t}>`;
         h += `<div class="row">BACKGROUND</div>`;
-        h += `<div class="row">${TA(t)}</div></div>`;
+        h += `<div class="row"></div>`;
+        h += `<div class="row">${TX0Y0(t)}</div>`;
+        h += `${TSA(t)}</div>`;
 
         return h;
     }

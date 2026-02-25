@@ -7,10 +7,12 @@ export class DrawBackground extends DrawBasic {
         super(layerDraw, "background", mode);
         this.data = { subType: this.subMode };
         this.moveFn = [[this.corners, this.draw], []];
-        this.clickFn = [[this.p0, this.newBlock, this.deleteData]];
+        this.clickFn = [[this.setPoint, this.sendDataBasic]];
         this.dataSent = [["x0", "y0"], []];
-        this.dataReceived = [];
+        this.dataReceived = ["rotimg"];
         this.corners = [];
+        this.data.x0 = undefined;
+        this.data.y0 = undefined;
         this.windowSize = 10;
         //this.kThreshold = 0.03; //0.015
         this.threshold = 100000;
@@ -26,6 +28,9 @@ export class DrawBackground extends DrawBasic {
         const idn = newData[0].idn; //vendrá en cada evento de change en mdata
         if (idn === "enter") {
             console.log(this.corners[0]);
+        } else if (idn === "rotimg") {
+            console.log(data.rotimg);
+            this.layerDraw.rotate(data.rotimg);
         }
         //     this.data.way = newData[0].v;
         // }
@@ -33,7 +38,7 @@ export class DrawBackground extends DrawBasic {
     corners = (pi) => {
         const ww = this.imageWindow.w;
         const wh = this.imageWindow.h;
-        const p = this.position2pixels(pi);
+        const p = this.layerDraw.position2pixels(pi);
         this.corners = detectCornersShiTomasi(this.layerDraw.ctx, p.x - 0.5 * ww, p.y - 0.5 * wh, ww, wh, {
             threshold: this.threshold,
             nmsRadius: this.nmsRadius,
@@ -41,7 +46,17 @@ export class DrawBackground extends DrawBasic {
         });
         if (this.corners.length > 0) {
             const corner = this.corners.sort((a, b) => b.score - a.score)[0];
-            console.log(pi, this.pixels2position(corner), corner.score);
+            this.data.x0 = corner.x;
+            this.data.y0 = corner.y;
+            //console.log(pi, this.layerDraw.pixels2position(corner), corner.score);
+        }
+    };
+    setPoint = () => {
+        if (this.corners.length > 0) {
+            const p = this.layerDraw.pixels2position(this.corners[0]); //el pi no se usa en el dibujo
+            this.layerDraw.dispatchEvent(
+                new CustomEvent("new-block", { bubbles: true, composed: true, detail: { type: "cut-point", data: this.data } }),
+            );
         }
     };
     //Mandamos el subType o mode para orientar al create
@@ -53,7 +68,7 @@ export class DrawBackground extends DrawBasic {
     draw = (pi) => {
         //const r = scalePixels2mm(this.imageWindow.w);
         if (this.corners.length > 0) {
-            const p = this.pixels2position(this.corners[0]); //el pi no se usa en el dibujo
+            const p = this.layerDraw.pixels2position(this.corners[0]); //el pi no se usa en el dibujo
             this.drawBlocks(pi.x, pi.y, [{ type: "cut-point", x0: p.x, y0: p.y }]);
         }
         //this.drawBlocks(pi.x, pi.y, createDrawElement("circle", { subType: "CR", cx: pi.x, cy: pi.y, r: r }));

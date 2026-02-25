@@ -36,6 +36,7 @@ export default class CyCanvasLayerBackgrouund extends CyCanvasLayer {
     connectedCallback() {
         super.connectedCallback();
     }
+    _drawImage(image) {}
     setImage(image) {
         this.background = image; //copio la imagen
         const rx = image.width / this.viewer.width;
@@ -43,6 +44,7 @@ export default class CyCanvasLayerBackgrouund extends CyCanvasLayer {
         this.z = Math.max(rx, ry); //zoom = pixels image / pixels canvas
         this.imgsize = { w: image.width / this.z, h: image.height / this.z };
         this.rotationAngle = 0;
+        this.contrast = 2;
         this.draw();
         return this.imgsize;
     }
@@ -52,23 +54,28 @@ export default class CyCanvasLayerBackgrouund extends CyCanvasLayer {
             //Hay que tener el mismo zoom porque si no distorsiona la imagen, lógicamente
             const w = this.z * this.viewer.width;
             const h = this.z * this.viewer.height;
+            const oldT = this.ctx.getTransform();
+
             this.ctx.scale(1, -1);
             this.ctx.translate(-0.5 * this.imgsize.w, -0.5 * this.imgsize.h);
-            this.ctx.filter = "grayscale(100%)";
+            this.ctx.filter = `"grayscale(100%) contrast(${this.contrast})"`;
             if (this.rotationAngle !== 0) {
                 this.ctx.rotate((this.rotationAngle * Math.PI) / 180);
             }
+            this.ctx.imageSmoothingEnabled = false;
             this.ctx.drawImage(this.background, 0, 0, w, h, 0, 0, this.viewer.width, this.viewer.height);
+            this.ctx.setTransform(oldT);
         }
     }
-    rotateR() {
-        this.rotationAngle -= 1;
+    rotate(angle) {
+        this.rotationAngle = angle;
         this.draw();
     }
-    rotateL() {
-        this.rotationAngle += 1;
-        this.draw();
-    }
+    contrast(value) {}
+    // rotateL(angle) {
+    //     this.rotationAngle = angle;
+    //     this.draw();
+    // }
     disconnectedCallback() {
         //Aquí hay que quitar los listeners siendo formales
         super.disconnectedCallback();
