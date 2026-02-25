@@ -1,6 +1,4 @@
 //Heredo de layer genérica que me da los métodos de borrado, etc...
-//import {scalePixels2mm, scaleMm2pixels, position2pixels} from './cy-canvas-handler.js';
-//import { position2pixels } from "./cy-canvas-handler.js";
 import { CyCanvasLayer } from "./cy-canvas-layer.js";
 
 export default class CyCanvasLayerBackgrouund extends CyCanvasLayer {

@@ -1,6 +1,5 @@
 "use strict";
 import { CyCanvasLayer, canvasCSS } from "./cy-canvas-layer.js";
-import { scalePixels2mm, position2pixels } from "./cy-canvas-handler.js";
 import { checkBbox, insideBbox, blockTranslate } from "../cy-geometry/cy-geometry-library.js";
 import { getRelevantPoints } from "../cy-geometry/cy-geometry-basic-elements.js";
 import { getPathFromBlocks } from "./cy-elements-to-canvas.js";
@@ -380,8 +379,8 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
      * Pero se podrían devolver más.
      */
     getNearestBlock(x, y, w) {
-        const p = position2pixels({ x: x, y: y });
-        this.ctx.lineWidth = scalePixels2mm(w); //Esto son pixels, iría en settings o así TODO
+        const p = this.position2pixels({ x: x, y: y });
+        this.ctx.lineWidth = this.scalePixels2mm(w); //Esto son pixels, iría en settings o así TODO
         for (let ix = 0; ix < this.layers.length; ix++) {
             const blocks = this.layers[ix].blocks;
             for (let jx = 0; jx < blocks.length; jx++) {
@@ -545,7 +544,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         this.layers.forEach((layer) => {
             if (layer.visible) {
                 layer.blocks.forEach((p) => {
-                    this.ctx.lineWidth = scalePixels2mm(p.selected ? +layer.layerStyle.selectedWidth : +layer.layerStyle.pathWidth);
+                    this.ctx.lineWidth = this.scalePixels2mm(p.selected ? +layer.layerStyle.selectedWidth : +layer.layerStyle.pathWidth);
                     this.ctx.strokeStyle = p.selected
                         ? layer.layerStyle.selectedColor
                         : p.hover

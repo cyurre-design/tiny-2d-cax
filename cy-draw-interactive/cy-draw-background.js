@@ -1,7 +1,6 @@
 import DrawBasic from "./cy-draw-basic.js";
 import { detectCornersShiTomasi } from "../cy-geometry/cy-corner-detection.js";
-import { createDrawElement } from "../cy-geometry/cy-geometry-basic-elements.js";
-import { scalePixels2mm, scaleMm2pixels, position2pixels, pixels2position } from "../cy-canvas-layers/cy-canvas-handler.js";
+//import { createDrawElement } from "../cy-geometry/cy-geometry-basic-elements.js";
 //el tipo y edges provienen del menu de input-data
 export class DrawBackground extends DrawBasic {
     constructor(layerDraw, mode) {
@@ -34,7 +33,7 @@ export class DrawBackground extends DrawBasic {
     corners = (pi) => {
         const ww = this.imageWindow.w;
         const wh = this.imageWindow.h;
-        const p = position2pixels(pi);
+        const p = this.position2pixels(pi);
         this.corners = detectCornersShiTomasi(this.layerDraw.ctx, p.x - 0.5 * ww, p.y - 0.5 * wh, ww, wh, {
             threshold: this.threshold,
             nmsRadius: this.nmsRadius,
@@ -42,7 +41,7 @@ export class DrawBackground extends DrawBasic {
         });
         if (this.corners.length > 0) {
             const corner = this.corners.sort((a, b) => b.score - a.score)[0];
-            console.log(pi, pixels2position(corner), corner.score);
+            console.log(pi, this.pixels2position(corner), corner.score);
         }
     };
     //Mandamos el subType o mode para orientar al create
@@ -54,7 +53,7 @@ export class DrawBackground extends DrawBasic {
     draw = (pi) => {
         //const r = scalePixels2mm(this.imageWindow.w);
         if (this.corners.length > 0) {
-            const p = pixels2position(this.corners[0]); //el pi no se usa en el dibujo
+            const p = this.pixels2position(this.corners[0]); //el pi no se usa en el dibujo
             this.drawBlocks(pi.x, pi.y, [{ type: "cut-point", x0: p.x, y0: p.y }]);
         }
         //this.drawBlocks(pi.x, pi.y, createDrawElement("circle", { subType: "CR", cx: pi.x, cy: pi.y, r: r }));

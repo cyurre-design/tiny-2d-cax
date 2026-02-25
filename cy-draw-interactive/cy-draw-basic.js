@@ -1,4 +1,3 @@
-import { scalePixels2mm } from "../cy-canvas-layers/cy-canvas-handler.js";
 const selectionWidthInPixels = 10;
 //El translate está definido con clone, cada vez que muevo se crea.... pero a la larga es más comprensible
 export default class DrawBasic {
@@ -21,18 +20,18 @@ export default class DrawBasic {
     //Y luego hay funciones que serán específicas, como el bloque y modo de dibujo, borrado, etc...
 
     highLight = (x, y, blocks) => {
-        const w = scalePixels2mm(this.draft.pathWidth); //O selected??
+        const w = this.draft.scalePixels2mm(this.draft.pathWidth); //O selected??
         //pintamos los bloques, si hay
         this.draft.clear();
         if (blocks !== undefined) this.draft.drawBlocks(blocks, w, this.draft.pathColor); //es llamada desde aquí, pasarnos siempre array
         //busco el punto más cercano al cursor y lo pinto
-        const selWidth = scalePixels2mm(selectionWidthInPixels);
+        const selWidth = this.draft.scalePixels2mm(selectionWidthInPixels);
         const point = this.layerDraw.getNearestPoint(x, y, selWidth); //El 5 a settings TODO
         this.draft.drawBlocks(point, w, this.draft.pathColor);
         return { x: point.x0, y: point.y0 };
     };
     drawBlocks = (x, y, blocks) => {
-        const w = scalePixels2mm(this.draft.pathWidth); //O selected??
+        const w = this.draft.scalePixels2mm(this.draft.pathWidth); //O selected??
         this.draft.clear();
         if (blocks !== undefined) this.draft.drawBlocks(blocks, w, this.draft.pathColor); //es llamada desde aquí, pasarnos siempre array
     };

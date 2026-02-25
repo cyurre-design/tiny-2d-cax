@@ -1,5 +1,4 @@
 "use strict";
-import { scalePixels2mm, position2pixels } from "./cy-canvas-handler.js";
 import { CyCanvasLayer } from "./cy-canvas-layer.js";
 
 const divisions = [0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 20, 50, 100, 200, 500]; //desde 1 centésima a 500mm
@@ -58,7 +57,7 @@ export default class CyCanvasLayerAxes extends CyCanvasLayer {
     }
     drawAxis(x = 0, y = 0) {
         const ww = this.extents; //por comodidad, window
-        const w = scalePixels2mm(this.axesLayer.layerStyle.pathWidth);
+        const w = this.scalePixels2mm(this.axesLayer.layerStyle.pathWidth);
         const blocks = [
             { type: "segment", x0: ww.xi, y0: y, x1: ww.xf, y1: y },
             { type: "segment", x0: x, y0: ww.yi, x1: x, y1: ww.yf },
@@ -82,7 +81,7 @@ export default class CyCanvasLayerAxes extends CyCanvasLayer {
         for (let x = 0; x <= ww.xf; x += this.scale) blocks.push({ type: "segment", x0: x, y0: ww.yi, x1: x, y1: ww.yf });
         for (let y = 0; y >= ww.yi; y -= this.scale) blocks.push({ type: "segment", x0: ww.xi, y0: y, x1: ww.xf, y1: y });
         for (let y = 0; y <= ww.yf; y += this.scale) blocks.push({ type: "segment", x0: ww.xi, y0: y, x1: ww.xf, y1: y });
-        const w = scalePixels2mm(this.gridLayer.layerStyle.pathWidth);
+        const w = this.scalePixels2mm(this.gridLayer.layerStyle.pathWidth);
         this.ctx.setLineDash([0.1 * this.scale, 0.1 * this.scale]);
         this.drawBlocks(blocks, w, this.gridLayer.layerStyle.pathColor);
         this.ctx.setLineDash([]);
@@ -90,20 +89,20 @@ export default class CyCanvasLayerAxes extends CyCanvasLayer {
     drawTicks() {
         const blocks = [];
         const ww = this.extents; //por comodidad, window
-        let tl = scalePixels2mm(0.5 * this.axesLayer.layerStyle.tickLength);
+        let tl = this.scalePixels2mm(0.5 * this.axesLayer.layerStyle.tickLength);
         let spacing = 0.1 * this.scale;
         for (let x = 0; x >= ww.xi; x -= spacing) blocks.push({ type: "segment", x0: x, y0: -tl, x1: x, y1: tl });
         for (let x = 0; x <= ww.xf; x += spacing) blocks.push({ type: "segment", x0: x, y0: -tl, x1: x, y1: tl });
         for (let y = 0; y >= ww.yi; y -= spacing) blocks.push({ type: "segment", x0: -tl, y0: y, x1: tl, y1: y });
         for (let y = 0; y <= ww.yf; y += spacing) blocks.push({ type: "segment", x0: -tl, y0: y, x1: tl, y1: y });
         //Las largas
-        tl = scalePixels2mm(1.5 * this.axesLayer.layerStyle.tickLength);
+        tl = this.scalePixels2mm(1.5 * this.axesLayer.layerStyle.tickLength);
         spacing = this.scale;
         for (let x = 0; x >= ww.xi; x -= spacing) blocks.push({ type: "segment", x0: x, y0: -tl, x1: x, y1: tl });
         for (let x = 0; x <= ww.xf; x += spacing) blocks.push({ type: "segment", x0: x, y0: -tl, x1: x, y1: tl });
         for (let y = 0; y >= ww.yi; y -= spacing) blocks.push({ type: "segment", x0: -tl, y0: y, x1: tl, y1: y });
         for (let y = 0; y <= ww.yf; y += spacing) blocks.push({ type: "segment", x0: -tl, y0: y, x1: tl, y1: y });
-        const w = scalePixels2mm(this.axesLayer.layerStyle.tickWidth);
+        const w = this.scalePixels2mm(this.axesLayer.layerStyle.tickWidth);
         this.drawBlocks(blocks, w, this.axesLayer.layerStyle.tickColor);
     }
     //de momento atado al eje
@@ -120,19 +119,19 @@ export default class CyCanvasLayerAxes extends CyCanvasLayer {
         this.ctx.font = "12px monospace";
 
         for (let x = -this.scale; x >= ww.xi; x -= this.scale) {
-            const p = position2pixels({ x: x, y: 0 });
+            const p = this.position2pixels({ x: x, y: 0 });
             this.ctx.fillText(x, p.x, p.y + oy);
         }
         for (let x = this.scale; x <= ww.xf; x += this.scale) {
-            const p = position2pixels({ x: x, y: 0 });
+            const p = this.position2pixels({ x: x, y: 0 });
             this.ctx.fillText(x, p.x, p.y + oy);
         }
         for (let y = -this.scale; y >= ww.yi; y -= this.scale) {
-            const p = position2pixels({ x: 0, y: y });
+            const p = this.position2pixels({ x: 0, y: y });
             this.ctx.fillText(y, p.x + ox, p.y);
         }
         for (let y = this.scale; y <= ww.yf; y += this.scale) {
-            const p = position2pixels({ x: 0, y: y });
+            const p = this.position2pixels({ x: 0, y: y });
             this.ctx.fillText(y, p.x + ox, p.y);
         }
         this.ctx.setTransform(tr);

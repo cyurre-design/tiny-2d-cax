@@ -1,6 +1,6 @@
 "use strict";
 import { getPathFromBlocks } from "./cy-elements-to-canvas.js";
-import { scaleMm2pixels, position2pixels } from "./cy-canvas-handler.js";
+import { scalePixels2mm, scaleMm2pixels, position2pixels, pixels2position } from "./cy-canvas-handler.js";
 
 export const canvasCSS = {
     pathColor: "green",
@@ -57,6 +57,11 @@ export class CyCanvasLayer extends HTMLElement {
                 break;
         }
     }
+    //Rexportamos las funciones de window-viewport para que se usen sin incluir el original
+    scalePixels2mm = (px) => scalePixels2mm(px);
+    scaleMm2pixels = (mm) => scaleMm2pixels(mm);
+    position2pixels = (mm) => position2pixels(mm);
+    pixels2position = (px) => pixels2position(px);
     //espera true o false
     setVisible(visible) {
         this.style.setProperty("visibility", visible ? "visible" : "hidden");
@@ -69,13 +74,14 @@ export class CyCanvasLayer extends HTMLElement {
     }
     setExtents(extents) {
         this.extents = extents;
-        const scale = scaleMm2pixels(1);
-        const offset = position2pixels({ x: 0, y: 0 });
+        const scale = this.scaleMm2pixels(1);
+        const offset = this.position2pixels({ x: 0, y: 0 });
         this.ctx.setTransform(scale, 0, 0, -scale, offset.x, offset.y);
     }
     draw() {
+        //esta se debe sobrecargar
         /*console.log('draw sin definir')*/
-    } //esta se debe sobrecargar
+    }
     clear() {
         const old = this.ctx.getTransform();
         this.ctx.setTransform();

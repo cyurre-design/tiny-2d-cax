@@ -1,6 +1,4 @@
 //Heredo de layer genérica que me da los métodos de borrado, etc...
-//import {scalePixels2mm, scaleMm2pixels, position2pixels} from './cy-canvas-handler.js';
-import { position2pixels } from "./cy-canvas-handler.js";
 import { CyCanvasLayer } from "./cy-canvas-layer.js";
 
 export default class CyCanvasLayerDraft extends CyCanvasLayer {
@@ -65,7 +63,7 @@ export default class CyCanvasLayerDraft extends CyCanvasLayer {
         this.ctx.font = "20px Arial";
         this.ctx.fillStyle = "red";
         texts.forEach((t) => {
-            const p = position2pixels({ x: t.x0, y: t.y0 });
+            const p = this.position2pixels({ x: t.x0, y: t.y0 });
             this.ctx.fillText(t.text, p.x, p.y); //0,0 porque hemos puesto los offsets antes
         });
         this.ctx.restore(); // Restore to normal state

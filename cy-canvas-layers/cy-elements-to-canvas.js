@@ -1,15 +1,5 @@
 import { scalePixels2mm } from "./cy-canvas-handler.js";
 
-/*
-     
-        case 'arcEllipse':
-          svgel = FgSvgLayerProfile.path.cloneNode(true);
-          svgel.setAttribute('d', `M ${el.pi.x} ${el.pi.y} A ${el.rx} ${el.ry} ${el.fi} ${el.flagLarge} ${el.flagSweep} ${el.pf.x} ${el.pf.y}`);
-          svgel.setAttribute('class', clase);
-          break;          
-
-*/
-
 //estas son funciones de librería, a la que hay que pasarles los puntos
 export function getPathFromBlocks(blocks, pointDimension = 5) {
     return new Path2D(getSvgPathFromBlocks(blocks, pointDimension));
