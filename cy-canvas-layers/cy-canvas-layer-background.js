@@ -36,7 +36,6 @@ export default class CyCanvasLayerBackgrouund extends CyCanvasLayer {
     connectedCallback() {
         super.connectedCallback();
     }
-    _drawImage(image) {}
     setImage(image) {
         this.background = image; //copio la imagen
         const rx = image.width / this.viewer.width;
@@ -56,7 +55,7 @@ export default class CyCanvasLayerBackgrouund extends CyCanvasLayer {
             const h = this.z * this.viewer.height;
             const oldT = this.ctx.getTransform();
 
-            this.ctx.scale(1, -1);
+            this.ctx.scale(this.scaleFactor, -this.scaleFactor);
             this.ctx.translate(-0.5 * this.imgsize.w, -0.5 * this.imgsize.h);
             this.ctx.filter = `"grayscale(100%) contrast(${this.contrast})"`;
             if (this.rotationAngle !== 0) {
@@ -69,6 +68,10 @@ export default class CyCanvasLayerBackgrouund extends CyCanvasLayer {
     }
     rotate(angle) {
         this.rotationAngle = angle;
+        this.draw();
+    }
+    scale(z) {
+        this.scaleFactor = z;
         this.draw();
     }
     contrast(value) {}

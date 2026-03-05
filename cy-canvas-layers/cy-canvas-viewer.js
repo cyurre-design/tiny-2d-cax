@@ -127,7 +127,7 @@ export default class CyCanvasViewer extends HTMLElement {
         this.layerDraft.pathWidth = 3;
         this.layerDraft.selectedPathWidth = 4;
         this.layerDraft.selectedPathColor = "magenta";
-        this.interactiveDrawing = new CyInteractiveDraw(this.canvasHandler, this.layerDraft);
+        this.interactiveDrawing = new CyInteractiveDraw(this.canvasHandler, this.layerDraft, this.layerBackground);
         /**@listens zoom-end cambios en la relación window - viewport , o sea, coordenadas mundo y bitamp */
         this.addEventListener("zoom_end", (e) => this._redrawLayers());
         //--------------------------------------
@@ -172,9 +172,13 @@ export default class CyCanvasViewer extends HTMLElement {
     //         break;
     //   }
     // }
+    //@todo llamada por evento mejor?
     setBackground(image) {
         const dim = this.layerBackground.setImage(image);
         this.canvasHandler.view("fgZoomInDrag", { x: 0, y: 0 }, { w: 1.1 * dim.w, h: 1.1 * dim.h });
+    }
+    rotateBackground(angle) {
+        this.layerBackground.rotate(angle);
     }
     /**
      * Obtenemos el box que engloba todo lo que hay en la geometría y simulamos el evento de zoom con ventana

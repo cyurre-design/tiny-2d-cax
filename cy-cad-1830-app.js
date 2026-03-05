@@ -63,6 +63,7 @@ import {
     DrawSymmetry,
     DrawText,
     DrawTranslate,
+    DrawBackground,
 } from "./cy-draw-interactive/cy-drawing-interactive.js";
 
 //Parsers
@@ -90,10 +91,11 @@ const templateFiles = `
 //tools y settings fijos
 const templateMeasure = `
 <div class="column" id='menu-measure'>
-  <div class="row">MEASURE</div>
+  <div class="row">SCALE & MEASURE</div>
   <div class="row">
-  <input type="button" id='measure-block' value="MEAS. BLOCK" class="_50"/>
-  <input type="button" id='measure-p2p' value="MEAS. P2P" class="_50"/>
+  <input type="button" id='measure-block' value="M. BLOCK" class="_33"/>
+  <input type="button" id='measure-p2p' value="SET DIM." class="_33"/>
+  <input type="button" id='measure-rotate' value="ROT. BG." class="_33"/>
 </div>
 </div>`;
 const templateZoom = `
@@ -139,7 +141,6 @@ const templateUndo = `
   </div>
 </div>
 `;
-
 const templateDrawOptions = `
 <div id='drawing-options'>
   <div class="row">DRAWING OPTIONS</div>
@@ -179,7 +180,6 @@ const templateDrawOptions = `
       <input type="button" id="text" class="_25" value="TEXT" />
     </div>
 </div>`;
-
 const templateTransform = `<div id='transform'>
   <div class="row">GEOMETRIC TRANSFORMS</div>
   <div class="row">
@@ -202,7 +202,6 @@ const templateTransform = `<div id='transform'>
     <input type="button" id="pocket" class="_33" value="POCKET" />
   </div>
 </div>`;
-
 const template = `
   <div id="full-screen" tabindex='1' class='row'>
     <div id="left" class="column" >
@@ -332,14 +331,6 @@ class cyCad1830App extends HTMLElement {
         this.viewer = this.dom.querySelector("#viewer");
         this.manager = createCommandManager(this.viewer.layerDraw, this); //
 
-        //--------------MENUS
-        // const menus = ["file", "settings"];
-        // menus.forEach((m) => (this[m + "MenuEl"] = this.dom.querySelector(`#${m}-menu`)));
-        // menus.forEach((m) => {
-        //     const el = this.dom.querySelector(`#${m}-menu-anchor`);
-        //     el.addEventListener("click", () => (this[`${m}MenuEl`].open = !this[`${m}MenuEl`].open));
-        // });
-        // menus.forEach((m) => this[`${m}MenuEl`].addEventListener("close-menu", (e) => this.handleMenus(e)));
         //------------- INPUT DATA  ----------
         customElements.whenDefined("cy-input-data-basic").then(() => {
             //console.log('mdata inicializado')
@@ -763,6 +754,10 @@ class cyCad1830App extends HTMLElement {
                                 });
                                 this.viewer.fit();
                                 this.viewer.layerDraw.draw();
+                            } else if (type === "jpg" || type === "png") {
+                                this.viewer.setBackground(file.text);
+                                //this.mData.setActiveApplication("background", "");
+                                //this.registerInputApplications(new DrawBackground(this.viewer.layerBackground, ""));
                             }
                         });
                     }
