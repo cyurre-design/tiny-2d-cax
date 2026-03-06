@@ -59,6 +59,9 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
         this.selectData = {
             hoveredBlocks: undefined,
         };
+        this.scale = 100;
+        this.divider = 100;
+        this.resolution = 1; //esto se pone en realidad al cambiar de escala con el zoom, o por settings el divider
         //cuts
         this.cutPoints = [];
         this.nextPointId = 1;
@@ -350,7 +353,11 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     /**@todo esto igual mejor un evento??*/
     scaleChange(scale) {
         this.scale = scale;
-        this.resolution = scale / 20; //settings, TODO
+        this.resolution = scale / this.divider; //settings, TODO
+    }
+    setRelativeResolution(divider) {
+        this.divider = divider;
+        this.resolution = this.scale / this.divider;
     }
     /**@function
      * @param {Number} x,y coordendas del cursor en espacio usuario (window, milimetros)

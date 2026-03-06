@@ -117,7 +117,9 @@ const templateSelectInputData = `
     
     <div id="menu-select" class="column">
       <div class="row">
-        <span class="_50">Select Tolerance</span><input class="_33" id="data-penWidth" type="number" value="1" max="5" min="0.5" step="0.5"/>
+        <span class="_20">Select</span><input class="_20" id="select-tolerance" type="number" value="1" max="5" min="0.5" step="0.5"/>
+        <span class="_20">Snap</span><select class="_20" id="select-resolution"><options>
+        <option>20</option><option>50</option><option selected>100</option><option>200</option></options></select>
       </div>
       <div class="row">
         <input type="button" class="_25" id="select-sel" value = "SEL"/>
@@ -487,6 +489,16 @@ class cyCad1830App extends HTMLElement {
         /**select
          * Esto no está en el menú sino en la zona vertical
          */
+        this.dom.querySelector("#menu-select").addEventListener("change", (evt) => {
+            const [main, sub1, sub2] = evt.target.id.split("-");
+            switch (sub1) {
+                case "tolerance":
+                    break; //@todo
+                case "resolution":
+                    this.viewer.layerDraw.setRelativeResolution(+evt.target.value);
+                    break;
+            }
+        });
         this.dom.querySelector("#menu-select").addEventListener("click", (evt) => {
             // eslint-disable-next-line no-unused-vars
             const [main, sub1, sub2] = evt.target.id.split("-");
@@ -513,14 +525,6 @@ class cyCad1830App extends HTMLElement {
                         //este es el modo por defecto
                     }
                     break;
-                // case 'copy'   : {
-                //                   this.selectedBlocks = this.viewer.layerDraw.getSelectedBlocks();
-                //                 }
-                //                 break;
-                // case 'paste'  : {
-
-                //                 }
-                //                 break;
             }
         });
         //----------------- ZOOM  ------------------------------ BOTONES
