@@ -72,7 +72,7 @@ export default class CyCanvasLayerBackgrouund extends CyCanvasLayer {
     translate(dx, dy) {
         //ye acumulativo
         this.translation.x -= dx;
-        this.translation.y -= dy;
+        this.translation.y += dy;
         //this.translation = { x: -dx - 0.5 * this.imgsize.w, y: -dy - 0.5 * this.imgsize.h };
         this.draw();
     }

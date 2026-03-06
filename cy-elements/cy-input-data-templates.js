@@ -98,7 +98,7 @@ export function TL2RR2L(t) {
     return `<select class="data" id="data-${t}-invert"><option value="l2r">L2R</option><option value="r2l">R2L</option></select>`;
 }
 export function TSA(t) {
-    return `<div class="full" >ROTATE BACKGROUND<input id="data-${t}-rotimg" class="_33" type="number" max="10" min="-10" value="0" step="0.5"/></div></div>`;
+    return `<div class="full" >ROTATE BACKGROUND<input id="data-${t}-rotimg" class="_33" type="number" max="10" min="-10" value="0" step="0.1"/></div></div>`;
 }
 
 function keyFromId(id) {
