@@ -31,8 +31,7 @@ export default class CyInputDataBackground extends HTMLElement {
         let t = `background`;
         let h = `<div id=${t}>`;
         h += `<div class="row">BACKGROUND</div>`;
-        h += `<div class="row"></div>`;
-        h += `<div class="row">${TX0Y0(t)}</div>`;
+        //h += `<div class="row">${TX0Y0(t)}</div>`;
         h += `${TSA(t)}</div>`;
 
         return h;

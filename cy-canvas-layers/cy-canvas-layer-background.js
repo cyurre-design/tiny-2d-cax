@@ -42,6 +42,7 @@ export default class CyCanvasLayerBackgrouund extends CyCanvasLayer {
         const ry = image.height / this.viewer.height;
         this.z = Math.max(rx, ry); //zoom = pixels image / pixels canvas
         this.imgsize = { w: image.width / this.z, h: image.height / this.z };
+        this.translation = { x: -0.5 * this.imgsize.w, y: -0.5 * this.imgsize.h };
         this.rotationAngle = 0;
         this.contrast = 2;
         this.draw();
@@ -56,7 +57,8 @@ export default class CyCanvasLayerBackgrouund extends CyCanvasLayer {
             const oldT = this.ctx.getTransform();
 
             this.ctx.scale(this.scaleFactor, -this.scaleFactor);
-            this.ctx.translate(-0.5 * this.imgsize.w, -0.5 * this.imgsize.h);
+            //this.ctx.translate(-0.5 * this.imgsize.w, -0.5 * this.imgsize.h);
+            this.ctx.translate(this.translation.x, this.translation.y);
             this.ctx.filter = `"grayscale(100%) contrast(${this.contrast})"`;
             if (this.rotationAngle !== 0) {
                 this.ctx.rotate((this.rotationAngle * Math.PI) / 180);
@@ -65,6 +67,13 @@ export default class CyCanvasLayerBackgrouund extends CyCanvasLayer {
             this.ctx.drawImage(this.background, 0, 0, w, h, 0, 0, this.viewer.width, this.viewer.height);
             this.ctx.setTransform(oldT);
         }
+    }
+    translate(dx, dy) {
+        //ye acumulativo
+        this.translation.x -= dx;
+        this.translation.y -= dy;
+        //this.translation = { x: -dx - 0.5 * this.imgsize.w, y: -dy - 0.5 * this.imgsize.h };
+        this.draw();
     }
     rotate(angle) {
         this.rotationAngle = angle;

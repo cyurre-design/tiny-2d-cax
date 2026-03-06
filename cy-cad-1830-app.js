@@ -816,6 +816,7 @@ class cyCad1830App extends HTMLElement {
     /**para poder llamarla desde la gestión de comandos desde donde solo queremos acceso al modelo y la app (esta) */
     translateOrigin = (dx, dy) => {
         this.viewer.canvasHandler.view("fgPane", { x: dx, y: dy }); //rehace los cálculos del handler
+        this.viewer.layerBackground.translate(dx, dy);
     };
 
     //Se supone que aquí se llama al desconectar la página, pero en laa aplicaciones no parece que pase
