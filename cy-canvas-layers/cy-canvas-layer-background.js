@@ -43,6 +43,7 @@ export default class CyCanvasLayerBackgrouund extends CyCanvasLayer {
         this.z = Math.max(rx, ry); //zoom = pixels image / pixels canvas
         this.imgsize = { w: image.width / this.z, h: image.height / this.z };
         this.translation = { x: -0.5 * this.imgsize.w, y: -0.5 * this.imgsize.h };
+        this.scaleFactor = 1;
         this.rotationAngle = 0;
         this.contrast = 2;
         this.draw();
