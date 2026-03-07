@@ -54,10 +54,7 @@ export class DrawExportGcode extends DrawBasic {
         }
         return { type: "arrow", x0: x0, y0: y0, dx: ux, dy: uy };
     }
-    //mientras mueve sin click, estado 0, miramos si pincha en bloque
-    hover = (pi) => {
-        return this.layerDraw.hover(pi.x, pi.y, undefined, false);
-    };
+
     //Al hacer click
     getPath = (pi) => {
         let found = this.layerDraw.hover(pi.x, pi.y, undefined, false);

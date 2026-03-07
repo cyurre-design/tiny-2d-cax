@@ -9,6 +9,12 @@ export default class DrawBasic {
         this.status = 0;
         this.enabled = true; //guarda para evitar ejecutar acciones en click, se pone en cada heredera
     }
+    //Función pensada para ser sobrecargada. En el constructor todavía no se conoce por ejemplo layerdraft
+    // porque se inyectan cuando la aplicación interactiva se instala en el mousehandler
+    // en la llamada a init ya está inyectado
+    init() {
+        console.log("init called");
+    }
     /**
      * NO SE DEBEN LLAMAR FUNCIONES SOBRECARGABLES EN EL CONSTRUCTOR
      * porque se llamarán con el this de la clase hija y ANTES del constructor de la clase hija!!!
@@ -16,9 +22,9 @@ export default class DrawBasic {
     //Por defecto, la nomenclatura sería x0,y0 para un primer punto, x1,y1 para un segundo....
     dataSent = [[], [], []];
     dataReceived = [];
+    setCursor = (type) => (this.draft.style.cursor = type);
     //Al final las operaciones básicas son visualizar el punto, almacenar el punto, actualizar el status, importar data...
     //Y luego hay funciones que serán específicas, como el bloque y modo de dibujo, borrado, etc...
-
     highLight = (x, y, blocks) => {
         const w = this.draft.scalePixels2mm(this.draft.pathWidth); //O selected??
         //pintamos los bloques, si hay
@@ -30,11 +36,18 @@ export default class DrawBasic {
         this.draft.drawBlocks(point, w, this.draft.pathColor);
         return { x: point.x0, y: point.y0 };
     };
-    drawBlocks = (x, y, blocks) => {
-        const w = this.draft.scalePixels2mm(this.draft.pathWidth); //O selected??
-        this.draft.clear();
-        if (blocks !== undefined) this.draft.drawBlocks(blocks, w, this.draft.pathColor); //es llamada desde aquí, pasarnos siempre array
+    //mientras mueve sin click, estado 0, miramos si pincha en bloque
+    //args: El undefined es porque no usamos el block como para seleccionar
+    //el false para que no lo ponga como seleccionado
+    //Al no ser box, devuelve el pinchado y, si es path, el path
+    hover = (pi) => {
+        return this.layerDraw.hover(pi.x, pi.y, undefined, false);
     };
+    // drawBlocks = (x, y, blocks) => {
+    //     const w = this.draft.scalePixels2mm(this.draft.pathWidth); //O selected??
+    //     this.draft.clear();
+    //     if (blocks !== undefined) this.draft.drawBlocks(blocks, w, this.draft.pathColor); //es llamada desde aquí, pasarnos siempre array
+    // };
     clear = () => this.draft.clear();
 
     p0 = (pi) => {
@@ -70,6 +83,7 @@ export default class DrawBasic {
     deleteDataBasic = (args) => {
         this.status = 0;
         this.enabled = true;
+        this.hit = undefined;
         args.forEach((k) => delete this.data[k]);
     };
     //arrays de funciones

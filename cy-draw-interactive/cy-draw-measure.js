@@ -32,14 +32,8 @@ export class DrawMeasure extends DrawBasic {
                 break;
         }
     }
-    //mientras mueve sin click, estado 0, miramos si pincha en bloque
-    //args: El undefined es porque no usamos el block como para seleccionar
-    //el false para que no lo ponga como seleccionado
-    //Al no ser box, devuelve el pinchado y, si es path, el path
-    hover = (pi) => {
-        this.found = this.layerDraw.hover(pi.x, pi.y, undefined, false);
-        //console.log(this.found);
-        return this.found;
+    init = () => {
+        if (this.subMode === "p2p") this.setCursor("none");
     };
     //Aquí, al hacer click no pasamos de hover a selected (sería el flag )
     select = (/*pi*/) => {
@@ -66,12 +60,9 @@ export class DrawMeasure extends DrawBasic {
             if (this.data.len && this.data.truelen) this.background.scale(this.data.truelen / this.data.len);
         }
     };
-
-    drawBlock = (/*pi*/) => {};
     drawP2P = (pi) => {
         this.block = createDrawElement("segment", this.data);
         this.data.len = distancePointToPoint(this.data.x0, this.data.y0, this.data.x1, this.data.y1);
         this.hit = this.highLight(pi.x, pi.y, this.block);
-        //this.hit = distancePointToPoint(this.data.x0, this.data.y0, this.data.x1, this.data.y1);
     };
 }

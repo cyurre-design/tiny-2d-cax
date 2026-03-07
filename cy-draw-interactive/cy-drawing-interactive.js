@@ -19,4 +19,3 @@ export { DrawGcode } from "./cy-draw-gcode.js";
 export { DrawExportGcode } from "./cy-draw-export-gcode.js";
 export { DrawText } from "./cy-draw-text.js";
 export { DrawMeasure } from "./cy-draw-measure.js";
-export { DrawBackground } from "./cy-draw-background.js";
