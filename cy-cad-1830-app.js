@@ -63,7 +63,6 @@ import {
     DrawSymmetry,
     DrawText,
     DrawTranslate,
-    DrawBackground,
 } from "./cy-draw-interactive/cy-drawing-interactive.js";
 
 //Parsers

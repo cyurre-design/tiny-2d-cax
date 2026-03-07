@@ -124,7 +124,7 @@ export default class CyCanvasViewer extends HTMLElement {
         //los colores y grosores vienen del estilo. Si se ponen en un json de settings puede ir aquí..
         /**@todo decidir si esto es estilo, son, clas.... */
         this.layerDraft.pathColor = "yellow";
-        this.layerDraft.pathWidth = 3;
+        this.layerDraft.pathWidth = 1;
         this.layerDraft.selectedPathWidth = 4;
         this.layerDraft.selectedPathColor = "magenta";
         this.interactiveDrawing = new CyInteractiveDraw(this.canvasHandler, this.layerDraft, this.layerBackground);
