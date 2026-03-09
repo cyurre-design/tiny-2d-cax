@@ -41,7 +41,6 @@ export default class CyInputDataTransform extends HTMLElement {
             "transform-link",
             "transform-boolean",
             "transform-pocket",
-            "transform-spline",
         ].forEach((el) => (this.dom.querySelector("#" + el).style.display = "none"));
         this.dom.querySelector("#transform-" + this.type).style.display = "block";
         inputDataSubtype(this, `data-transform-${this.type}`);
@@ -96,11 +95,6 @@ export default class CyInputDataTransform extends HTMLElement {
                 <div class="row">INSIDE OFFSET<input class="_25" id="data-${t}-io" type="number" value="0" step="0.1"/></div>
                 <div class="row">${TENTER(t) + TESC(t)}</div>
             </div>`;
-        t = `transform-spline`;
-        h += `<div id=${t} style="display:none;">
-                <div class="row">${TENTER(t) + TESC(t)}</div>
-            </div>`;
-
         return h;
     }
 

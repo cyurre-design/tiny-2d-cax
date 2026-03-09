@@ -255,11 +255,11 @@ export function commandPocket(paths, co, ci, tolerance) {
     });
     commandManager.execute(theCommand);
 }
-export function commandPathToSpline(path, ai, af) {
+export function commandPathToSpline(path) {
     const theCommand = commandManager.makeCommand({
         execute(p, a, b) {
             this.copiaBefore = JSON.stringify(p);
-            let newPath = pathToSpline(path, ai, af);
+            let newPath = pathToSpline(path);
             p.addBlocks(undefined, newPath);
             this.copiaAfter = JSON.stringify(p);
             p.draw();
