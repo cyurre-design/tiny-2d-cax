@@ -17,7 +17,7 @@ import {
 } from "../cy-geometry-library.js";
 import { createSegment } from "./cy-segment.js";
 import { createArc } from "./cy-arc.js";
-import { v2dalfa, mid, sub, norm, mul, dot } from "../cy-v2d.js";
+import { cross, mid, sub, norm, mul, dot } from "../cy-v2d.js";
 import { calculateBiarc } from "./cy-biarc.js";
 //los create deben garantizar que aquí llegan bien los parámetros
 
@@ -406,29 +406,18 @@ export function pathToSpline(path, a, b) {
     u = norm(els[n - 1].v);
     p = mul(u, 2 * dot(els[n - 1].ti, u));
     els[n - 1].tf = sub(p, els[n - 1].ti);
-    out = els.map((el) => calculateBiarc(el.pi, el.pf, el.ti, el.tf));
-    // path.elements.forEach((el, ix) => {
-    //     t = sub(path.elements[ix].pf, path.elements[ix].pi);
-    //     if (ix === 0) ti = v2dalfa(a);
-    //     else {
-    //         t1 = sub(path.elements[ix - 1].pf, path.elements[ix - 1].pi);
-    //         ti = norm(mid(t1, t));
-    //     }
-    //     if (ix === path.elements.length - 1)
-    //         tf = v2dalfa(b); //con un solo elemento debería hacer un biarc...
-    //     else {
-    //         t1 = sub(path.elements[ix + 1].pf, path.elements[ix + 1].pi);
-    //         tf = norm(mid(t1, t));
-    //     }
-    //     out.push(calculateBiarc(el.pi, el.pf, ti, tf));
-    // });
+    //hay que tener cuidado con los puntos de inflexión y el way de los arcos, lo sacamos de la sucesión de tangentes
+    els.forEach((el) => (el.way = cross(el.ti, el.tf) < 0 ? "clock" : "antiClock"));
+
+    out = els.map((el) => calculateBiarc(el.pi, el.pf, el.ti, el.tf, el.way));
+
     const arcs = [];
     out = out.flat(); //un array de arcos
     out.forEach((arc) => {
         if (arc.line) {
             arcs.push(createSegment({ x0: arc.pi.x, y0: arc.pi.y, x1: arc.pf.x, y1: arc.pf.y }));
         } else {
-            arcs.push(createArc(arc2PC2SVG(arc.c, arc.r, arc.p0, arc.p1, "clock")));
+            arcs.push(createArc(arc2PC2SVG(arc.c, arc.r, arc.p0, arc.p1, arc.way)));
         }
     });
     return createPath({ elements: arcs });

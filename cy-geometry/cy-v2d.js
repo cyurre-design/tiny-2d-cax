@@ -1,7 +1,7 @@
 // -------- utilidades vectoriales ----------
 export const v2d = (x, y) => ({ x: x, y: y });
 export const dot = (a, b) => a.x * b.x + a.y * b.y;
-export const cross = (a, b) => a.x * b.y - b.y * a.x;
+export const cross = (a, b) => a.x * b.y - b.x * a.y;
 export const sub = (a, b) => ({ x: a.x - b.x, y: a.y - b.y });
 export const add = (a, b) => ({ x: a.x + b.x, y: a.y + b.y });
 export const mul = (a, s) => ({ x: a.x * s, y: a.y * s });
@@ -19,3 +19,4 @@ export const rotL = (a, alfa) => {
     const s = Math.sin(alfa);
     return { x: a.x * c - a.y * s, y: a.x * s + a.y * c };
 };
+export const v2dalfa = (alfa) => ({ x: Math.cos(alfa), y: Math.sin(alfa) });
