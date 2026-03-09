@@ -71,18 +71,24 @@ export default class CyCanvasLayerBackgrouund extends CyCanvasLayer {
     }
     translate(dx, dy) {
         //ye acumulativo
-        this.translation.x -= dx;
-        this.translation.y += dy;
-        //this.translation = { x: -dx - 0.5 * this.imgsize.w, y: -dy - 0.5 * this.imgsize.h };
-        this.draw();
+        if (this.background) {
+            this.translation.x -= dx;
+            this.translation.y += dy;
+            //this.translation = { x: -dx - 0.5 * this.imgsize.w, y: -dy - 0.5 * this.imgsize.h };
+            this.draw();
+        }
     }
     rotate(angle) {
-        this.rotationAngle = angle;
-        this.draw();
+        if (this.background) {
+            this.rotationAngle = angle;
+            this.draw();
+        }
     }
     scale(z) {
-        this.scaleFactor = z;
-        this.draw();
+        if (this.background) {
+            this.scaleFactor = z;
+            this.draw();
+        }
     }
     contrast(value) {}
     // rotateL(angle) {
