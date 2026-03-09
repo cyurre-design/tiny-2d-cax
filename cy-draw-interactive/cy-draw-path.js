@@ -23,7 +23,9 @@ export class DrawPath extends DrawBasic {
         this.dataReceived = ["x0", "y0", "x1", "y1"];
     }
 
-    pop = () => this.thePath.elements.pop();
+    pop = () =>
+        //
+        this.thePath.elements.pop();
     newSegment = (/*p*/) => {
         this.thePath.elements.push(createDrawElement("segment", this.data));
     };

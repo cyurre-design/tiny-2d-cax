@@ -17,6 +17,8 @@ import {
 } from "../cy-geometry-library.js";
 import { createSegment } from "./cy-segment.js";
 import { createArc } from "./cy-arc.js";
+import { v2dalfa, mid, sub, norm, mul, dot } from "../cy-v2d.js";
+import { calculateBiarc } from "./cy-biarc.js";
 //los create deben garantizar que aquí llegan bien los parámetros
 
 export function createPath(data = { elements: [] }) {
@@ -380,6 +382,57 @@ export function pointInsidePath(path, p, orientation) {
     return true;
 }
 
+//De momento uso todos los elementos como si fueran segmentos, si hubiese un arco, se va a susituir por un biarc...
+export function pathToSpline(path, a, b) {
+    //a y b son los ángulos de entrada y salida
+    //cada elemento se convierte en un biarc
+    let out = [];
+    if (path.elements.length === 0) return [];
+    // let ti, tf, t, t1;
+    const els = path.elements.map((el) => ({ pi: el.pi, pf: el.pf, v: sub(el.pf, el.pi) }));
+    const n = els.length;
+    for (let i = 1; i < n; i++) {
+        els[i].ti = norm(mid(els[i - 1].v, els[i].v));
+    }
+    for (let i = 0; i < n - 1; i++) {
+        els[i].tf = els[i + 1].ti;
+    }
+    //Defino las tangentes inicial y final por simtería, porque sí
+    //Dado un vector unitario u, la proyección p de otro unitario v sobre él es su producto escalar, la dirección, la de u
+    //El vector v reflejado es 2*p - v
+    let u = norm(els[0].v);
+    let p = mul(u, 2 * dot(els[0].tf, u));
+    els[0].ti = sub(p, els[0].tf);
+    u = norm(els[n - 1].v);
+    p = mul(u, 2 * dot(els[n - 1].ti, u));
+    els[n - 1].tf = sub(p, els[n - 1].ti);
+    out = els.map((el) => calculateBiarc(el.pi, el.pf, el.ti, el.tf));
+    // path.elements.forEach((el, ix) => {
+    //     t = sub(path.elements[ix].pf, path.elements[ix].pi);
+    //     if (ix === 0) ti = v2dalfa(a);
+    //     else {
+    //         t1 = sub(path.elements[ix - 1].pf, path.elements[ix - 1].pi);
+    //         ti = norm(mid(t1, t));
+    //     }
+    //     if (ix === path.elements.length - 1)
+    //         tf = v2dalfa(b); //con un solo elemento debería hacer un biarc...
+    //     else {
+    //         t1 = sub(path.elements[ix + 1].pf, path.elements[ix + 1].pi);
+    //         tf = norm(mid(t1, t));
+    //     }
+    //     out.push(calculateBiarc(el.pi, el.pf, ti, tf));
+    // });
+    const arcs = [];
+    out = out.flat(); //un array de arcos
+    out.forEach((arc) => {
+        if (arc.line) {
+            arcs.push(createSegment({ x0: arc.pi.x, y0: arc.pi.y, x1: arc.pf.x, y1: arc.pf.y }));
+        } else {
+            arcs.push(createArc(arc2PC2SVG(arc.c, arc.r, arc.p0, arc.p1, "clock")));
+        }
+    });
+    return createPath({ elements: arcs });
+}
 //métodos exclusivos de path
 // export function pathConcat(p1, p2) { //de fin de this a comienzo de path
 //         return p1.elements.concat(p2.elements);

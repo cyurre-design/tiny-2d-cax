@@ -38,6 +38,7 @@ import {
     commandLinkUnlink,
     commandBooleanOperation,
     commandPocket,
+    commandPathToSpline,
 } from "./cy-commands/cy-command-definitions.js";
 
 //For Drawing Interactively
@@ -63,6 +64,7 @@ import {
     DrawSymmetry,
     DrawText,
     DrawTranslate,
+    DrawSpline,
 } from "./cy-draw-interactive/cy-drawing-interactive.js";
 
 //Parsers
@@ -201,6 +203,7 @@ const templateTransform = `<div id='transform'>
   <div class="row">
     <input type="button" id="boolean" class="_33" value="BOOLEAN" />
     <input type="button" id="pocket" class="_33" value="POCKET" />
+    <input type="button" id="spline" class="_33" value="SPLINE" />
   </div>
 </div>`;
 const template = `
@@ -412,6 +415,13 @@ class cyCad1830App extends HTMLElement {
             //Aquí se debería hacer el comando link o unlink
             commandLinkUnlink(e.detail.mode, e.detail.data.tol);
         });
+        //--------------------- SPLINE COMANDO --------------------------------
+        /**@listens path-to-spline cuando se ejecuta de verdad el comando spline de forma interactiva */
+        //Los comandos en realidad no se ejecutan al accionar el menú sino cuando se dan por concluidas las partes interactivas
+        this.addEventListener("path-to-spline", (e) => {
+            commandPathToSpline(e.detail.data.path, e.detail.data.a, e.detail.data.b);
+        });
+
         //--------------------- BOOLEAN  COMANDOS ------------------------
         /**@listens boolean-op  para hacer operaciones con paths */
         // Para las and y or se admiten n paths, pero para not y xor solo 2
@@ -579,7 +589,12 @@ class cyCad1830App extends HTMLElement {
                     {
                         this.registerInputApplications(new DrawLink(this.viewer.layerDraw, sub1));
                         this.mData.setActiveApplication("transform", `link`);
-                        //this.viewer.layerDraw.link();
+                    }
+                    break;
+                case "spline":
+                    {
+                        this.registerInputApplications(new DrawSpline(this.viewer.layerDraw, sub1));
+                        this.mData.setActiveApplication("transform", `spline`);
                     }
                     break;
                 case "symmetry":

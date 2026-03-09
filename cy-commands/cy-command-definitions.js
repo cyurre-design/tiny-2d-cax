@@ -3,6 +3,7 @@ import { linkPaths, unlinkPaths } from "../cy-geometry/cy-geometry-link-paths.js
 import { pathBoolean } from "../cy-geometry/cy-path-boolean.js";
 import { polygonToPath } from "../cy-geometry/cy-geometry-basic-elements.js";
 import { parallelOffset } from "../cy-geometry/cy-path-offset.js";
+import { pathToSpline } from "../cy-geometry/cy-geo-elements/cy-path.js";
 
 /*eslint no-unused-vars: "off"*/
 
@@ -241,6 +242,26 @@ export function commandPocket(paths, co, ci, tolerance) {
                 //console.log(result);
                 window.alert(result.text);
             }
+            p.draw();
+        },
+        undo(p, a) {
+            p.deserialize(JSON.parse(this.copiaBefore));
+            p.draw();
+        },
+        redo(p, a) {
+            p.deserialize(JSON.parse(this.copiaAfter));
+            p.draw();
+        },
+    });
+    commandManager.execute(theCommand);
+}
+export function commandPathToSpline(path, ai, af) {
+    const theCommand = commandManager.makeCommand({
+        execute(p, a, b) {
+            this.copiaBefore = JSON.stringify(p);
+            let newPath = pathToSpline(path, ai, af);
+            p.addBlocks(undefined, newPath);
+            this.copiaAfter = JSON.stringify(p);
             p.draw();
         },
         undo(p, a) {
