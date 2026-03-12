@@ -79,8 +79,9 @@ const defaultConfig = await fetch("./cy-1830-config.json").then((r) => r.json())
 const templateFiles = `
     <div id="file-menu">
         <div class="row" id="file-open">
-            <input type="button" id='file-load-project' value="OPEN PR" class="_50"/>
-            <input type="button" id='file-load-geometry' value="LOAD GEO." class="_50"/>
+            <input type="button" id='file-new' value="NEW PR" class="_33"/>
+            <input type="button" id='file-load-project' value="OPEN PR" class="_33"/>
+            <input type="button" id='file-load-geometry' value="LOAD GEO." class="_33"/>
         </div>
         <div class="row" id="file-save">
             <input type="button" id='file-save-project' value="SAVE PR" class="_33"/>
@@ -737,6 +738,9 @@ class cyCad1830App extends HTMLElement {
             //Nos ponemos una nomenclatura razonable para poner orden en los ids
             //menu, submenu, etc... separados por guiones
             switch (sub1) {
+                case "new":
+                    this.viewer.connectedCallback();
+                    break;
                 case "load":
                     {
                         const clear = sub2 === "geometry" ? false : true;

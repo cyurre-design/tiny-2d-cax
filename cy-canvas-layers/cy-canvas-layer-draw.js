@@ -94,7 +94,7 @@ export default class CyCanvasLayerDraw extends CyCanvasLayer {
     deserialize(saved, clear = true) {
         const model = saved; //.model;
         if (clear) {
-            this.layers = model.layers;
+            this.layers = model.layers || [];
             this.nextLayerId = model.nextLayerId;
             this._activeLayerId = model._activeLayerId;
             this.cutPoints = model.cutPoints;
