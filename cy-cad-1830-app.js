@@ -322,7 +322,6 @@ class cyCad1830App extends HTMLElement {
 
         this.dom = this.attachShadow({ mode: "open" });
         this.dom.adoptedStyleSheets = [sharedStyles];
-        this.dom.innerHTML = template + style;
     }
     registerInputApplications(drawingApp) {
         //-------------------INPUT DATA
@@ -333,8 +332,11 @@ class cyCad1830App extends HTMLElement {
     }
 
     connectedCallback() {
-        this.viewer = this.dom.querySelector("#viewer");
-        this.manager = createCommandManager(this.viewer.layerDraw, this); //
+        this.dom.innerHTML = template + style;
+        customElements.whenDefined("cy-canvas-viewer").then(() => {
+            this.viewer = this.dom.querySelector("#viewer");
+            this.manager = createCommandManager(this.viewer.layerDraw, this);
+        });
 
         //------------- INPUT DATA  ----------
         customElements.whenDefined("cy-input-data-basic").then(() => {
@@ -739,7 +741,7 @@ class cyCad1830App extends HTMLElement {
             //menu, submenu, etc... separados por guiones
             switch (sub1) {
                 case "new":
-                    this.viewer.connectedCallback();
+                    this.connectedCallback();
                     break;
                 case "load":
                     {
