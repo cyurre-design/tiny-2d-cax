@@ -17,7 +17,7 @@ import {
 } from "../cy-geometry-library.js";
 import { createSegment } from "./cy-segment.js";
 import { createArc } from "./cy-arc.js";
-import { cross, mid, sub, norm, mul, dot } from "../cy-v2d.js";
+import { cross, mid, sub, norm, mul, dot, inv } from "../cy-v2d.js";
 import { calculateBiarc } from "./cy-biarc.js";
 //los create deben garantizar que aquí llegan bien los parámetros
 
@@ -383,7 +383,13 @@ export function pointInsidePath(path, p, orientation) {
 }
 
 //De momento uso todos los elementos como si fueran segmentos, si hubiese un arco, se va a susituir por un biarc...
-export function pathToSpline(path, a, b) {
+export function pathToSpline(path) {
+    //Dado un vector unitario u, la proyección p de otro unitario v sobre él es su producto escalar, la dirección, la de u
+    //El vector v reflejado es 2*p - v
+    function reflect(u, v) {
+        let p = mul(u, 2 * dot(v, u));
+        return sub(p, v);
+    }
     //a y b son los ángulos de entrada y salida
     //cada elemento se convierte en un biarc
     let out = [];
@@ -398,18 +404,30 @@ export function pathToSpline(path, a, b) {
         els[i].tf = els[i + 1].ti;
     }
     //Defino las tangentes inicial y final por simtería, porque sí
-    //Dado un vector unitario u, la proyección p de otro unitario v sobre él es su producto escalar, la dirección, la de u
-    //El vector v reflejado es 2*p - v
-    let u = norm(els[0].v);
-    let p = mul(u, 2 * dot(els[0].tf, u));
-    els[0].ti = sub(p, els[0].tf);
-    u = norm(els[n - 1].v);
-    p = mul(u, 2 * dot(els[n - 1].ti, u));
-    els[n - 1].tf = sub(p, els[n - 1].ti);
-    //hay que tener cuidado con los puntos de inflexión y el way de los arcos, lo sacamos de la sucesión de tangentes
-    els.forEach((el) => (el.way = cross(el.ti, el.tf) < 0 ? "clock" : "antiClock"));
+    els[0].ti = reflect(norm(els[0].v), els[0].tf);
+    els[n - 1].tf = reflect(norm(els[n - 1].v), els[n - 1].ti);
 
-    out = els.map((el) => calculateBiarc(el.pi, el.pf, el.ti, el.tf, el.way));
+    //hay que tener cuidado con los puntos de inflexión y el way de los arcos, lo sacamos de la sucesión de tangentes
+    //els.forEach((el) => (el.way = cross(el.ti, el.tf) < 0 ? "clock" : "antiClock"));
+    els.forEach((el) => {
+        el.wi = cross(el.ti, el.v) < 0;
+        el.wf = cross(el.v, el.tf) < 0;
+    });
+    //Si los w no son iguales es que hay un puntp de inflexión.
+    for (let ix = 0; ix < els.length; ix++) {
+        const el = els[ix];
+        const wi = cross(el.ti, el.v) < 0;
+        const wf = cross(el.v, el.tf) < 0;
+        if (wi == wf) out.push(calculateBiarc(el.pi, el.pf, el.ti, el.tf, wi ? "clock" : "anticlock"));
+        else {
+            //de momento pongo el p. de inflexión en el punto medio
+            const pm = mid(el.pi, el.pf);
+            let t = reflect(norm(el.v), norm(mid(el.ti, el.tf)));
+            out.push(calculateBiarc(el.pi, pm, el.ti, t, wi ? "clock" : "anticlock"));
+            out.push(calculateBiarc(pm, el.pf, t, el.tf, wf ? "clock" : "anticlock"));
+        }
+    }
+    //out = els.map((el) => calculateBiarc(el.pi, el.pf, el.ti, el.tf, el.way));
 
     const arcs = [];
     out = out.flat(); //un array de arcos

@@ -591,10 +591,10 @@ class cyCad1830App extends HTMLElement {
                         this.mData.setActiveApplication("transform", `link`);
                     }
                     break;
-                case "spline":
+                case "spline": //sin parametrización en este momento
                     {
                         this.registerInputApplications(new DrawSpline(this.viewer.layerDraw, sub1));
-                        this.mData.setActiveApplication("transform", `spline`);
+                        this.mData.setActiveApplication("none");
                     }
                     break;
                 case "symmetry":

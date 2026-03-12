@@ -1,8 +1,8 @@
 "use strict";
 
 import { distancePointToPoint, fuzzy_eq_zero } from "../cy-geometry-library.js";
-import { dot, sub, add, mul, len, left, inv, mid, norm } from "../cy-v2d.js";
-
+import { dot, sub, v2dalfa, add, mul, len, left, inv, mid, norm } from "../cy-v2d.js";
+import { createSegment } from "./cy-segment.js";
 //se supone que le pasamos los do arcos tangentes, se puede pasar la rutina de cálculos
 // export function createBiarc(a, b) {
 //     // const lengtha = Math.abs(a.r * a.da); //revisar, a3 debe ser mayor que a1
