@@ -1,6 +1,7 @@
 "use strict";
 import { fuzzy_eq, fuzzy_eq_zero, centerFrom2PR, circleFrom3Points, arc3P2SVG, arc2PR2SVG, arcCPA, arcWay, arcDxf } from "./cy-geometry-library.js";
-import { arc2PL } from "./cy-geometry-library.js";
+import { arc2PL, arc2PC2SVG } from "./cy-geometry-library.js";
+import { v2d, add, sub } from "./cy-v2d.js";
 
 import { createSegment } from "./cy-geo-elements/cy-segment.js";
 import { createCircle } from "./cy-geo-elements/cy-circle.js";
@@ -9,7 +10,6 @@ import { createPolygon } from "./cy-geo-elements/cy-polygon.js";
 import { createPath } from "./cy-geo-elements/cy-path.js";
 import { createBezier } from "./cy-geo-elements/cy-bezier.js";
 import { createArcEllipse } from "./cy-geo-elements/cy-arc-ellipse.js";
-
 //import './cy-geo-elements/biarc.js'
 
 //igual, pero el constructor garantiza x0 <x1 e y0 < y1
@@ -85,6 +85,16 @@ export function polygonToPath(polygon) {
             x1: polygon.segments[0].x0,
             y1: polygon.segments[0].y0,
         }),
+    );
+    return createDrawElement("path", { elements: elements });
+}
+export function circleToPath(circle) {
+    const elements = [];
+    const vr = v2d(circle.r, 0);
+    const c = v2d(circle.cx, circle.cy);
+    elements.push(
+        createArc(arc2PC2SVG(c, circle.r, add(c, vr), sub(c, vr), circle.way)),
+        createArc(arc2PC2SVG(c, circle.r, sub(c, vr), add(c, vr), circle.way)),
     );
     return createDrawElement("path", { elements: elements });
 }

@@ -1,5 +1,6 @@
 import DrawBasic from "./cy-draw-basic.js";
 import { pathSetStartPoint, pathReverse } from "../cy-geometry/cy-geo-elements/cy-path.js";
+import { circleToPath, polygonToPath } from "../cy-geometry/cy-geometry-basic-elements.js";
 //import {pathOrientation} from '../cy-geometry/cy-geo-elements/cy-path.js'
 
 /**
@@ -15,8 +16,12 @@ export class DrawExportGcode extends DrawBasic {
         this.data = { subType: "exportISO" };
 
         this.truePaths = this.layerDraw.getSelectedBlocks().filter((b) => b.type === "path");
+        this.circles = this.layerDraw.getSelectedBlocks().filter((b) => b.type === "circle");
+        this.polygons = this.layerDraw.getSelectedBlocks().filter((b) => b.type === "polygon");
         this.paths = [];
         this.paths.push(...this.truePaths); //son los punteros, creo
+        this.paths.push(...this.circles.map((c) => circleToPath(c)));
+        this.paths.push(...this.polygons.map((c) => polygonToPath(c)));
         this.arrows = this.paths.map((p) => this.createArrow(p)); //mismos índices
         this.order = Array.from({ length: this.paths.length }, (v, i) => i);
 
